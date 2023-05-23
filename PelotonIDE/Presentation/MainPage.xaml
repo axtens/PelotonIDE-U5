@@ -1,0 +1,244 @@
+﻿<Page x:Class="PelotonIDE.Presentation.MainPage"
+      x:Name="mainWindow"
+	  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	  xmlns:local="using:PelotonIDE.Presentation"
+	  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	  mc:Ignorable="d"
+	  xmlns:uen="using:Uno.Extensions.Navigation.UI"
+	  xmlns:utu="using:Uno.Toolkit.UI"
+	  xmlns:not_skia="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	  NavigationCacheMode="Required"
+	  Background="{ThemeResource BackgroundBrush}">
+
+    <RelativePanel x:Name="relativePanel" Margin="0,0,0,0" HorizontalAlignment="Stretch">
+        <RelativePanel.Resources>
+            <Style TargetType="Button">
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Margin" Value="0,0,8,0" />
+            </Style>
+        </RelativePanel.Resources>
+        <MenuBar x:Name="menuBar">
+            <MenuBarItem Title="File" BorderBrush="LightGray"  BorderThickness="1">
+                <MenuFlyoutItem x:Name="o1" Text="New" Click="newFileButton_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="T"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon Glyph="&#xE8F4;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="o2" Text="Open" Click="openFileButton_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="O"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon Glyph="&#xE8E5;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="o3" Text="Save" Click="saveFileButton_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="S"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon Glyph="&#xE74E;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="o4" Text="Close" Click="closeFileButton_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="W"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon Glyph="&#xE8BB;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+            </MenuBarItem>
+
+            <MenuBarItem Title="Edit" BorderBrush="LightGray"  BorderThickness="1">
+                <MenuFlyoutItem x:Name="o5" Text="Copy" Click="copyButton_Click">
+                    <MenuFlyoutItem.KeyboardAcceleratorTextOverride>
+                        Ctrl+C
+                    </MenuFlyoutItem.KeyboardAcceleratorTextOverride>
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon Glyph="&#xE8C8;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="o6" Text="Cut" Click="cutButton_Click">
+                    <MenuFlyoutItem.KeyboardAcceleratorTextOverride>
+                        Ctrl+X
+                    </MenuFlyoutItem.KeyboardAcceleratorTextOverride>
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon Glyph="&#xE8C6;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="o7" Text="Paste" Click="pasteButton_Click">
+                    <MenuFlyoutItem.KeyboardAcceleratorTextOverride>
+                        Ctrl+V
+                    </MenuFlyoutItem.KeyboardAcceleratorTextOverride>
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon Glyph="&#xE77F;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="o8" Text="Select All" Click="selectAllButton_Click">
+                    <MenuFlyoutItem.KeyboardAcceleratorTextOverride>
+                        Ctrl+A
+                    </MenuFlyoutItem.KeyboardAcceleratorTextOverride>
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon Glyph="&#xE8B3;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+            </MenuBarItem>
+            <MenuBarItem Title="Help" BorderBrush="LightGray"  BorderThickness="1">
+                <MenuFlyoutItem x:Name="o9" Text="About"/>
+            </MenuBarItem>
+        </MenuBar>
+        <Button x:Name="newFileButton" AutomationProperties.Name="New" ToolTipService.ToolTip="New" Click="newFileButton_Click"
+                RelativePanel.Below="menuBar">
+            <Button.Content>
+                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8F4;"/>
+            </Button.Content>
+        </Button>
+        <Button x:Name="openFileButton" AutomationProperties.Name="Open" ToolTipService.ToolTip="Open"
+            RelativePanel.RightOf="newFileButton" RelativePanel.Below="menuBar" Click="openFileButton_Click">
+            <Button.Content>
+                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8E5;"/>
+            </Button.Content>
+        </Button>
+        <Button x:Name="closeFileButton" AutomationProperties.Name="Close" ToolTipService.ToolTip="Close"
+            RelativePanel.RightOf="openFileButton" RelativePanel.Below="menuBar" Click="closeFileButton_Click">
+            <Button.Content>
+                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8BB;"/>
+            </Button.Content>
+        </Button>
+        <Button x:Name="saveFileButton" AutomationProperties.Name="Save" ToolTipService.ToolTip="Save"
+            RelativePanel.RightOf="closeFileButton" RelativePanel.Below="menuBar" Click="saveFileButton_Click">
+            <Button.Content>
+                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE74E;"/>
+            </Button.Content>
+        </Button>
+        <Button x:Name="copyButton" AutomationProperties.Name="Copy" ToolTipService.ToolTip="Copy"
+            RelativePanel.RightOf="saveFileButton" RelativePanel.Below="menuBar" Click="copyButton_Click">
+            <Button.Content>
+                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8C8;"/>
+            </Button.Content>
+        </Button>
+        <Button x:Name="cutButton" AutomationProperties.Name="Cut" ToolTipService.ToolTip="Cut"
+            RelativePanel.RightOf="copyButton" RelativePanel.Below="menuBar" Click="cutButton_Click">
+            <Button.Content>
+                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8C6;"/>
+            </Button.Content>
+        </Button>
+        <Button x:Name="pasteButton" AutomationProperties.Name="Paste" ToolTipService.ToolTip="Paste"
+            RelativePanel.RightOf="cutButton" RelativePanel.Below="menuBar" Click="pasteButton_Click">
+            <Button.Content>
+                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE77F;"/>
+            </Button.Content>
+        </Button>
+        <Button x:Name="selectAllButton" AutomationProperties.Name="Select All" ToolTipService.ToolTip="Select All"
+            RelativePanel.RightOf="pasteButton" RelativePanel.Below="menuBar" Click="selectAllButton_Click">
+            <Button.Content>
+                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8B3;"/>
+            </Button.Content>
+        </Button>
+        <Button x:Name="transformButton" AutomationProperties.Name="Transform" ToolTipService.ToolTip="Transform"
+            RelativePanel.RightOf="selectAllButton" RelativePanel.Below="menuBar" Click="transformButton_Click">
+            <Button.Content>
+                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE13C;"/>
+            </Button.Content>
+        </Button>
+        <Button x:Name="showOutputButton" AutomationProperties.Name="Show/Hide Output" ToolTipService.ToolTip="Show/Hide Output"
+            RelativePanel.RightOf="transformButton" RelativePanel.Below="menuBar" Click="showOutputButton_Click">
+            <Button.Content>
+                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE92F;"/>
+            </Button.Content>
+        </Button>
+
+        <NavigationView x:Name="tabControl" PaneDisplayMode="Top" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" RelativePanel.Below="selectAllButton" RelativePanel.AlignLeftWithPanel="True"
+                 RelativePanel.AlignRightWithPanel="True"  RelativePanel.Above="outputPanel" SelectionChanged="tabControl_SelectionChanged">
+            <NavigationView.MenuItems>
+                <NavigationViewItem x:Name="tab1" Content="Tab 1" Tag="Tab1"/>
+            </NavigationView.MenuItems>
+        </NavigationView>
+        <Canvas x:Name="outputPanel" RelativePanel.Above="statusBar" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" 
+                Height="200" Background="LightGray" HorizontalAlignment="Stretch" MinHeight="100" MaxHeight="500" SizeChanged="outputPanel_SizeChanged" >
+            <Thumb x:Name="outputThumb"  Height="5" DragDelta="Thumb_DragDelta" DragCompleted="outputThumb_DragCompleted"
+                   Canvas.Left="0" Canvas.Top="-5" PointerEntered="outputThumb_PointerEntered" PointerExited="outputThumb_PointerExited"/>
+            <TabView x:Name="outputPanelTabView" IsAddTabButtonVisible="False" TabWidthMode="SizeToContent" 
+                     VerticalAlignment="Stretch" HorizontalAlignment="Stretch" >
+                <TabView.TabStripFooter>
+                    <Button VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <Button.Content>
+                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE712;"/>
+                        </Button.Content>
+                        <Button.Flyout>
+                            <Flyout x:Name="outputDockingFlyout" Placement="Bottom">
+                                <Flyout.FlyoutPresenterStyle>
+                                    <Style TargetType="FlyoutPresenter">
+                                        <Setter Property="CornerRadius" Value="20"/>
+                                        <Setter Property="Background" Value="White"/>
+                                    </Style>
+                                </Flyout.FlyoutPresenterStyle>
+                                <StackPanel Orientation="Horizontal" Background="White" CornerRadius="20">
+                                    <TextBlock Text="Dock Side" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Button x:Name="outputLeftButton" Background="Transparent" Foreground="Black" BorderBrush="LightGray" 
+                                            BorderThickness="1" Margin="5" Padding="0" Width="30" Height="30" Click="OutputLeft_Click">
+                                        <Button.Content>
+                                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE90C;"/>
+                                        </Button.Content>
+                                    </Button>
+                                    <Button x:Name="outputBottomButton" Background="DeepSkyBlue" Foreground="Black" BorderBrush="DodgerBlue" 
+                                            BorderThickness="1" Margin="5" Padding="0" Width="30" Height="30" Click="OutputBottom_Click">
+                                        <Button.Content>
+                                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE90E;"/>
+                                        </Button.Content>
+                                    </Button>
+                                    <Button x:Name="outputRightButton" Background="Transparent" Foreground="Black" BorderBrush="LightGray" 
+                                            BorderThickness="1" Margin="5" Padding="0" Width="30" Height="30" Click="OutputRight_Click">
+                                        <Button.Content>
+                                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE90D;"/>
+                                        </Button.Content>
+                                    </Button>
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+
+                    </Button>
+                </TabView.TabStripFooter>
+                <TabView.TabItems>
+                    <TabViewItem Header="Output" IsSelected="True" IsClosable="False" Background="DarkGray" Foreground="White">
+                        <Border Background="LightGray" Margin="0" Padding="0">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto"
+                                          HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto">
+                                <RichTextBlock x:Name="outputText">
+                                    <Paragraph>
+                                        This is Output
+                                    </Paragraph>
+                                </RichTextBlock>
+                            </ScrollViewer>
+                        </Border>
+                    </TabViewItem>
+                    <TabViewItem Header="Error" IsClosable="False" Background="DarkGray" Foreground="White">
+                        <Border Background="LightGray" Margin="0" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto"
+                                          HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto">
+                                <RichTextBlock x:Name="errorText">
+                                    <Paragraph>
+                                        This is Error
+                                    </Paragraph>
+                                </RichTextBlock>
+                            </ScrollViewer>
+                        </Border>
+                    </TabViewItem>
+                </TabView.TabItems>
+            </TabView>
+        </Canvas>
+        <StackPanel x:Name="statusBar" RelativePanel.AlignBottomWithPanel="True" Orientation="Horizontal">
+            <TextBlock Text="Line 1, Char 0" Margin="10,0,40,0" Name="cursorPosition"/>
+            <TextBlock Text="0 words" Margin="0,0,20,0" Name="wordCount"/>
+            <TextBlock Text="Caps Lock: " Margin="0,0,30,0" Name="capsLock"/>
+            <TextBlock Text="Num Lock: " Margin="0,0,30,0" Name="numsLock"/>
+        </StackPanel>
+    </RelativePanel>
+</Page>
