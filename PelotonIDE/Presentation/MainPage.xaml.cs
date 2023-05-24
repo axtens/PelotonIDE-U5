@@ -14,7 +14,7 @@ namespace PelotonIDE.Presentation
 {
     public sealed partial class MainPage : Page
     {
-        Dictionary<object, CustomRichEditBox> _richEditBoxes = new Dictionary<object, CustomRichEditBox>();
+        readonly Dictionary<object, CustomRichEditBox> _richEditBoxes = new();
         bool outputPanelShowing = true;
         enum OutputPanelPosition
         {
@@ -26,8 +26,10 @@ namespace PelotonIDE.Presentation
         public MainPage()
         {
             this.InitializeComponent();
-            CustomRichEditBox richEditBox = new CustomRichEditBox();
-            richEditBox.Tag = "Tab1";
+            CustomRichEditBox richEditBox = new()
+            {
+                Tag = "Tab1"
+            };
             richEditBox.KeyDown += RichEditBox_KeyDown;
             richEditBox.SelectionFlyout = null;
             richEditBox.ContextFlyout = null;
@@ -54,12 +56,10 @@ namespace PelotonIDE.Presentation
                 var isNumLocked = Console.NumberLock;
                 numsLock.Text = isNumLocked ? "Num Lock: On" : "Num Lock: Off";
             }
-            CustomRichEditBox? currentRichEditBox = tabControl.Content as CustomRichEditBox;
-            if (currentRichEditBox != null)
+            if (tabControl.Content is CustomRichEditBox currentRichEditBox)
             {
-                string text = "";
-                currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out text);
-                wordCount.Text = text.Split(' ').Count() - 1 + " words";
+                currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string text);
+                wordCount.Text = text.Split(' ').Length - 1 + " words";
                 int caretPosition = currentRichEditBox.Document.Selection.StartPosition;
                 int lineNumber = 1;
                 int charNumber = 0;
@@ -195,7 +195,6 @@ namespace PelotonIDE.Presentation
             Canvas.SetTop(outputThumb, -4);
 
             outputDockingFlyout.Hide();
-
         }
 
         private void OutputRight_Click(object sender, RoutedEventArgs e)
@@ -232,18 +231,20 @@ namespace PelotonIDE.Presentation
 
         private async void transformButton_Click(object sender, RoutedEventArgs e)
         {
-            ContentDialog dialog = new ContentDialog();
-            dialog.XamlRoot = this.XamlRoot;
-            dialog.Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style;
-            dialog.Title = "Reverse?";
-            dialog.PrimaryButtonText = "Yes";
-            dialog.SecondaryButtonText = "No";
-            DialogContentPage dialogContentPage = new DialogContentPage();
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = "Reverse?",
+                PrimaryButtonText = "Yes",
+                SecondaryButtonText = "No"
+            };
+            DialogContentPage dialogContentPage = new();
 
             NavigationViewItem navigationViewItem = (NavigationViewItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
             currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string selectedText);
-            selectedText = selectedText.ToString().TrimEnd('\r');
+            selectedText = selectedText.TrimEnd('\r');
             dialogContentPage.SetText(selectedText);
             dialog.Content = dialogContentPage;
 
@@ -271,9 +272,9 @@ namespace PelotonIDE.Presentation
 
         private void CreateNewRichEditBox()
         {
-            CustomRichEditBox richEditBox = new CustomRichEditBox();
+            CustomRichEditBox richEditBox = new();
             richEditBox.KeyDown += RichEditBox_KeyDown;
-            NavigationViewItem navigationViewItem = new NavigationViewItem()
+            NavigationViewItem navigationViewItem = new()
             {
                 Content = "Tab " + (tabControl.MenuItems.Count + 1),
                 Tag = "Tab" + (tabControl.MenuItems.Count + 1)
@@ -299,8 +300,10 @@ namespace PelotonIDE.Presentation
 
         private async void Open()
         {
-            FileOpenPicker open = new FileOpenPicker();
-            open.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+            FileOpenPicker open = new()
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+            };
             open.FileTypeFilter.Add(".rtf");
 
             // For Uno.WinUI-based apps
@@ -310,22 +313,20 @@ namespace PelotonIDE.Presentation
             StorageFile pickedFile = await open.PickSingleFileAsync();
             if (pickedFile != null)
             {
-                using (Windows.Storage.Streams.IRandomAccessStream randAccStream =
-                    await pickedFile.OpenAsync(Windows.Storage.FileAccessMode.Read))
-                {
-                    // Load the file into the Document property of the RichEditBox.
-                    CreateNewRichEditBox();
-                    NavigationViewItem navigationViewItem = (NavigationViewItem)tabControl.MenuItems[tabControl.MenuItems.Count - 1];
-                    navigationViewItem.Content = pickedFile.DisplayName;
-                    CustomRichEditBox newestRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-                    newestRichEditBox.Document.LoadFromStream(Microsoft.UI.Text.TextSetOptions.FormatRtf, randAccStream);
-                }
+                using Windows.Storage.Streams.IRandomAccessStream randAccStream =
+                    await pickedFile.OpenAsync(Windows.Storage.FileAccessMode.Read);
+                // Load the file into the Document property of the RichEditBox.
+                CreateNewRichEditBox();
+                NavigationViewItem navigationViewItem = (NavigationViewItem)tabControl.MenuItems[tabControl.MenuItems.Count - 1];
+                navigationViewItem.Content = pickedFile.DisplayName;
+                CustomRichEditBox newestRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+                newestRichEditBox.Document.LoadFromStream(Microsoft.UI.Text.TextSetOptions.FormatRtf, randAccStream);
             }
         }
 
         private async void Save()
         {
-            FileSavePicker savePicker = new FileSavePicker
+            FileSavePicker savePicker = new()
             {
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary
             };
@@ -361,7 +362,7 @@ namespace PelotonIDE.Presentation
                 if (status != FileUpdateStatus.Complete)
                 {
                     Windows.UI.Popups.MessageDialog errorBox =
-                        new Windows.UI.Popups.MessageDialog("File " + file.Name + " couldn't be saved.");
+                        new("File " + file.Name + " couldn't be saved.");
                     await errorBox.ShowAsync();
                 }
                 NavigationViewItem savedItem = (NavigationViewItem)tabControl.SelectedItem;
@@ -374,7 +375,7 @@ namespace PelotonIDE.Presentation
             NavigationViewItem navigationViewItem = (NavigationViewItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
             string selectedText = currentRichEditBox.Document.Selection.Text;
-            DataPackage dataPackage = new DataPackage();
+            DataPackage dataPackage = new();
             dataPackage.SetText(selectedText);
             Clipboard.SetContent(dataPackage);
         }
@@ -476,7 +477,7 @@ namespace PelotonIDE.Presentation
                 outputPanelTabView.Width = outputPanel.ActualWidth;
                 outputThumb.Width = outputPanel.ActualWidth;
                 outputThumb.Height = 5;
-            } 
+            }
             else if (outputPosition == OutputPanelPosition.Right)
             {
                 outputPanelTabView.Width = outputPanel.ActualWidth;
