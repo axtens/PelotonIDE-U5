@@ -8,6 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="Uno.Dsp.Tasks" Version="1.0.1" />
 		<PackageReference Include="Uno.WinUI" Version="4.8.33" />
 		<PackageReference Include="Uno.Resizetizer" Version="1.0.4" />
@@ -77,9 +78,14 @@
 
 	<ItemGroup>
 	  <None Remove="Presentation\DialogContentPage.xaml" />
+	  <None Remove="Presentation\LanguageConfig.json" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <UpToDateCheckInput Remove="Presentation\DialogContentPage.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="Presentation\LanguageConfig.json" />
 	</ItemGroup>
 </Project>
