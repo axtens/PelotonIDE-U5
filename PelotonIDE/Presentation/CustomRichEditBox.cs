@@ -14,6 +14,18 @@ namespace PelotonIDE.Presentation
 {
     public partial class CustomRichEditBox : RichEditBox
     {
+        public TabSpecificSettings tabSettings { get; set; }
+        public bool isRTF { get; set; }
+
+        public CustomRichEditBox()
+        {
+            IsSpellCheckEnabled = false;
+            tabSettings = new TabSpecificSettings();
+            isRTF = true;
+            SelectionFlyout = null;
+            ContextFlyout = null;
+        }
+
         protected override void OnKeyDown(KeyRoutedEventArgs e)
         {
             var ctrlState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);

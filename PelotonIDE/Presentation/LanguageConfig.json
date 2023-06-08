@@ -1,0 +1,53 @@
+{
+    "US_English": {
+        "File": "File",
+        "New": "New",
+        "Open": "Open",
+        "Save": "Save",
+        "SaveAs": "SaveAs",
+        "Close": "Close",
+        "Edit": "Edit",
+        "Copy": "Copy",
+        "Cut": "Cut",
+        "Paste": "Paste",
+        "SelectAll": "Select All",
+        "Help": "Help",
+        "About": "About",
+        "Transform": "Transform",
+        "ToggleOutput": "Toggle Output"
+    },
+    "Australian_English": {
+        "File": "File",
+        "New": "New",
+        "Open": "Open",
+        "Save": "Save",
+        "SaveAs": "SaveAs",
+        "Close": "Close",
+        "Edit": "Chop And Change",
+        "Copy": "Nick",
+        "Cut": "Slice",
+        "Paste": "Glue",
+        "SelectAll": "Grab",
+        "Help": "Help",
+        "About": "About",
+        "Transform": "Transform",
+        "ToggleOutput": "Toggle Output"
+    },
+    "French": {
+        "File": "Fichier",
+        "New": "Nouveau",
+        "Open": "Ouvrir",
+        "Save": "Enregistrer",
+        "SaveAs": "Enregistrer Sous",
+        "Close": "Fermer",
+        "Edit": "Editer",
+        "Copy": "Copier",
+        "Cut": "Couper",
+        "Paste": "Coller",
+        "SelectAll": "Sélectionn er Tout",
+        "Help": "Aider",
+        "About": "À propos",
+        "Transform": "Transformer",
+        "ToggleOutput": "Basculer la Sortie"
+    }
+}
