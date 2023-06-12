@@ -729,13 +729,19 @@ namespace PelotonIDE.Presentation
             int startIndex = modifiedRtfContent.LastIndexOf('{');
             int endIndex = modifiedRtfContent.Length;
             string serializedObject = modifiedRtfContent.Substring(startIndex, endIndex - startIndex);
-
-            // Deserialize the object from JSON
-            TabSpecificSettings? tabSpecificSettings = System.Text.Json.JsonSerializer.Deserialize(serializedObject, typeof(TabSpecificSettings)) as TabSpecificSettings;
-            if (tabSpecificSettings != null)
+            
+            try
             {
-                customRichEditBox.tabSettings.Setting1 = tabSpecificSettings.Setting1;
-                customRichEditBox.tabSettings.Setting2 = tabSpecificSettings.Setting2;
+                // Deserialize the object from JSON
+                TabSpecificSettings? tabSpecificSettings = System.Text.Json.JsonSerializer.Deserialize(serializedObject, typeof(TabSpecificSettings)) as TabSpecificSettings;
+                if (tabSpecificSettings != null)
+                {
+                    customRichEditBox.tabSettings.Setting1 = tabSpecificSettings.Setting1;
+                    customRichEditBox.tabSettings.Setting2 = tabSpecificSettings.Setting2;
+                }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
             }
         }
 
