@@ -729,7 +729,7 @@ namespace PelotonIDE.Presentation
             int startIndex = modifiedRtfContent.LastIndexOf('{');
             int endIndex = modifiedRtfContent.Length;
             string serializedObject = modifiedRtfContent.Substring(startIndex, endIndex - startIndex);
-            
+
             try
             {
                 // Deserialize the object from JSON
@@ -739,6 +739,7 @@ namespace PelotonIDE.Presentation
                     customRichEditBox.tabSettings.Setting1 = tabSpecificSettings.Setting1;
                     customRichEditBox.tabSettings.Setting2 = tabSpecificSettings.Setting2;
                 }
+            }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
