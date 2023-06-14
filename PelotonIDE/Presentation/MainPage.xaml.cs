@@ -279,7 +279,6 @@ namespace PelotonIDE.Presentation
                 paragraph.Inlines.Add(run);
                 errorText.Blocks.Add(paragraph);
             }
-
         }
 
         private void HelpAbout_Click(object sender, RoutedEventArgs e)
