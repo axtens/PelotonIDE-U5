@@ -11,6 +11,7 @@ using Windows.System;
 using Windows.UI.Core;
 using Newtonsoft.Json;
 using System.Text;
+using Microsoft.UI.Xaml.Documents;
 
 namespace PelotonIDE.Presentation
 {
@@ -18,19 +19,14 @@ namespace PelotonIDE.Presentation
     {
         readonly Dictionary<object, CustomRichEditBox> _richEditBoxes = new();
         bool outputPanelShowing = true;
-        enum IDELanguage
-        {
-            US_English,
-            Australian_English,
-            French
-        }
         enum OutputPanelPosition
         {
             Left,
             Bottom,
             Right
         }
-        IDELanguage currentLanguage = IDELanguage.US_English;
+        string currentLanguageName = "US English";
+        int currentLanguageId = 101;
         OutputPanelPosition outputPosition = OutputPanelPosition.Bottom;
         public MainPage()
         {
@@ -47,13 +43,31 @@ namespace PelotonIDE.Presentation
             var isNumLocked = Console.NumberLock;
             capsLock.Text = isCapsLocked ? "Caps Lock: On" : "Caps Lock: Off";
             numsLock.Text = isNumLocked ? "Num Lock: On" : "Num Lock: Off";
-            App._window.Closed += mainWindow_Closed;
+            App._window.Closed += MainWindow_Closed;
+            FillLanguages();
+        }
+
+        private async void FillLanguages()
+        {
+            var languageJsonFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\LanguageConfig.json"));
+            string languageJsonString = File.ReadAllText(languageJsonFile.Path);
+            var languageJson = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(languageJsonString);
+            foreach (string key in languageJson.Keys)
+            {
+                MenuFlyoutItem menuFlyoutItem = new()
+                {
+                    Name = key,
+                    Text = key
+                };
+                menuFlyoutItem.Click += Internationalization_Click; // MenuFlyoutItem_Click;
+                InternationalisationBar.Items.Add(menuFlyoutItem);
+            }
         }
 
         /// <summary>
         /// Load previous editor settings
         /// </summary>
-        private void mainWindow_Loaded(object sender, RoutedEventArgs e)
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
             if (localSettings.Values.ContainsKey("OutputPanelPosition"))
@@ -75,22 +89,21 @@ namespace PelotonIDE.Presentation
 
             if (localSettings.Values.ContainsKey("Language"))
             {
-                string savedLang = localSettings.Values["Language"] as string ?? "US_English";
-                currentLanguage = (IDELanguage)Enum.Parse(typeof(IDELanguage), savedLang);
-                HandleLanguageChange(currentLanguage);
+                string savedLang = localSettings.Values["Language"] as string ?? "US English";
+                HandleLanguageChange(savedLang);
             }
         }
 
         /// <summary>
         /// Save current editor settings
         /// </summary>
-        private void mainWindow_Closed(object sender, object e)
+        private void MainWindow_Closed(object sender, object e)
         {
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
             localSettings.Values["OutputPanelPosition"] = outputPosition.ToString();
             localSettings.Values["OutputHeight"] = outputPanel.Height;
             localSettings.Values["OutputWidth"] = outputPanel.Width;
-            localSettings.Values["Language"] = currentLanguage.ToString();
+            localSettings.Values["Language"] = currentLanguageName; // currentLanguage.ToString();
         }
 
         #region Event Handlers
@@ -136,52 +149,52 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        private void newFileButton_Click(object sender, RoutedEventArgs e)
+        private void FileNew_Click(object sender, RoutedEventArgs e)
         {
             CreateNewRichEditBox();
         }
 
-        private async void openFileButton_Click(object sender, RoutedEventArgs e)
+        private async void FileOpen_Click(object sender, RoutedEventArgs e)
         {
             Open();
         }
 
-        private void closeFileButton_Click(object sender, RoutedEventArgs e)
+        private void FileClose_Click(object sender, RoutedEventArgs e)
         {
             Close();
         }
 
-        private async void saveFileButton_Click(object sender, RoutedEventArgs e)
+        private async void FileSave_Click(object sender, RoutedEventArgs e)
         {
             Save();
         }
 
-        private async void saveAsFileButton_Click(object sender, RoutedEventArgs e)
+        private async void FileSaveAs_Click(object sender, RoutedEventArgs e)
         {
             SaveAs();
         }
 
-        private void copyButton_Click(object sender, RoutedEventArgs e)
+        private void EditCopy_Click(object sender, RoutedEventArgs e)
         {
             CopyText();
         }
 
-        private void cutButton_Click(object sender, RoutedEventArgs e)
+        private void EditCut_Click(object sender, RoutedEventArgs e)
         {
             Cut();
         }
 
-        private async void pasteButton_Click(object sender, RoutedEventArgs e)
+        private async void EditPaste_Click(object sender, RoutedEventArgs e)
         {
             Paste();
         }
 
-        private void selectAllButton_Click(object sender, RoutedEventArgs e)
+        private void EditSelectAll_Click(object sender, RoutedEventArgs e)
         {
             SelectAll();
         }
 
-        private void tabControl_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+        private void TabControl_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
         {
             if (tabControl.SelectedItem != null)
             {
@@ -205,7 +218,7 @@ namespace PelotonIDE.Presentation
             HandleOutputPanelChange(OutputPanelPosition.Right);
         }
 
-        private async void transformButton_Click(object sender, RoutedEventArgs e)
+        private async void TransformButton_Click(object sender, RoutedEventArgs e)
         {
             ContentDialog dialog = new()
             {
@@ -236,10 +249,49 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        private void toggleOutputButton_Click(object sender, RoutedEventArgs e)
+        private void ToggleOutputButton_Click(object sender, RoutedEventArgs e)
         {
             outputPanel.Visibility = outputPanelShowing ? Visibility.Collapsed : Visibility.Visible;
             outputPanelShowing = !outputPanelShowing;
+        }
+
+        private void RunCodeButton_Click(Object sender, RoutedEventArgs e)
+        {
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+            currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string selectedText);
+            selectedText = selectedText.TrimEnd('\r');
+
+            (string stdOut, string stdErr) = RunPeloton(@"C:\protium\bin\pdb.exe", $"/Q=1 /L={currentLanguageId}", selectedText);
+
+            Run run = new();
+            Paragraph paragraph = new();
+
+            if (!string.IsNullOrEmpty(stdOut))
+            {
+                run.Text = stdOut;
+                paragraph.Inlines.Add(run);
+                outputText.Blocks.Add(paragraph);
+            }
+            if (!string.IsNullOrEmpty(stdErr))
+            {
+                run.Text = stdErr;
+                paragraph.Inlines.Add(run);
+                errorText.Blocks.Add(paragraph);
+            }
+        }
+
+        private void HelpAbout_Click(object sender, RoutedEventArgs e)
+        {
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = "PelotonIDE v20230614",
+                Content = "Based on original code by\r\nHakob Chalikyan <hchalikyan3@gmail.com>",
+                CloseButtonText = "OK"
+            };
+            _ = dialog.ShowAsync();
         }
 
         private void Thumb_DragDelta(object sender, Microsoft.UI.Xaml.Controls.Primitives.DragDeltaEventArgs e)
@@ -279,7 +331,7 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        private void outputPanel_SizeChanged(object sender, SizeChangedEventArgs e)
+        private void OutputPanel_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             if (outputPosition == OutputPanelPosition.Bottom)
             {
@@ -302,7 +354,7 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        private async void outputThumb_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+        private async void OutputThumb_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             if (outputPosition == OutputPanelPosition.Bottom)
             {
@@ -314,31 +366,20 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        private void outputThumb_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+        private void OutputThumb_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             this.ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Arrow, 0));
         }
 
-        private void outputThumb_DragCompleted(object sender, DragCompletedEventArgs e)
+        private void OutputThumb_DragCompleted(object sender, DragCompletedEventArgs e)
         {
             this.ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Arrow, 0));
         }
 
-        private void USEnglish_Click(object sender, RoutedEventArgs e)
+        private void Internationalization_Click(object sender, RoutedEventArgs e)
         {
-            HandleLanguageChange(IDELanguage.US_English);
+            HandleLanguageChange(((MenuFlyoutItem)sender).Name);
         }
-
-        private void AusEnglish_Click(object sender, RoutedEventArgs e)
-        {
-            HandleLanguageChange(IDELanguage.Australian_English);
-        }
-
-        private void French_Click(object sender, RoutedEventArgs e)
-        {
-            HandleLanguageChange(IDELanguage.French);
-        }
-
         #endregion
 
         #region Edit Handlers
@@ -374,8 +415,10 @@ namespace PelotonIDE.Presentation
 
         private async void Open()
         {
-            FileOpenPicker open = new FileOpenPicker();
-            open.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+            FileOpenPicker open = new()
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+            };
             open.FileTypeFilter.Add(".pr");
             open.FileTypeFilter.Add(".p");
 
@@ -421,10 +464,9 @@ namespace PelotonIDE.Presentation
 
             if (navigationViewItem != null)
             {
-                if (navigationViewItem.IsNewFile == true)
+                if (navigationViewItem.IsNewFile)
                 {
-
-                    FileSavePicker savePicker = new FileSavePicker
+                    FileSavePicker savePicker = new()
                     {
                         SuggestedStartLocation = PickerLocationId.DocumentsLibrary
                     };
@@ -434,14 +476,7 @@ namespace PelotonIDE.Presentation
                     savePicker.FileTypeChoices.Add("UTF-8", new List<string>() { ".p" });
 
                     string? tabTitle = navigationViewItem.Content.ToString();
-                    if (tabTitle == null)
-                    {
-                        savePicker.SuggestedFileName = "New Document";
-                    }
-                    else
-                    {
-                        savePicker.SuggestedFileName = tabTitle;
-                    }
+                    savePicker.SuggestedFileName = tabTitle ?? "New Document";
 
                     // For Uno.WinUI-based apps
                     var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
@@ -450,7 +485,6 @@ namespace PelotonIDE.Presentation
                     StorageFile file = await savePicker.PickSaveFileAsync();
                     if (file != null)
                     {
-
                         CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
                         // Prevent updates to the remote version of the file until we
                         // finish making changes and call CompleteUpdatesAsync.
@@ -484,7 +518,7 @@ namespace PelotonIDE.Presentation
                         if (status != FileUpdateStatus.Complete)
                         {
                             Windows.UI.Popups.MessageDialog errorBox =
-                                new Windows.UI.Popups.MessageDialog("File " + file.Name + " couldn't be saved.");
+                                new($"File {file.Name} couldn't be saved.");
                             await errorBox.ShowAsync();
                         }
 
@@ -535,7 +569,7 @@ namespace PelotonIDE.Presentation
                         if (status != FileUpdateStatus.Complete)
                         {
                             Windows.UI.Popups.MessageDialog errorBox =
-                                new Windows.UI.Popups.MessageDialog("File " + file.Name + " couldn't be saved.");
+                                new("File " + file.Name + " couldn't be saved.");
                             await errorBox.ShowAsync();
                         }
                         CustomTabItem savedItem = (CustomTabItem)tabControl.SelectedItem;
@@ -557,8 +591,7 @@ namespace PelotonIDE.Presentation
 
             if (navigationViewItem != null)
             {
-
-                FileSavePicker savePicker = new FileSavePicker
+                FileSavePicker savePicker = new()
                 {
                     SuggestedStartLocation = PickerLocationId.DocumentsLibrary
                 };
@@ -576,14 +609,7 @@ namespace PelotonIDE.Presentation
                 }
 
                 string? tabTitle = navigationViewItem.Content.ToString();
-                if (tabTitle == null)
-                {
-                    savePicker.SuggestedFileName = "New Document";
-                }
-                else
-                {
-                    savePicker.SuggestedFileName = tabTitle;
-                }
+                savePicker.SuggestedFileName = tabTitle ?? "New Document";
 
                 // For Uno.WinUI-based apps
                 var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
@@ -626,7 +652,7 @@ namespace PelotonIDE.Presentation
                     if (status != FileUpdateStatus.Complete)
                     {
                         Windows.UI.Popups.MessageDialog errorBox =
-                            new Windows.UI.Popups.MessageDialog("File " + file.Name + " couldn't be saved.");
+                            new($"File {file.Name} couldn't be saved.");
                         await errorBox.ShowAsync();
                     }
                     CustomTabItem savedItem = (CustomTabItem)tabControl.SelectedItem;
@@ -706,35 +732,33 @@ namespace PelotonIDE.Presentation
             return new string(charArray);
         }
 
-        public void HandleCustomPropertySaving(StorageFile file, CustomRichEditBox customRichEditBox)
+        public static void HandleCustomPropertySaving(StorageFile file, CustomRichEditBox customRichEditBox)
         {
             string rtfContent = File.ReadAllText(file.Path);
 
             string settingsJson = System.Text.Json.JsonSerializer.Serialize(customRichEditBox.tabSettings);
 
             // Manipulate the RTF content
-            StringBuilder rtfBuilder = new StringBuilder(rtfContent);
+            StringBuilder rtfBuilder = new(rtfContent);
 
             // Add a \language section
             rtfBuilder.Insert(rtfBuilder.Length, settingsJson);
 
             // Write the modified RTF content back to the file
             File.WriteAllText(file.Path, rtfBuilder.ToString());
-
         }
 
-        public void HandleCustomPropertyLoading(StorageFile file, CustomRichEditBox customRichEditBox)
+        public static void HandleCustomPropertyLoading(StorageFile file, CustomRichEditBox customRichEditBox)
         {
             string modifiedRtfContent = File.ReadAllText(file.Path);
             int startIndex = modifiedRtfContent.LastIndexOf('{');
             int endIndex = modifiedRtfContent.Length;
-            string serializedObject = modifiedRtfContent.Substring(startIndex, endIndex - startIndex);
+            string serializedObject = modifiedRtfContent[startIndex..endIndex];
 
             try
             {
                 // Deserialize the object from JSON
-                TabSpecificSettings? tabSpecificSettings = System.Text.Json.JsonSerializer.Deserialize(serializedObject, typeof(TabSpecificSettings)) as TabSpecificSettings;
-                if (tabSpecificSettings != null)
+                if (System.Text.Json.JsonSerializer.Deserialize(serializedObject, typeof(TabSpecificSettings)) is TabSpecificSettings tabSpecificSettings)
                 {
                     customRichEditBox.tabSettings.Setting1 = tabSpecificSettings.Setting1;
                     customRichEditBox.tabSettings.Setting2 = tabSpecificSettings.Setting2;
@@ -746,13 +770,22 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        private async void HandleLanguageChange(IDELanguage lang)
+        private async void HandleLanguageChange(string langName)
         {
             var languageJsonFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\LanguageConfig.json"));
             string languageJsonString = File.ReadAllText(languageJsonFile.Path);
             var languageJson = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(languageJsonString);
-            var selectedLanguage = languageJson[lang.ToString()];
+            var selectedLanguage = languageJson[langName];
 
+            SetMenuText(selectedLanguage);
+
+            currentLanguageName = langName;
+            currentLanguageId = int.Parse(selectedLanguage["ID"]);
+            languageName.Text = "Language: " + currentLanguageName;
+        }
+
+        private void SetMenuText(Dictionary<string, string> selectedLanguage)
+        {
             fileBar.Title = selectedLanguage["File"];
             menuNew.Text = selectedLanguage["New"];
             menuOpen.Text = selectedLanguage["Open"];
@@ -766,6 +799,13 @@ namespace PelotonIDE.Presentation
             menuSelectAll.Text = selectedLanguage["SelectAll"];
             helpBar.Title = selectedLanguage["Help"];
             menuAbout.Text = selectedLanguage["About"];
+            SearchBar.Title = selectedLanguage["Search"];
+            FormatBar.Title = selectedLanguage["Format"];
+            ViewBar.Title = selectedLanguage["View"];
+            InterpreterBar.Title = selectedLanguage["Interpreter"];
+            SourceBar.Title = selectedLanguage["Source"];
+            SettingsBar.Title = selectedLanguage["Settings"];
+            WindowBar.Title = selectedLanguage["Window"];
 
             ToolTipService.SetToolTip(newFileButton, selectedLanguage["New"]);
             ToolTipService.SetToolTip(openFileButton, selectedLanguage["Open"]);
@@ -778,8 +818,7 @@ namespace PelotonIDE.Presentation
             ToolTipService.SetToolTip(selectAllButton, selectedLanguage["SelectAll"]);
             ToolTipService.SetToolTip(transformButton, selectedLanguage["Transform"]);
             ToolTipService.SetToolTip(toggleOutputButton, selectedLanguage["ToggleOutput"]);
-
-            currentLanguage = lang;
+            ToolTipService.SetToolTip(runCodeButton, selectedLanguage["RunCode"]);
         }
 
         private void HandleOutputPanelChange(OutputPanelPosition panelPos)
@@ -844,7 +883,6 @@ namespace PelotonIDE.Presentation
                 Canvas.SetTop(outputThumb, -4);
 
                 outputDockingFlyout.Hide();
-
             }
             else if (panelPos == OutputPanelPosition.Right)
             {
@@ -877,6 +915,35 @@ namespace PelotonIDE.Presentation
 
                 outputDockingFlyout.Hide();
             }
+        }
+
+        public static (string StdOut, string StdErr) RunPeloton(string pelotonPath, string extraArguments, string buffer)
+        {
+            var tempfile = Path.GetTempFileName();
+            File.WriteAllText(tempfile, buffer);
+            ProcessStartInfo startInfo = new()
+            {
+                Arguments = $"{tempfile} {extraArguments}",
+                FileName = pelotonPath,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            };
+
+            var theProcess = Process.Start(startInfo);
+            StringBuilder stdout = new();
+            StringBuilder stderr = new();
+
+            theProcess.OutputDataReceived += (object sender, DataReceivedEventArgs e) => stdout.Append(e.Data);
+            theProcess.ErrorDataReceived += (object sender, DataReceivedEventArgs e) => stderr.Append(e.Data);
+
+            theProcess.BeginErrorReadLine();
+            theProcess.BeginOutputReadLine();
+
+            theProcess.WaitForExit();
+            theProcess.Dispose();
+
+            return (StdOut: stdout.ToString(), StdErr: stderr.ToString());
         }
     }
 }
