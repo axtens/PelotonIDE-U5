@@ -104,8 +104,8 @@
                 <MenuFlyoutItem x:Name="menuAbout" Text="About"/>
             </MenuBarItem>
 
-            <MenuBarItem Title="Internationalisation" BorderBrush="LightGray"  BorderThickness="1">
-                <MenuFlyoutItem x:Name="USEnglish" Text="US English" Click="USEnglish_Click">
+            <MenuBarItem Title="Internationalisation" BorderBrush="LightGray"  BorderThickness="1" x:Name="InternationalisationBar">
+                <!-- <MenuFlyoutItem x:Name="USEnglish" Text="US English" Click="USEnglish_Click">
                     <MenuFlyoutItem.Icon>
                         <ImageIcon Source="/PelotonIDE/Assets/Icons/flag-united-states.png"/>
                     </MenuFlyoutItem.Icon>
@@ -119,7 +119,7 @@
                     <MenuFlyoutItem.Icon>
                         <ImageIcon Source="/PelotonIDE/Assets/Icons/flag-france.png"/>
                     </MenuFlyoutItem.Icon>
-                </MenuFlyoutItem>
+                </MenuFlyoutItem>-->
             </MenuBarItem>
         </MenuBar>
 

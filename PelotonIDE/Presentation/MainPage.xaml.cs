@@ -18,19 +18,20 @@ namespace PelotonIDE.Presentation
     {
         readonly Dictionary<object, CustomRichEditBox> _richEditBoxes = new();
         bool outputPanelShowing = true;
-        enum IDELanguage
-        {
-            US_English,
-            Australian_English,
-            French
-        }
+        //enum IDELanguage
+        //{
+        //    US_English,
+        //    Australian_English,
+        //    French
+        //}
         enum OutputPanelPosition
         {
             Left,
             Bottom,
             Right
         }
-        IDELanguage currentLanguage = IDELanguage.US_English;
+        // IDELanguage currentLanguage = IDELanguage.US_English;
+        string currentLanguageName = "US English";
         OutputPanelPosition outputPosition = OutputPanelPosition.Bottom;
         public MainPage()
         {
@@ -48,6 +49,24 @@ namespace PelotonIDE.Presentation
             capsLock.Text = isCapsLocked ? "Caps Lock: On" : "Caps Lock: Off";
             numsLock.Text = isNumLocked ? "Num Lock: On" : "Num Lock: Off";
             App._window.Closed += mainWindow_Closed;
+            FillLanguages();
+        }
+
+        private async void FillLanguages()
+        {
+            var languageJsonFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\LanguageConfig.json"));
+            string languageJsonString = File.ReadAllText(languageJsonFile.Path);
+            var languageJson = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(languageJsonString);
+            foreach (string key in languageJson.Keys)
+            {
+                MenuFlyoutItem menuFlyoutItem = new()
+                {
+                    Name = key,
+                    Text = key
+                };
+                menuFlyoutItem.Click += Internationalisation_Click; // MenuFlyoutItem_Click;
+                InternationalisationBar.Items.Add(menuFlyoutItem);
+            }
         }
 
         /// <summary>
@@ -75,9 +94,9 @@ namespace PelotonIDE.Presentation
 
             if (localSettings.Values.ContainsKey("Language"))
             {
-                string savedLang = localSettings.Values["Language"] as string ?? "US_English";
-                currentLanguage = (IDELanguage)Enum.Parse(typeof(IDELanguage), savedLang);
-                HandleLanguageChange(currentLanguage);
+                string savedLang = localSettings.Values["Language"] as string ?? "US English";
+                //currentLanguageName = (IDELanguage)Enum.Parse(typeof(IDELanguage), savedLang);
+                HandleLanguageChange(savedLang);
             }
         }
 
@@ -90,7 +109,7 @@ namespace PelotonIDE.Presentation
             localSettings.Values["OutputPanelPosition"] = outputPosition.ToString();
             localSettings.Values["OutputHeight"] = outputPanel.Height;
             localSettings.Values["OutputWidth"] = outputPanel.Width;
-            localSettings.Values["Language"] = currentLanguage.ToString();
+            localSettings.Values["Language"] = currentLanguageName; // currentLanguage.ToString();
         }
 
         #region Event Handlers
@@ -324,21 +343,25 @@ namespace PelotonIDE.Presentation
             this.ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Arrow, 0));
         }
 
-        private void USEnglish_Click(object sender, RoutedEventArgs e)
-        {
-            HandleLanguageChange(IDELanguage.US_English);
-        }
+        //private void USEnglish_Click(object sender, RoutedEventArgs e)
+        //{
+        //    HandleLanguageChange(IDELanguage.US_English);
+        //}
 
-        private void AusEnglish_Click(object sender, RoutedEventArgs e)
-        {
-            HandleLanguageChange(IDELanguage.Australian_English);
-        }
+        //private void AusEnglish_Click(object sender, RoutedEventArgs e)
+        //{
+        //    HandleLanguageChange(IDELanguage.Australian_English);
+        //}
 
-        private void French_Click(object sender, RoutedEventArgs e)
-        {
-            HandleLanguageChange(IDELanguage.French);
-        }
+        //private void French_Click(object sender, RoutedEventArgs e)
+        //{
+        //    HandleLanguageChange(IDELanguage.French);
+        //}
 
+        private void Internationalisation_Click(object sender, RoutedEventArgs e)
+        {
+            HandleLanguageChange(((MenuFlyoutItem)sender).Name);
+        }
         #endregion
 
         #region Edit Handlers
@@ -730,13 +753,33 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        private async void HandleLanguageChange(IDELanguage lang)
+        private async void HandleLanguageChange(string langName)
         {
             var languageJsonFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\LanguageConfig.json"));
             string languageJsonString = File.ReadAllText(languageJsonFile.Path);
             var languageJson = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(languageJsonString);
-            var selectedLanguage = languageJson[lang.ToString()];
+            var selectedLanguage = languageJson[langName];
 
+            SetMenuText(selectedLanguage);
+
+            currentLanguageName = langName;
+            languageName.Text = "Language: " + currentLanguageName;
+        }
+
+        //private async void HandleLanguageChange(IDELanguage lang)
+        //{
+        //    var languageJsonFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\LanguageConfig.json"));
+        //    string languageJsonString = File.ReadAllText(languageJsonFile.Path);
+        //    var languageJson = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(languageJsonString);
+        //    var selectedLanguage = languageJson[lang.ToString()];
+
+        //    SetMenuText(selectedLanguage);
+
+        //    currentLanguage = lang;
+        //}
+
+        private void SetMenuText(Dictionary<string, string> selectedLanguage)
+        {
             fileBar.Title = selectedLanguage["File"];
             menuNew.Text = selectedLanguage["New"];
             menuOpen.Text = selectedLanguage["Open"];
@@ -750,6 +793,7 @@ namespace PelotonIDE.Presentation
             menuSelectAll.Text = selectedLanguage["SelectAll"];
             helpBar.Title = selectedLanguage["Help"];
             menuAbout.Text = selectedLanguage["About"];
+            InternationalisationBar.Title = selectedLanguage["Internationalization"];
 
             ToolTipService.SetToolTip(newFileButton, selectedLanguage["New"]);
             ToolTipService.SetToolTip(openFileButton, selectedLanguage["Open"]);
@@ -762,8 +806,7 @@ namespace PelotonIDE.Presentation
             ToolTipService.SetToolTip(selectAllButton, selectedLanguage["SelectAll"]);
             ToolTipService.SetToolTip(transformButton, selectedLanguage["Transform"]);
             ToolTipService.SetToolTip(toggleOutputButton, selectedLanguage["ToggleOutput"]);
-
-            currentLanguage = lang;
+            
         }
 
         private void HandleOutputPanelChange(OutputPanelPosition panelPos)

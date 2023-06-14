@@ -1,39 +1,43 @@
 {
-    "US_English": {
-        "File": "File",
-        "New": "New",
-        "Open": "Open",
-        "Save": "Save",
-        "SaveAs": "SaveAs",
-        "Close": "Close",
-        "Edit": "Edit",
-        "Copy": "Copy",
-        "Cut": "Cut",
-        "Paste": "Paste",
-        "SelectAll": "Select All",
-        "Help": "Help",
-        "About": "About",
-        "Transform": "Transform",
-        "ToggleOutput": "Toggle Output"
-    },
-    "Australian_English": {
-        "File": "File",
-        "New": "New",
-        "Open": "Open",
-        "Save": "Save",
-        "SaveAs": "SaveAs",
-        "Close": "Close",
-        "Edit": "Chop And Change",
-        "Copy": "Nick",
-        "Cut": "Slice",
-        "Paste": "Glue",
-        "SelectAll": "Grab",
-        "Help": "Help",
-        "About": "About",
-        "Transform": "Transform",
-        "ToggleOutput": "Toggle Output"
-    },
-  "French": {
+  "US English": {
+    "File": "File",
+    "New": "New",
+    "Open": "Open",
+    "Save": "Save",
+    "SaveAs": "SaveAs",
+    "Close": "Close",
+    "Edit": "Edit",
+    "Copy": "Copy",
+    "Cut": "Cut",
+    "Paste": "Paste",
+    "SelectAll": "Select All",
+    "Help": "Help",
+    "About": "About",
+    "Transform": "Transform",
+    "ToggleOutput": "Toggle Output",
+    "Internationalization": "Internationalization"
+
+  },
+  "Australian English": {
+    "File": "File",
+    "New": "New",
+    "Open": "Open",
+    "Save": "Save",
+    "SaveAs": "SaveAs",
+    "Close": "Close",
+    "Edit": "Chop And Change",
+    "Copy": "Nick",
+    "Cut": "Slice",
+    "Paste": "Glue",
+    "SelectAll": "Grab",
+    "Help": "Help",
+    "About": "About",
+    "Transform": "Transform",
+    "ToggleOutput": "Toggle Output",
+    "Internationalization": "Overseas"
+
+  },
+  "Français": {
     "File": "Fichier",
     "New": "Nouveau",
     "Open": "Ouvrir",
@@ -48,16 +52,18 @@
     "Help": "Aider",
     "About": "À propos",
     "Transform": "Transformer",
-    "ToggleOutput": "Basculer la Sortie"
+    "ToggleOutput": "Basculer la Sortie",
+    "Internationalization": "Internationalisation"
+
   },
-  "Urdu": {
+  "اردو": {
     "File": "دستاویز",
-    "New": "نئی.",
+    "New": "نئی",
     "Open": "کھلا",
     "Save": "محفوظ",
     "SaveAs": "ایسے محفوظ",
     "Close": "بند",
-    "Edit": "ترمیم.",
+    "Edit": "ترمیم",
     "Copy": "کاپی",
     "Cut": "کاٹ",
     "Paste": "پیسٹ",
@@ -65,6 +71,7 @@
     "Help": "مدد",
     "About": "کے بارے میں",
     "Transform": "تبدیل",
-    "ToggleOutput": "منظر بدل"
+    "ToggleOutput": "منظر بدل",
+    "Internationalization": "بین اقوامی"
   }
 }
