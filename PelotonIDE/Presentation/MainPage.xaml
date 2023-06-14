@@ -274,6 +274,7 @@
             <TextBlock Text="0 words" Margin="0,0,20,0" Name="wordCount"/>
             <TextBlock Text="Caps Lock: " Margin="0,0,30,0" Name="capsLock"/>
             <TextBlock Text="Num Lock: " Margin="0,0,30,0" Name="numsLock"/>
+            <TextBlock Text="Language: " Margin="0,0,30,0" Name="languageName"/>
         </StackPanel>
     </RelativePanel>
 </Page>

@@ -374,8 +374,10 @@ namespace PelotonIDE.Presentation
 
         private async void Open()
         {
-            FileOpenPicker open = new FileOpenPicker();
-            open.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+            FileOpenPicker open = new()
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+            };
             open.FileTypeFilter.Add(".pr");
             open.FileTypeFilter.Add(".p");
 
@@ -421,10 +423,9 @@ namespace PelotonIDE.Presentation
 
             if (navigationViewItem != null)
             {
-                if (navigationViewItem.IsNewFile == true)
+                if (navigationViewItem.IsNewFile)
                 {
-
-                    FileSavePicker savePicker = new FileSavePicker
+                    FileSavePicker savePicker = new()
                     {
                         SuggestedStartLocation = PickerLocationId.DocumentsLibrary
                     };
@@ -434,14 +435,7 @@ namespace PelotonIDE.Presentation
                     savePicker.FileTypeChoices.Add("UTF-8", new List<string>() { ".p" });
 
                     string? tabTitle = navigationViewItem.Content.ToString();
-                    if (tabTitle == null)
-                    {
-                        savePicker.SuggestedFileName = "New Document";
-                    }
-                    else
-                    {
-                        savePicker.SuggestedFileName = tabTitle;
-                    }
+                    savePicker.SuggestedFileName = tabTitle ?? "New Document";
 
                     // For Uno.WinUI-based apps
                     var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
@@ -450,7 +444,6 @@ namespace PelotonIDE.Presentation
                     StorageFile file = await savePicker.PickSaveFileAsync();
                     if (file != null)
                     {
-
                         CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
                         // Prevent updates to the remote version of the file until we
                         // finish making changes and call CompleteUpdatesAsync.
@@ -484,7 +477,7 @@ namespace PelotonIDE.Presentation
                         if (status != FileUpdateStatus.Complete)
                         {
                             Windows.UI.Popups.MessageDialog errorBox =
-                                new Windows.UI.Popups.MessageDialog("File " + file.Name + " couldn't be saved.");
+                                new($"File {file.Name} couldn't be saved.");
                             await errorBox.ShowAsync();
                         }
 
@@ -535,7 +528,7 @@ namespace PelotonIDE.Presentation
                         if (status != FileUpdateStatus.Complete)
                         {
                             Windows.UI.Popups.MessageDialog errorBox =
-                                new Windows.UI.Popups.MessageDialog("File " + file.Name + " couldn't be saved.");
+                                new("File " + file.Name + " couldn't be saved.");
                             await errorBox.ShowAsync();
                         }
                         CustomTabItem savedItem = (CustomTabItem)tabControl.SelectedItem;
@@ -557,8 +550,7 @@ namespace PelotonIDE.Presentation
 
             if (navigationViewItem != null)
             {
-
-                FileSavePicker savePicker = new FileSavePicker
+                FileSavePicker savePicker = new()
                 {
                     SuggestedStartLocation = PickerLocationId.DocumentsLibrary
                 };
@@ -576,14 +568,7 @@ namespace PelotonIDE.Presentation
                 }
 
                 string? tabTitle = navigationViewItem.Content.ToString();
-                if (tabTitle == null)
-                {
-                    savePicker.SuggestedFileName = "New Document";
-                }
-                else
-                {
-                    savePicker.SuggestedFileName = tabTitle;
-                }
+                savePicker.SuggestedFileName = tabTitle ?? "New Document";
 
                 // For Uno.WinUI-based apps
                 var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
@@ -626,7 +611,7 @@ namespace PelotonIDE.Presentation
                     if (status != FileUpdateStatus.Complete)
                     {
                         Windows.UI.Popups.MessageDialog errorBox =
-                            new Windows.UI.Popups.MessageDialog("File " + file.Name + " couldn't be saved.");
+                            new($"File {file.Name} couldn't be saved.");
                         await errorBox.ShowAsync();
                     }
                     CustomTabItem savedItem = (CustomTabItem)tabControl.SelectedItem;
@@ -713,14 +698,13 @@ namespace PelotonIDE.Presentation
             string settingsJson = System.Text.Json.JsonSerializer.Serialize(customRichEditBox.tabSettings);
 
             // Manipulate the RTF content
-            StringBuilder rtfBuilder = new StringBuilder(rtfContent);
+            StringBuilder rtfBuilder = new(rtfContent);
 
             // Add a \language section
             rtfBuilder.Insert(rtfBuilder.Length, settingsJson);
 
             // Write the modified RTF content back to the file
             File.WriteAllText(file.Path, rtfBuilder.ToString());
-
         }
 
         public void HandleCustomPropertyLoading(StorageFile file, CustomRichEditBox customRichEditBox)
@@ -728,7 +712,7 @@ namespace PelotonIDE.Presentation
             string modifiedRtfContent = File.ReadAllText(file.Path);
             int startIndex = modifiedRtfContent.LastIndexOf('{');
             int endIndex = modifiedRtfContent.Length;
-            string serializedObject = modifiedRtfContent.Substring(startIndex, endIndex - startIndex);
+            string serializedObject = modifiedRtfContent[startIndex..endIndex];
 
             try
             {
@@ -844,7 +828,6 @@ namespace PelotonIDE.Presentation
                 Canvas.SetTop(outputThumb, -4);
 
                 outputDockingFlyout.Hide();
-
             }
             else if (panelPos == OutputPanelPosition.Right)
             {
