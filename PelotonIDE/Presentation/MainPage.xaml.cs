@@ -28,6 +28,8 @@ namespace PelotonIDE.Presentation
         string currentLanguageName = "US English";
         int currentLanguageId = 101;
         OutputPanelPosition outputPosition = OutputPanelPosition.Bottom;
+        string pelotonEXE = string.Empty;
+
         public MainPage()
         {
             this.InitializeComponent();
@@ -92,6 +94,12 @@ namespace PelotonIDE.Presentation
                 string savedLang = localSettings.Values["Language"] as string ?? "US English";
                 HandleLanguageChange(savedLang);
             }
+
+            if (localSettings.Values.ContainsKey("PelotonEXE"))
+            {
+                pelotonEXE = localSettings.Values["PelotonEXE"] as string ?? @"c:\protium\bin\pdb.exe";
+            }
+
         }
 
         /// <summary>
@@ -104,12 +112,14 @@ namespace PelotonIDE.Presentation
             localSettings.Values["OutputHeight"] = outputPanel.Height;
             localSettings.Values["OutputWidth"] = outputPanel.Width;
             localSettings.Values["Language"] = currentLanguageName; // currentLanguage.ToString();
+            localSettings.Values["PelotonEXE"] = pelotonEXE;
         }
 
         #region Event Handlers
 
         private void RichEditBox_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
         {
+            Debug.WriteLine($"{e.Key}");
             if (e.Key == VirtualKey.CapitalLock)
             {
                 var isCapsLocked = Console.CapsLock;
@@ -123,7 +133,7 @@ namespace PelotonIDE.Presentation
             if (tabControl.Content is CustomRichEditBox currentRichEditBox)
             {
                 currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string text);
-                wordCount.Text = text.Split(' ').Length - 1 + " words";
+                //wordCount.Text = text.Split(' ').Length - 1 + " words";
                 int caretPosition = currentRichEditBox.Document.Selection.StartPosition;
                 int lineNumber = 1;
                 int charNumber = 0;
@@ -255,14 +265,14 @@ namespace PelotonIDE.Presentation
             outputPanelShowing = !outputPanelShowing;
         }
 
-        private void RunCodeButton_Click(Object sender, RoutedEventArgs e)
+        private void RunCodeButton_Click(object sender, RoutedEventArgs e)
         {
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
             currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string selectedText);
             selectedText = selectedText.TrimEnd('\r');
 
-            (string stdOut, string stdErr) = RunPeloton(@"C:\protium\bin\pdb.exe", $"/Q=1 /L={currentLanguageId}", selectedText);
+            (string stdOut, string stdErr) = RunPeloton(pelotonEXE, $"/Q=1 /L={currentLanguageId}", selectedText);
 
             Run run = new();
             Paragraph paragraph = new();
@@ -927,7 +937,8 @@ namespace PelotonIDE.Presentation
                 FileName = pelotonPath,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
-                RedirectStandardError = true
+                RedirectStandardError = true,
+                WindowStyle = ProcessWindowStyle.Hidden
             };
 
             var theProcess = Process.Start(startInfo);

@@ -248,7 +248,7 @@
                         <Border Background="LightGray" Margin="0" Padding="0">
                             <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto"
                                           HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto">
-                                <RichTextBlock x:Name="outputText">
+                                <RichTextBlock x:Name="outputText" IsTextSelectionEnabled="True" >
                                     <Paragraph>
 
                                     </Paragraph>
@@ -260,7 +260,7 @@
                         <Border Background="LightGray" Margin="0" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                             <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto"
                                           HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto">
-                                <RichTextBlock x:Name="errorText">
+                                <RichTextBlock x:Name="errorText" IsTextSelectionEnabled="True" >
                                     <Paragraph>
 
                                     </Paragraph>
@@ -273,7 +273,7 @@
         </Canvas>
         <StackPanel x:Name="statusBar" RelativePanel.AlignBottomWithPanel="True" Orientation="Horizontal">
             <TextBlock Text="Line 1, Char 0" Margin="10,0,40,0" Name="cursorPosition"/>
-            <TextBlock Text="0 words" Margin="0,0,20,0" Name="wordCount"/>
+            <!--<TextBlock Text="0 words" Margin="0,0,20,0" Name="wordCount"/>-->
             <TextBlock Text="Caps Lock: " Margin="0,0,30,0" Name="capsLock"/>
             <TextBlock Text="Num Lock: " Margin="0,0,30,0" Name="numsLock"/>
             <TextBlock Text="Language: " Margin="0,0,30,0" Name="languageName"/>

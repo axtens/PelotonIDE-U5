@@ -7,7 +7,7 @@
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="D8A18375-128D-423F-8BA5-EC2A659A4664"
+    Name="PelotonProjectMultilingualIDE"
     Publisher="O=PelotonIDE"
     Version="1.0.0.0" />
 
@@ -33,6 +33,7 @@
         DisplayName="PelotonIDE"
         Description="PelotonIDE">
         <uap:SplashScreen BackgroundColor="#086AD1"/>
+        <uap:DefaultTile/>
       </uap:VisualElements>
     </Application>
   </Applications>
