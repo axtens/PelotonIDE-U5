@@ -72,12 +72,17 @@ namespace PelotonIDE.Presentation
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+            string outputPos;
             if (localSettings.Values.ContainsKey("OutputPanelPosition"))
             {
-                string outputPos = localSettings.Values["OutputPanelPosition"] as string ?? "Bottom";
-                outputPosition = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), outputPos);
-                HandleOutputPanelChange(outputPosition);
+                outputPos = localSettings.Values["OutputPanelPosition"] as string ?? "Bottom";
+            } 
+            else
+            {
+                outputPos = "Bottom";
             }
+            outputPosition = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), outputPos);
+            HandleOutputPanelChange(outputPosition);
 
             if (localSettings.Values.ContainsKey("OutputHeight"))
             {
@@ -97,7 +102,12 @@ namespace PelotonIDE.Presentation
 
             if (localSettings.Values.ContainsKey("PelotonEXE"))
             {
-                pelotonEXE = localSettings.Values["PelotonEXE"] as string ?? @"c:\protium\bin\pdb.exe";
+                var exe = localSettings.Values["PelotonEXE"] as string;
+                pelotonEXE = string.IsNullOrEmpty(exe) ? @"c:\protium\bin\pdb.exe" : exe;
+            } 
+            else
+            {
+                pelotonEXE = @"c:\protium\bin\pdb.exe";
             }
 
         }

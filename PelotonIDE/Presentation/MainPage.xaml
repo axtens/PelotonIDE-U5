@@ -185,10 +185,16 @@
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE92F;"  />
             </Button.Content>
         </Button>
-        <Button x:Name="runCodeButton" AutomationProperties.Name="Run Code" ToolTipService.ToolTip="Run Code"
+        <!--<Button x:Name="runCodeButton" AutomationProperties.Name="Run Code" ToolTipService.ToolTip="Run Code"
                 RelativePanel.RightOf="toggleOutputButton" RelativePanel.Below="menuBar" Click="RunCodeButton_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE73E;"/>
+            </Button.Content>
+        </Button>-->
+        <Button x:Name="runCodeButton" AutomationProperties.Name="Run Code" ToolTipService.ToolTip="Run Code"
+                RelativePanel.RightOf="toggleOutputButton" RelativePanel.Below="menuBar" Click="RunCodeButton_Click" Background="DarkGreen" Foreground="White">
+            <Button.Content>
+                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE73E;" FontWeight="ExtraBold" />
             </Button.Content>
         </Button>
 
@@ -245,7 +251,7 @@
                 </TabView.TabStripFooter>
                 <TabView.TabItems>
                     <TabViewItem Header="Output" IsSelected="True" IsClosable="False" Background="DarkGray" Foreground="White">
-                        <Border Background="LightGray" Margin="0" Padding="0">
+                        <Border Background="LightGray" Margin="5" Padding="0">
                             <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto"
                                           HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto">
                                 <RichTextBlock x:Name="outputText" IsTextSelectionEnabled="True" >
@@ -257,7 +263,7 @@
                         </Border>
                     </TabViewItem>
                     <TabViewItem Header="Error" IsClosable="False" Background="DarkGray" Foreground="White">
-                        <Border Background="LightGray" Margin="0" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                        <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                             <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto"
                                           HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto">
                                 <RichTextBlock x:Name="errorText" IsTextSelectionEnabled="True" >

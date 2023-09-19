@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net7.0-windows10.0.19041.0</TargetFramework>
@@ -16,6 +16,18 @@
 		<!-- This bundles the .NET Core libraries (Uncomment for packaged builds)  -->
 		<SelfContained>true</SelfContained>
 		<UseWPF>False</UseWPF>
+		<GenerateAppInstallerFile>True</GenerateAppInstallerFile>
+		<AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+		<AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
+		<GenerateTestArtifacts>True</GenerateTestArtifacts>
+		<AppxBundle>Always</AppxBundle>
+		<AppxBundlePlatforms>x64</AppxBundlePlatforms>
+		<AppInstallerUri>c:\temp\pi</AppInstallerUri>
+		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
+		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+		<PackageCertificateThumbprint>2CB45DDA66A114860391D05C4132C58DD59D9FEB</PackageCertificateThumbprint>
+		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+		<AppxPackageSigningTimestampServerUrl>https://timestamp.comodoca.com</AppxPackageSigningTimestampServerUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -69,4 +81,8 @@
 	</ItemGroup>
 
 	<Import Project="..\PelotonIDE.Base\base.props" />
+
+	<ItemGroup>
+	  <SourceGeneratorInput Remove="PelotonIDE.Windows_TemporaryKey.pfx" />
+	</ItemGroup>
 </Project>
