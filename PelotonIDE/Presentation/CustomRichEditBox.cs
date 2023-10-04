@@ -24,6 +24,7 @@ namespace PelotonIDE.Presentation
             isRTF = true;
             SelectionFlyout = null;
             ContextFlyout = null;
+            
         }
 
         protected override void OnKeyDown(KeyRoutedEventArgs e)

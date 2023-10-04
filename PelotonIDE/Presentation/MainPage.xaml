@@ -201,7 +201,7 @@
         <NavigationView x:Name="tabControl" PaneDisplayMode="Top" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" RelativePanel.Below="selectAllButton" RelativePanel.AlignLeftWithPanel="True"
                  RelativePanel.AlignRightWithPanel="True"  RelativePanel.Above="outputPanel" SelectionChanged="TabControl_SelectionChanged">
             <NavigationView.MenuItems>
-                <local:CustomTabItem x:Name="tab1" Content="Tab 1" Tag="Tab1" IsNewFile="True"/>
+                <local:CustomTabItem x:Name="tab1" Content="Tab 1" Tag="Tab1" IsNewFile="True" Background="DarkGray" Foreground="White" />
             </NavigationView.MenuItems>
         </NavigationView>
         <Canvas x:Name="outputPanel" RelativePanel.Above="statusBar" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" 

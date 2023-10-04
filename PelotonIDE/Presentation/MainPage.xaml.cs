@@ -12,6 +12,7 @@ using Windows.UI.Core;
 using Newtonsoft.Json;
 using System.Text;
 using Microsoft.UI.Xaml.Documents;
+using Windows.UI;
 
 namespace PelotonIDE.Presentation
 {
@@ -33,11 +34,14 @@ namespace PelotonIDE.Presentation
         public MainPage()
         {
             this.InitializeComponent();
+
             CustomRichEditBox richEditBox = new()
             {
-                Tag = "Tab1"
+                Tag = "Tab1",
+                Background = new SolidColorBrush(new Color() { A = 0xFF, R = 0xf9, G = 0xf8, B = 0xbd }),
             };
             richEditBox.KeyDown += RichEditBox_KeyDown;
+            // richEditBox.Background = 
             tabControl.Content = richEditBox;
             _richEditBoxes[richEditBox.Tag] = richEditBox;
             tabControl.SelectedItem = tab1;
@@ -406,13 +410,16 @@ namespace PelotonIDE.Presentation
 
         private void CreateNewRichEditBox()
         {
-            CustomRichEditBox richEditBox = new();
+            CustomRichEditBox richEditBox = new()
+            {
+                Background = new SolidColorBrush(Color.FromArgb(0xff, 0xf9, 0xf8, 0xbd))
+            };
             richEditBox.KeyDown += RichEditBox_KeyDown;
             CustomTabItem navigationViewItem = new()
             {
                 Content = "Tab " + (tabControl.MenuItems.Count + 1),
                 Tag = "Tab" + (tabControl.MenuItems.Count + 1),
-                IsNewFile = true,
+                IsNewFile = true
             };
             richEditBox.Tag = navigationViewItem.Tag;
             tabControl.Content = richEditBox;
