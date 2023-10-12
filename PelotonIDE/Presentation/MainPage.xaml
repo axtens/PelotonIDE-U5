@@ -113,8 +113,22 @@
                         <FontIcon  FontFamily="Segoe MDL2 Assets" Glyph="&#xE73E;" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="runSelectedCode" Text="Run Selected Code" Click="RunSelectedCodeButton_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="F5" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
             </MenuBarItem>
-            <MenuBarItem Title="Source" BorderBrush="LightGray"  BorderThickness="1" x:Name="SourceBar" />
+            <MenuBarItem Title="Source" BorderBrush="LightGray"  BorderThickness="1" x:Name="SourceBar">
+                <MenuFlyoutItem x:Name="makeProtiumStructure" Text="Insert Code Template" Click="InsertCodeTemplate_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="None" Key="F2" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon  FontFamily="Segoe MDL2 Assets" Glyph="&#xE73E;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+            </MenuBarItem>
             <MenuBarItem Title="Settings" BorderBrush="LightGray"  BorderThickness="1" x:Name="SettingsBar" />
             <MenuBarItem Title="Window" BorderBrush="LightGray"  BorderThickness="1" x:Name="WindowBar" />
 

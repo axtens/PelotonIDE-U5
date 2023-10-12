@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using System.Text;
 using Microsoft.UI.Xaml.Documents;
 using Windows.UI;
+using Microsoft.UI.Text;
 
 namespace PelotonIDE.Presentation
 {
@@ -279,6 +280,23 @@ namespace PelotonIDE.Presentation
             outputPanelShowing = !outputPanelShowing;
         }
 
+        // InsertCodeTemplate_Click
+
+        private void InsertCodeTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+            var selection = currentRichEditBox.Document.Selection;
+            if (selection != null)
+            {
+                selection.StartPosition = selection.EndPosition;
+                selection.Text = "<@ ></@>";
+                selection.EndPosition = selection.StartPosition;
+                currentRichEditBox.Document.Selection.Move(TextRangeUnit.Character, 3);
+            }
+
+        }
+
         private void RunCodeButton_Click(object sender, RoutedEventArgs e)
         {
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
@@ -303,6 +321,39 @@ namespace PelotonIDE.Presentation
                 paragraph.Inlines.Add(run);
                 errorText.Blocks.Add(paragraph);
             }
+        }
+
+        private void RunSelectedCodeButton_Click(object sender, RoutedEventArgs e)
+        {
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+            var selection = currentRichEditBox.Document.Selection;
+            //currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string selectedText);
+            //selectedText = selectedText.TrimEnd('\r');
+
+            string selectedText = selection.Text;
+            selectedText.TrimEnd('\r');
+            if (selection.Text.Length > 0)
+            {
+                (string stdOut, string stdErr) = RunPeloton(pelotonEXE, $"/Q=1 /L={currentLanguageId}", selectedText);
+
+                Run run = new();
+                Paragraph paragraph = new();
+
+                if (!string.IsNullOrEmpty(stdOut))
+                {
+                    run.Text = stdOut;
+                    paragraph.Inlines.Add(run);
+                    outputText.Blocks.Add(paragraph);
+                }
+                if (!string.IsNullOrEmpty(stdErr))
+                {
+                    run.Text = stdErr;
+                    paragraph.Inlines.Add(run);
+                    errorText.Blocks.Add(paragraph);
+                }
+            }
+
         }
 
         private void HelpAbout_Click(object sender, RoutedEventArgs e)
