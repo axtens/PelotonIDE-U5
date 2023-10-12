@@ -101,12 +101,19 @@
             </MenuBarItem>
 
 
-
-
             <MenuBarItem Title="Search" BorderBrush="LightGray"  BorderThickness="1" x:Name="SearchBar" />
             <MenuBarItem Title="Format" BorderBrush="LightGray"  BorderThickness="1" x:Name="FormatBar" />
             <MenuBarItem Title="View" BorderBrush="LightGray"  BorderThickness="1" x:Name="ViewBar" />
-            <MenuBarItem Title="Interpreter" BorderBrush="LightGray"  BorderThickness="1" x:Name="InterpreterBar" />
+            <MenuBarItem Title="Interpreter" BorderBrush="LightGray"  BorderThickness="1" x:Name="InterpreterBar" >
+                <MenuFlyoutItem x:Name="runCode" Text="Run Code" Click="RunCodeButton_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="None" Key="F5" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon  FontFamily="Segoe MDL2 Assets" Glyph="&#xE73E;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+            </MenuBarItem>
             <MenuBarItem Title="Source" BorderBrush="LightGray"  BorderThickness="1" x:Name="SourceBar" />
             <MenuBarItem Title="Settings" BorderBrush="LightGray"  BorderThickness="1" x:Name="SettingsBar" />
             <MenuBarItem Title="Window" BorderBrush="LightGray"  BorderThickness="1" x:Name="WindowBar" />
