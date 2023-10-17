@@ -14,6 +14,7 @@ using System.Text;
 using Microsoft.UI.Xaml.Documents;
 using Windows.UI;
 using Microsoft.UI.Text;
+using LanguageConfigJson = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, string>>>;
 
 namespace PelotonIDE.Presentation
 {
@@ -27,15 +28,16 @@ namespace PelotonIDE.Presentation
             Bottom,
             Right
         }
-        string currentLanguageName = "US English";
-        int currentLanguageId = 101;
+        string currentLanguageName = "English";
+        int currentLanguageId = 0;
         OutputPanelPosition outputPosition = OutputPanelPosition.Bottom;
         string pelotonEXE = string.Empty;
 
         public MainPage()
         {
-            this.InitializeComponent();
 
+            this.InitializeComponent();
+            GetGlobals();
             CustomRichEditBox richEditBox = new()
             {
                 Tag = "Tab1",
@@ -54,12 +56,36 @@ namespace PelotonIDE.Presentation
             FillLanguages();
         }
 
+        private async void GetGlobals()
+        {
+            var globalSettings = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\GlobalSettings.json"));
+            string globalSettingsString = File.ReadAllText(globalSettings.Path);
+            var global = JsonConvert.DeserializeObject<Dictionary<string, object>>(globalSettingsString);
+            outputPanelShowing = (bool)global["OutputPanelShowing"];
+            currentLanguageName = global["Language"].ToString() ?? "English";
+            currentLanguageId = (int)(long)global["LanguageID"];
+            Enum.TryParse(global["OutputPanelPosition"].ToString(), out outputPosition);
+            pelotonEXE = global["PelotonEXE"].ToString() ?? "C:\\protium\\bin\\pdb.exe";
+        }
         private async void FillLanguages()
         {
             var languageJsonFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\LanguageConfig.json"));
             string languageJsonString = File.ReadAllText(languageJsonFile.Path);
-            var languageJson = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(languageJsonString);
-            foreach (string key in languageJson.Keys)
+            var languageJson = JsonConvert.DeserializeObject<LanguageConfigJson>(languageJsonString);
+            var items = new List<MenuFlyoutSubItem>();
+
+            foreach (var key in languageJson.Keys)
+            {
+                MenuFlyoutSubItem menuFlyoutSubItem = new()
+                {
+                    Name = key,
+                    Text = languageJson[key]["GLOBAL"]["ID"]
+                };
+                items.Add(menuFlyoutSubItem);
+            }
+            // SettingsBar_InterfaceLanguage.ContextFlyout = items;
+            SettingsBar_InterfaceLanguage.Click += Internationalization_Click;
+            /*foreach (string key in languageJson.Keys)
             {
                 MenuFlyoutItem menuFlyoutItem = new()
                 {
@@ -68,7 +94,7 @@ namespace PelotonIDE.Presentation
                 };
                 menuFlyoutItem.Click += Internationalization_Click; // MenuFlyoutItem_Click;
                 InternationalisationBar.Items.Add(menuFlyoutItem);
-            }
+            }*/
         }
 
         /// <summary>
@@ -77,11 +103,11 @@ namespace PelotonIDE.Presentation
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-            string outputPos;
+            /*string outputPos;
             if (localSettings.Values.ContainsKey("OutputPanelPosition"))
             {
                 outputPos = localSettings.Values["OutputPanelPosition"] as string ?? "Bottom";
-            } 
+            }
             else
             {
                 outputPos = "Bottom";
@@ -101,7 +127,7 @@ namespace PelotonIDE.Presentation
 
             if (localSettings.Values.ContainsKey("Language"))
             {
-                string savedLang = localSettings.Values["Language"] as string ?? "US English";
+                string savedLang = localSettings.Values["Language"] as string ?? "English";
                 HandleLanguageChange(savedLang);
             }
 
@@ -109,12 +135,12 @@ namespace PelotonIDE.Presentation
             {
                 var exe = localSettings.Values["PelotonEXE"] as string;
                 pelotonEXE = string.IsNullOrEmpty(exe) ? @"c:\protium\bin\pdb.exe" : exe;
-            } 
+            }
             else
             {
                 pelotonEXE = @"c:\protium\bin\pdb.exe";
             }
-
+            */
         }
 
         /// <summary>
@@ -122,12 +148,23 @@ namespace PelotonIDE.Presentation
         /// </summary>
         private void MainWindow_Closed(object sender, object e)
         {
-            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+            /*ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
             localSettings.Values["OutputPanelPosition"] = outputPosition.ToString();
             localSettings.Values["OutputHeight"] = outputPanel.Height;
             localSettings.Values["OutputWidth"] = outputPanel.Width;
             localSettings.Values["Language"] = currentLanguageName; // currentLanguage.ToString();
             localSettings.Values["PelotonEXE"] = pelotonEXE;
+            */
+            var jsonFile = new Uri("ms-appx:///PelotonIDE\\Presentation\\GlobalSettings.json").AbsolutePath;
+            var json = JsonConvert.DeserializeObject<JSONGlobalSettings>(File.ReadAllText(jsonFile));
+            json.Language = currentLanguageName;
+            json.LanguageID = currentLanguageId;
+            json.OutputPanelPosition = outputPosition.ToString();
+            json.PelotonEXE = pelotonEXE.ToString();
+            json.OutputHeight = (int)outputPanel.Height;
+            json.OutputWidth = (int)outputPanel.Width;
+            json.OutputPanelShowing = outputPanelShowing;
+            File.WriteAllText(jsonFile, JsonConvert.SerializeObject(json));
         }
 
         #region Event Handlers
@@ -297,6 +334,21 @@ namespace PelotonIDE.Presentation
 
         }
 
+        private void InsertVariableLengthCodeTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+            var selection = currentRichEditBox.Document.Selection;
+            if (selection != null)
+            {
+                selection.StartPosition = selection.EndPosition;
+                selection.Text = "<# ></#>";
+                selection.EndPosition = selection.StartPosition;
+                currentRichEditBox.Document.Selection.Move(TextRangeUnit.Character, 3);
+            }
+
+        }
+
         private void RunCodeButton_Click(object sender, RoutedEventArgs e)
         {
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
@@ -453,7 +505,7 @@ namespace PelotonIDE.Presentation
 
         private void Internationalization_Click(object sender, RoutedEventArgs e)
         {
-            HandleLanguageChange(((MenuFlyoutItem)sender).Name);
+            HandleLanguageChange(currentLanguageName /*((MenuFlyoutItem)sender).Name */);
         }
         #endregion
 
@@ -852,51 +904,51 @@ namespace PelotonIDE.Presentation
         {
             var languageJsonFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\LanguageConfig.json"));
             string languageJsonString = File.ReadAllText(languageJsonFile.Path);
-            var languageJson = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(languageJsonString);
+            var languageJson = JsonConvert.DeserializeObject<LanguageConfigJson>(languageJsonString);
             var selectedLanguage = languageJson[langName];
 
-            SetMenuText(selectedLanguage);
-
-            currentLanguageName = langName;
-            currentLanguageId = int.Parse(selectedLanguage["ID"]);
+            SetMenuText(selectedLanguage["frmMain"]);
+            var selLang = selectedLanguage["GLOBAL"]["153"];
+            currentLanguageName = selLang == langName ? $"{langName}" : $"{langName} - {selLang}";
+            currentLanguageId = int.Parse(selectedLanguage["GLOBAL"]["ID"]);
             languageName.Text = "Language: " + currentLanguageName;
         }
 
         private void SetMenuText(Dictionary<string, string> selectedLanguage)
         {
-            fileBar.Title = selectedLanguage["File"];
-            menuNew.Text = selectedLanguage["New"];
-            menuOpen.Text = selectedLanguage["Open"];
-            menuSave.Text = selectedLanguage["Save"];
-            menuSaveAs.Text = selectedLanguage["SaveAs"];
-            menuClose.Text = selectedLanguage["Close"];
-            editBar.Title = selectedLanguage["Edit"];
-            menuCopy.Text = selectedLanguage["Copy"];
-            menuCut.Text = selectedLanguage["Cut"];
-            menuPaste.Text = selectedLanguage["Paste"];
-            menuSelectAll.Text = selectedLanguage["SelectAll"];
-            helpBar.Title = selectedLanguage["Help"];
-            menuAbout.Text = selectedLanguage["About"];
-            SearchBar.Title = selectedLanguage["Search"];
-            FormatBar.Title = selectedLanguage["Format"];
-            ViewBar.Title = selectedLanguage["View"];
-            InterpreterBar.Title = selectedLanguage["Interpreter"];
-            SourceBar.Title = selectedLanguage["Source"];
-            SettingsBar.Title = selectedLanguage["Settings"];
-            WindowBar.Title = selectedLanguage["Window"];
+            fileBar.Title = selectedLanguage["mnuFile"];
+            menuNew.Text = selectedLanguage["mnuNew"];
+            menuOpen.Text = selectedLanguage["mnuOpen"];
+            menuSave.Text = selectedLanguage["mnuSave"];
+            menuSaveAs.Text = selectedLanguage["mnuSaveAs"];
+            menuClose.Text = selectedLanguage["mnuClose"];
+            editBar.Title = selectedLanguage["mnuEdit"];
+            menuCopy.Text = selectedLanguage["mnuCopy"];
+            menuCut.Text = selectedLanguage["mnuCut"];
+            menuPaste.Text = selectedLanguage["mnuPaste"];
+            menuSelectAll.Text = selectedLanguage["mnuDeselect"]; // select all not in original system
+            helpBar.Title = selectedLanguage["mnuHelp"];
+            menuAbout.Text = selectedLanguage["mnuHelpAbout"];
+            SearchBar.Title = selectedLanguage["mnuSearch"];
+            FormatBar.Title = selectedLanguage["mnuFormat"];
+            ViewBar.Title = selectedLanguage["mnuView"];
+            InterpreterBar.Title = selectedLanguage["mnuRun"];
+            SourceBar.Title = selectedLanguage["mnuSource"];
+            SettingsBar.Title = selectedLanguage["mnuSettings"];
+            WindowBar.Title = selectedLanguage["mnuWindow"];
 
-            ToolTipService.SetToolTip(newFileButton, selectedLanguage["New"]);
-            ToolTipService.SetToolTip(openFileButton, selectedLanguage["Open"]);
-            ToolTipService.SetToolTip(saveFileButton, selectedLanguage["Save"]);
-            ToolTipService.SetToolTip(saveAsFileButton, selectedLanguage["SaveAs"]);
-            ToolTipService.SetToolTip(closeFileButton, selectedLanguage["Close"]);
-            ToolTipService.SetToolTip(copyButton, selectedLanguage["Copy"]);
-            ToolTipService.SetToolTip(cutButton, selectedLanguage["Cut"]);
-            ToolTipService.SetToolTip(pasteButton, selectedLanguage["Paste"]);
-            ToolTipService.SetToolTip(selectAllButton, selectedLanguage["SelectAll"]);
-            ToolTipService.SetToolTip(transformButton, selectedLanguage["Transform"]);
-            ToolTipService.SetToolTip(toggleOutputButton, selectedLanguage["ToggleOutput"]);
-            ToolTipService.SetToolTip(runCodeButton, selectedLanguage["RunCode"]);
+            ToolTipService.SetToolTip(newFileButton, selectedLanguage["mnuNew"]);
+            ToolTipService.SetToolTip(openFileButton, selectedLanguage["mnuOpen"]);
+            ToolTipService.SetToolTip(saveFileButton, selectedLanguage["mnuSave"]);
+            ToolTipService.SetToolTip(saveAsFileButton, selectedLanguage["mnuSaveAs"]);
+            ToolTipService.SetToolTip(closeFileButton, selectedLanguage["mnuClose"]);
+            ToolTipService.SetToolTip(copyButton, selectedLanguage["mnuCopy"]);
+            ToolTipService.SetToolTip(cutButton, selectedLanguage["mnuCut"]);
+            ToolTipService.SetToolTip(pasteButton, selectedLanguage["mnuPaste"]);
+            ToolTipService.SetToolTip(selectAllButton, selectedLanguage["mnuDeselect"]);
+            // ToolTipService.SetToolTip(transformButton, selectedLanguage["mnuTransform"]);
+            // ToolTipService.SetToolTip(toggleOutputButton, selectedLanguage["mnuToggleOutput"]);
+            //ToolTipService.SetToolTip(runCodeButton, selectedLanguage["mnuRunCode"]);
         }
 
         private void HandleOutputPanelChange(OutputPanelPosition panelPos)

@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace PelotonIDE.Presentation
+{
+    public class JSONGlobalSettings
+    {
+        public string? Language { get; set; }
+        public int LanguageID { get; set; }
+        public string? OutputPanelPosition { get; set; }
+        public string? DefaultTabBackground { get; set; }
+        public string? PelotonEXE { get; set; }
+        public string? PelotonCMDLine { get; set; }
+        public int OutputHeight { get; set; }
+        public int OutputWidth { get; set; }
+        public bool OutputPanelShowing { get; set; }
+    }
+}

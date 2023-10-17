@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows')) or '$(EnableWindowsTargeting)' == 'true'">$(TargetFrameworks);net7.0-windows10.0.19041</TargetFrameworks>
 		<TargetFrameworks>$(TargetFrameworks);net7.0;net7.0-maccatalyst</TargetFrameworks>
@@ -78,6 +78,7 @@
 
 	<ItemGroup>
 	  <None Remove="Presentation\DialogContentPage.xaml" />
+	  <None Remove="Presentation\GlobalSettings.json" />
 	  <None Remove="Presentation\LanguageConfig.json" />
 	</ItemGroup>
 
@@ -86,6 +87,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Content Include="Presentation\GlobalSettings.json" />
 	  <Content Include="Presentation\LanguageConfig.json" />
 	</ItemGroup>
 </Project>

@@ -120,19 +120,28 @@
                 </MenuFlyoutItem>
             </MenuBarItem>
             <MenuBarItem Title="Source" BorderBrush="LightGray"  BorderThickness="1" x:Name="SourceBar">
-                <MenuFlyoutItem x:Name="makeProtiumStructure" Text="Insert Code Template" Click="InsertCodeTemplate_Click">
-                    <MenuFlyoutItem.KeyboardAccelerators>
-                        <KeyboardAccelerator Modifiers="None" Key="F2" />
-                    </MenuFlyoutItem.KeyboardAccelerators>
-                    <MenuFlyoutItem.Icon>
-                        <FontIcon  FontFamily="Segoe MDL2 Assets" Glyph="&#xE73E;" />
-                    </MenuFlyoutItem.Icon>
-                </MenuFlyoutItem>
+                <!-- <MenuFlyoutItem Text="Code templates" BorderBrush="LightGray" BorderThickness="1" x:Name="SourceBar_CodeTemplates">
+                    -->
+                <MenuFlyoutItem x:Name="makeProtiumStructure" Text="Make protium structure" Click="InsertCodeTemplate_Click">
+                        <MenuFlyoutItem.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="None" Key="F2" />
+                        </MenuFlyoutItem.KeyboardAccelerators>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem x:Name="makeProtiumVariableLengthStructure" Text="Make variable length" Click="InsertVariableLengthCodeTemplate_Click">
+                        <MenuFlyoutItem.KeyboardAccelerators>
+                            <KeyboardAccelerator Modifiers="None" Key="F3" />
+                        </MenuFlyoutItem.KeyboardAccelerators>
+                    </MenuFlyoutItem>
+                <!-- </MenuFlyoutItem>
+                -->
             </MenuBarItem>
-            <MenuBarItem Title="Settings" BorderBrush="LightGray"  BorderThickness="1" x:Name="SettingsBar" />
+            <MenuBarItem Title="Settings" BorderBrush="LightGray"  BorderThickness="1" x:Name="SettingsBar" >
+                <MenuFlyoutItem Text="Choose interface language" BorderBrush="LightGray" BorderThickness="1" x:Name="SettingsBar_InterfaceLanguage" />
+            </MenuBarItem>
+
             <MenuBarItem Title="Window" BorderBrush="LightGray"  BorderThickness="1" x:Name="WindowBar" />
 
-            <MenuBarItem Title="Internationalisation" BorderBrush="LightGray"  BorderThickness="1" x:Name="InternationalisationBar" />
+            <!-- <MenuBarItem Title="Internationalisation" BorderBrush="LightGray"  BorderThickness="1" x:Name="InternationalisationBar" />-->
 
             <MenuBarItem x:Name="helpBar" Title="Help" BorderBrush="LightGray"  BorderThickness="1">
                 <MenuFlyoutItem x:Name="menuAbout" Text="About" Click="HelpAbout_Click" />
