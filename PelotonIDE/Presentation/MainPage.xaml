@@ -118,6 +118,11 @@
                         <KeyboardAccelerator Modifiers="Control" Key="F5" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
+                <MenuFlyoutSubItem Text="Running Mode">
+                    <MenuFlyoutItem Text="Quiet"/>
+                    <MenuFlyoutItem Text="Verbose"/>
+                    <MenuFlyoutItem Text="Verbose, with pause"/>
+                </MenuFlyoutSubItem>
             </MenuBarItem>
             <MenuBarItem Title="Source" BorderBrush="LightGray"  BorderThickness="1" x:Name="SourceBar">
                 <MenuFlyoutItem x:Name="makeProtiumStructure" Text="Insert Code Template" Click="InsertCodeTemplate_Click">
@@ -217,6 +222,16 @@
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE73E;" FontWeight="ExtraBold" />
             </Button.Content>
+            <Button.Resources>
+                <ResourceDictionary>
+                    <ResourceDictionary.ThemeDictionaries>
+                        <ResourceDictionary x:Key="Light">
+                            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White"/>
+                            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="DarkGreen"/>
+                        </ResourceDictionary>
+                    </ResourceDictionary.ThemeDictionaries>
+                </ResourceDictionary>
+            </Button.Resources>
         </Button>
 
         <NavigationView x:Name="tabControl" PaneDisplayMode="Top" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" RelativePanel.Below="selectAllButton" RelativePanel.AlignLeftWithPanel="True"
