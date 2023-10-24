@@ -470,9 +470,7 @@ namespace PelotonIDE.Presentation
             {
                 Content = "Tab " + (tabControl.MenuItems.Count + 1),
                 Tag = "Tab" + (tabControl.MenuItems.Count + 1),
-                IsNewFile = true,
-                Background = new SolidColorBrush(Color.FromArgb(0xff, 0xf9, 0xf8, 0xbd)),
-                Foreground = new SolidColorBrush(Color.FromArgb(0xff, 0xf9, 0xf8, 0xbd))
+                IsNewFile = true
             };
             richEditBox.Tag = navigationViewItem.Tag;
             tabControl.Content = richEditBox;

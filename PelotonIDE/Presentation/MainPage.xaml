@@ -13,6 +13,22 @@
 	  Background="{ThemeResource BackgroundBrush}"
       Loaded="MainWindow_Loaded">
 
+    <Page.Resources>
+        <SolidColorBrush Color="Black" x:Key="NavigationViewItemForeground"/>
+        <SolidColorBrush Color="White" x:Key="TopNavigationViewItemForegroundPointerOver"/>
+        <SolidColorBrush Color="White" x:Key="TopNavigationViewItemForegroundSelected"/>
+        <SolidColorBrush Color="White" x:Key="TopNavigationViewItemForegroundSelectedPointerOver"/>
+        <SolidColorBrush Color="White" x:Key="TopNavigationViewItemForegroundPressed"/>
+        <SolidColorBrush Color="White" x:Key="TopNavigationViewItemForegroundSelectedPressed"/>
+        
+        <SolidColorBrush Color="Gray" x:Key="NavigationViewItemBackground"/>
+        <SolidColorBrush Color="DarkGray" x:Key="TopNavigationViewItemBackgroundPointerOver"/>
+        <SolidColorBrush Color="DarkSlateGray" x:Key="TopNavigationViewItemBackgroundSelected"/>
+        <SolidColorBrush Color="DarkSlateGray" x:Key="TopNavigationViewItemBackgroundSelectedPointerOver"/>
+        <SolidColorBrush Color="DarkGray" x:Key="TopNavigationViewItemBackgroundPressed"/>
+        <SolidColorBrush Color="DarkSlateGray" x:Key="TopNavigationViewItemBackgroundSelectedPressed"/>
+    </Page.Resources>
+
     <RelativePanel x:Name="relativePanel" Margin="0,0,0,0" HorizontalAlignment="Stretch">
         <RelativePanel.Resources>
             <Style TargetType="Button">
@@ -237,7 +253,7 @@
         <NavigationView x:Name="tabControl" PaneDisplayMode="Top" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" RelativePanel.Below="selectAllButton" RelativePanel.AlignLeftWithPanel="True"
                  RelativePanel.AlignRightWithPanel="True"  RelativePanel.Above="outputPanel" SelectionChanged="TabControl_SelectionChanged">
             <NavigationView.MenuItems>
-                <local:CustomTabItem x:Name="tab1" Content="Tab 1" Tag="Tab1" IsNewFile="True" Background="DarkGray" Foreground="White" />
+                <local:CustomTabItem x:Name="tab1" Content="Tab 1" Tag="Tab1" IsNewFile="True"/>
             </NavigationView.MenuItems>
         </NavigationView>
         <Canvas x:Name="outputPanel" RelativePanel.Above="statusBar" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" 
