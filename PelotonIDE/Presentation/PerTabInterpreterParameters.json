@@ -1,0 +1,182 @@
+{
+  "Help": {
+    "Defined": false,
+    "Key": "?",
+    "Value": false
+  },
+  "Exclaim": {
+    "Defined": false,
+    "Key": "!",
+    "Value": false
+  },
+  "Literate": {
+    "Defined": false,
+    "Key": "*",
+    "Value": false
+  },
+  "VariableLength": {
+    "Defined": false,
+    "Key": "#",
+    "Value": false
+  },
+  "Listen": {
+    "Defined": false,
+    "Key": ".",
+    "Value": -1
+  },
+  "Comma": {
+    "Defined": false,
+    "Key": ",",
+    "Value": false
+  },
+  "Brace": {
+    "Defined": false,
+    "Key": "{",
+    "Value": false
+  },
+  "Brackets": {
+    "Defined": false,
+    "Key": "(",
+    "Value": false
+  },
+  "Before": {
+    "Defined": false,
+    "Key": "-",
+    "Value": ""
+  },
+  "After": {
+    "Defined": false,
+    "Key": "+",
+    "Value": ""
+  },
+  "Assert": {
+    "Defined": false,
+    "Key": "A",
+    "Value": false
+  },
+  "Base": {
+    "Defined": false,
+    "Key": "B",
+    "Value": ""
+  },
+  "Check": {
+    "Defined": false,
+    "Key": "C",
+    "Value": false
+  },
+  "Debug": {
+    "Defined": false,
+    "Key": "D",
+    "Value": false
+  },
+  "Environment": {
+    "Defined": false,
+    "Key": "E",
+    "Value": ""
+  },
+  "Filespec": {
+    "Defined": false,
+    "Key": "F",
+    "Value": ""
+  },
+  "Get": {
+    "Defined": false,
+    "Key": "G",
+    "Value": ""
+  },
+  "Host": {
+    "Defined": false,
+    "Key": "H",
+    "Value": -1
+  },
+  "Input": {
+    "Defined": false,
+    "Key": "I",
+    "Value": ""
+  },
+  "Jump": {
+    "Defined": false,
+    "Key": "J",
+    "Value": -1
+  },
+  "Keyword": {
+    "Defined": false,
+    "Key": "K",
+    "Value": ""
+  },
+  "Language": {
+    "Defined": false,
+    "Key": "L",
+    "Value": 0
+  },
+  "Memory": {
+    "Defined": false,
+    "Key": "M",
+    "Value": ""
+  },
+  "Nanny": {
+    "Defined": false,
+    "Key": "N",
+    "Value": false
+  },
+  "Override": {
+    "Defined": false,
+    "Key": "O",
+    "Value": false
+  },
+  "PreventUnicode": {
+    "Defined": false,
+    "Key": "$",
+    "Value": false
+  },
+  "Project": {
+    "Defined": false,
+    "Key": "P",
+    "Value": ""
+  },
+  "Recordset": {
+    "Defined": false,
+    "Key": "R",
+    "Value": ""
+  },
+  "Structure": {
+    "Defined": false,
+    "Key": "S",
+    "Value": ""
+  },
+  "Transput": {
+    "Defined": false,
+    "Key": "T",
+    "Value": 0
+  },
+  "Use": {
+    "Defined": false,
+    "Key": "U",
+    "Value": ""
+  },
+  "Variables": {
+    "Defined": false,
+    "Key": "V",
+    "Value": ""
+  },
+  "Workspace": {
+    "Defined": false,
+    "Key": "W",
+    "Value": ""
+  },
+  "eXecute": {
+    "Defined": false,
+    "Key": "X",
+    "Value": ""
+  },
+  "Yonder": {
+    "Defined": false,
+    "Key": "Y",
+    "Value": -1
+  },
+  "Zone": {
+    "Defined": false,
+    "Key": "Z",
+    "Value": ""
+  }
+}
