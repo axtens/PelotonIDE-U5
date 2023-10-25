@@ -12,7 +12,21 @@
 	  NavigationCacheMode="Required"
 	  Background="{ThemeResource BackgroundBrush}"
       Loaded="MainWindow_Loaded">
+    <Page.Resources>
+        <SolidColorBrush Color="Black" x:Key="NavigationViewItemForeground"/>
+        <SolidColorBrush Color="White" x:Key="TopNavigationViewItemForegroundPointerOver"/>
+        <SolidColorBrush Color="White" x:Key="TopNavigationViewItemForegroundSelected"/>
+        <SolidColorBrush Color="White" x:Key="TopNavigationViewItemForegroundSelectedPointerOver"/>
+        <SolidColorBrush Color="White" x:Key="TopNavigationViewItemForegroundPressed"/>
+        <SolidColorBrush Color="White" x:Key="TopNavigationViewItemForegroundSelectedPressed"/>
 
+        <SolidColorBrush Color="Gray" x:Key="NavigationViewItemBackground"/>
+        <SolidColorBrush Color="DarkGray" x:Key="TopNavigationViewItemBackgroundPointerOver"/>
+        <SolidColorBrush Color="DarkSlateGray" x:Key="TopNavigationViewItemBackgroundSelected"/>
+        <SolidColorBrush Color="DarkSlateGray" x:Key="TopNavigationViewItemBackgroundSelectedPointerOver"/>
+        <SolidColorBrush Color="DarkGray" x:Key="TopNavigationViewItemBackgroundPressed"/>
+        <SolidColorBrush Color="DarkSlateGray" x:Key="TopNavigationViewItemBackgroundSelectedPressed"/>
+    </Page.Resources>
     <RelativePanel x:Name="relativePanel" Margin="0,0,0,0" HorizontalAlignment="Stretch">
         <RelativePanel.Resources>
             <Style TargetType="Button">
@@ -22,8 +36,8 @@
             </Style>
         </RelativePanel.Resources>
         <MenuBar x:Name="menuBar">
-            <MenuBarItem x:Name="fileBar" Title="File" BorderBrush="LightGray"  BorderThickness="1">
-                <MenuFlyoutItem x:Name="menuNew" Text="New" Click="FileNew_Click">
+            <MenuBarItem x:Name="mnuFile" Title="File" BorderBrush="LightGray"  BorderThickness="1">
+                <MenuFlyoutItem x:Name="mnuNew" Text="New" Click="FileNew_Click">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control" Key="T"/>
                     </MenuFlyoutItem.KeyboardAccelerators>
@@ -31,7 +45,7 @@
                         <FontIcon Glyph="&#xE8F4;" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="menuOpen" Text="Open" Click="FileOpen_Click">
+                <MenuFlyoutItem x:Name="mnuOpen" Text="Open" Click="FileOpen_Click">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control" Key="O"/>
                     </MenuFlyoutItem.KeyboardAccelerators>
@@ -39,7 +53,7 @@
                         <FontIcon Glyph="&#xE8E5;" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="menuSave" Text="Save" Click="FileSave_Click">
+                <MenuFlyoutItem x:Name="mnuSave" Text="Save" Click="FileSave_Click">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control" Key="S"/>
                     </MenuFlyoutItem.KeyboardAccelerators>
@@ -47,7 +61,7 @@
                         <FontIcon Glyph="&#xE74E;" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="menuSaveAs" Text="SaveAs" Click="FileSaveAs_Click">
+                <MenuFlyoutItem x:Name="mnuSaveAs" Text="SaveAs" Click="FileSaveAs_Click">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control, Menu"  Key="S"/>
                     </MenuFlyoutItem.KeyboardAccelerators>
@@ -55,7 +69,7 @@
                         <FontIcon Glyph="&#xE792;" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="menuClose" Text="Close" Click="FileClose_Click">
+                <MenuFlyoutItem x:Name="mnuClose" Text="Close" Click="FileClose_Click">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control" Key="W"/>
                     </MenuFlyoutItem.KeyboardAccelerators>
@@ -65,8 +79,8 @@
                 </MenuFlyoutItem>
             </MenuBarItem>
 
-            <MenuBarItem Name="editBar" Title="Edit" BorderBrush="LightGray"  BorderThickness="1">
-                <MenuFlyoutItem x:Name="menuCopy" Text="Copy" Click="EditCopy_Click">
+            <MenuBarItem Name="mnuEdit" Title="Edit" BorderBrush="LightGray"  BorderThickness="1">
+                <MenuFlyoutItem x:Name="mnuCopy" Text="Copy" Click="EditCopy_Click">
                     <MenuFlyoutItem.KeyboardAcceleratorTextOverride>
                         Ctrl+C
                     </MenuFlyoutItem.KeyboardAcceleratorTextOverride>
@@ -74,7 +88,7 @@
                         <FontIcon Glyph="&#xE8C8;" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="menuCut" Text="Cut" Click="EditCut_Click">
+                <MenuFlyoutItem x:Name="mnuCut" Text="Cut" Click="EditCut_Click">
                     <MenuFlyoutItem.KeyboardAcceleratorTextOverride>
                         Ctrl+X
                     </MenuFlyoutItem.KeyboardAcceleratorTextOverride>
@@ -82,7 +96,7 @@
                         <FontIcon Glyph="&#xE8C6;" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="menuPaste" Text="Paste" Click="EditPaste_Click">
+                <MenuFlyoutItem x:Name="mnuPaste" Text="Paste" Click="EditPaste_Click">
                     <MenuFlyoutItem.KeyboardAcceleratorTextOverride>
                         Ctrl+V
                     </MenuFlyoutItem.KeyboardAcceleratorTextOverride>
@@ -90,7 +104,7 @@
                         <FontIcon Glyph="&#xE77F;" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="menuSelectAll" Text="Select All" Click="EditSelectAll_Click">
+                <MenuFlyoutItem x:Name="mnuSelectAll" Text="Select All" Click="EditSelectAll_Click">
                     <MenuFlyoutItem.KeyboardAcceleratorTextOverride>
                         Ctrl+A
                     </MenuFlyoutItem.KeyboardAcceleratorTextOverride>
@@ -101,11 +115,23 @@
             </MenuBarItem>
 
 
-            <MenuBarItem Title="Search" BorderBrush="LightGray"  BorderThickness="1" x:Name="SearchBar" />
-            <MenuBarItem Title="Format" BorderBrush="LightGray"  BorderThickness="1" x:Name="FormatBar" />
-            <MenuBarItem Title="View" BorderBrush="LightGray"  BorderThickness="1" x:Name="ViewBar" />
-            <MenuBarItem Title="Interpreter" BorderBrush="LightGray"  BorderThickness="1" x:Name="InterpreterBar" >
-                <MenuFlyoutItem x:Name="runCode" Text="Run Code" Click="RunCodeButton_Click">
+            <MenuBarItem Title="Search" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuSearch" />
+            
+            <MenuBarItem Title="Format" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuFormat" />
+            
+            <MenuBarItem Title="View" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuView" />
+            
+            <MenuBarItem Title="Interpreter" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuRun" >
+                <MenuFlyoutSubItem x:Name="mnuRunningMode" Text="Running Mode" >
+                    <MenuFlyoutItem Text="Quiet"               x:Name="mnuQuiet"         Click="InterpretBar_RunningMode_Click">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon  FontFamily="Segoe MDL2 Assets" Glyph="&#xF0B7;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Text="Verbose"             x:Name="mnuVerbose"       Click="InterpretBar_RunningMode_Click" />
+                    <MenuFlyoutItem Text="Verbose, with pause" x:Name="mnuVerbosePauseOnExit"  Click="InterpretBar_RunningMode_Click" />
+                </MenuFlyoutSubItem>
+                <MenuFlyoutItem x:Name="mnuGo" Text="Run Code" Click="RunCodeButton_Click">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="None" Key="F5" />
                     </MenuFlyoutItem.KeyboardAccelerators>
@@ -113,127 +139,137 @@
                         <FontIcon  FontFamily="Segoe MDL2 Assets" Glyph="&#xE73E;" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Name="runSelectedCode" Text="Run Selected Code" Click="RunSelectedCodeButton_Click">
+                <MenuFlyoutItem x:Name="mnuRunSelectedCode" Text="Run Selected Code" Click="RunSelectedCodeButton_Click">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="Control" Key="F5" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
             </MenuBarItem>
-            <MenuBarItem Title="Source" BorderBrush="LightGray"  BorderThickness="1" x:Name="SourceBar">
-                <!-- <MenuFlyoutItem Text="Code templates" BorderBrush="LightGray" BorderThickness="1" x:Name="SourceBar_CodeTemplates">
-                    -->
-                <MenuFlyoutItem x:Name="makeProtiumStructure" Text="Make protium structure" Click="InsertCodeTemplate_Click">
+            
+            <MenuBarItem Title="Source" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuSource">
+                <MenuFlyoutItem Name="mnuVariableLength" Click="VariableLength_Click" Text="Variable Length">
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon  FontFamily="Segoe MDL2 Assets" Glyph="&#xF0B7;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutSubItem Name="mnuCodeTemplates" Text="Code templates">
+                    <MenuFlyoutItem Name="MakePeloton" Text="Make Peloton stucture" Click="InsertCodeTemplate_Click">
                         <MenuFlyoutItem.KeyboardAccelerators>
                             <KeyboardAccelerator Modifiers="None" Key="F2" />
                         </MenuFlyoutItem.KeyboardAccelerators>
                     </MenuFlyoutItem>
-                    <MenuFlyoutItem x:Name="makeProtiumVariableLengthStructure" Text="Make variable length" Click="InsertVariableLengthCodeTemplate_Click">
+                    <MenuFlyoutItem Name="MakePelotonVariableLength" Text="Make variable" Click="InsertVariableLengthCodeTemplate_Click">
                         <MenuFlyoutItem.KeyboardAccelerators>
                             <KeyboardAccelerator Modifiers="None" Key="F3" />
                         </MenuFlyoutItem.KeyboardAccelerators>
                     </MenuFlyoutItem>
-                <!-- </MenuFlyoutItem>
-                -->
+                </MenuFlyoutSubItem>
             </MenuBarItem>
-            <MenuBarItem Title="Settings" BorderBrush="LightGray"  BorderThickness="1" x:Name="SettingsBar" >
-                <MenuFlyoutItem Text="Choose interface language" BorderBrush="LightGray" BorderThickness="1" x:Name="SettingsBar_InterfaceLanguage" />
-            </MenuBarItem>
+            
+            <MenuBarItem Title="Settings" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuSettings" ></MenuBarItem>
 
-            <MenuBarItem Title="Window" BorderBrush="LightGray"  BorderThickness="1" x:Name="WindowBar" />
+            <MenuBarItem Title="Window" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuWindow" />
 
-            <!-- <MenuBarItem Title="Internationalisation" BorderBrush="LightGray"  BorderThickness="1" x:Name="InternationalisationBar" />-->
-
-            <MenuBarItem x:Name="helpBar" Title="Help" BorderBrush="LightGray"  BorderThickness="1">
-                <MenuFlyoutItem x:Name="menuAbout" Text="About" Click="HelpAbout_Click" />
+            <MenuBarItem x:Name="mnuHelp" Title="Help" BorderBrush="LightGray"  BorderThickness="1">
+                <MenuFlyoutItem x:Name="mnuHelpAbout" Text="About" Click="HelpAbout_Click" />
+                <MenuFlyoutItem x:Name="mnuReset" Text="Reset to factory settings" Click="ResetToFactorySettings_Click" />
             </MenuBarItem>
 
         </MenuBar>
 
-        <Button x:Name="newFileButton" AutomationProperties.Name="New" ToolTipService.ToolTip="New" Click="FileNew_Click"
+
+        <Button x:Name="butNew" AutomationProperties.Name="New" ToolTipService.ToolTip="New" Click="FileNew_Click"
                 RelativePanel.Below="menuBar">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8F4;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="openFileButton" AutomationProperties.Name="Open" ToolTipService.ToolTip="Open"
-            RelativePanel.RightOf="newFileButton" RelativePanel.Below="menuBar" Click="FileOpen_Click">
+        <Button x:Name="butOpen" AutomationProperties.Name="Open" ToolTipService.ToolTip="Open"
+            RelativePanel.RightOf="butNew" RelativePanel.Below="menuBar" Click="FileOpen_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8E5;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="closeFileButton" AutomationProperties.Name="Close" ToolTipService.ToolTip="Close"
-            RelativePanel.RightOf="openFileButton" RelativePanel.Below="menuBar" Click="FileClose_Click">
+        <Button x:Name="butClose" AutomationProperties.Name="Close" ToolTipService.ToolTip="Close"
+            RelativePanel.RightOf="butOpen" RelativePanel.Below="menuBar" Click="FileClose_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8BB;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="saveFileButton" AutomationProperties.Name="Save" ToolTipService.ToolTip="Save"
-            RelativePanel.RightOf="closeFileButton" RelativePanel.Below="menuBar" Click="FileSave_Click">
+        <Button x:Name="butSave" AutomationProperties.Name="Save" ToolTipService.ToolTip="Save"
+            RelativePanel.RightOf="butClose" RelativePanel.Below="menuBar" Click="FileSave_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE74E;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="saveAsFileButton" AutomationProperties.Name="Save As" ToolTipService.ToolTip="Save As"
-            RelativePanel.RightOf="saveFileButton" RelativePanel.Below="menuBar" Click="FileSaveAs_Click">
+        <Button x:Name="butSaveAs" AutomationProperties.Name="Save As" ToolTipService.ToolTip="Save As"
+            RelativePanel.RightOf="butSave" RelativePanel.Below="menuBar" Click="FileSaveAs_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE792;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="copyButton" AutomationProperties.Name="Copy" ToolTipService.ToolTip="Copy"
-            RelativePanel.RightOf="saveAsFileButton" RelativePanel.Below="menuBar" Click="EditCopy_Click">
+        <Button x:Name="butCopy" AutomationProperties.Name="Copy" ToolTipService.ToolTip="Copy"
+            RelativePanel.RightOf="butSaveAs" RelativePanel.Below="menuBar" Click="EditCopy_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8C8;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="cutButton" AutomationProperties.Name="Cut" ToolTipService.ToolTip="Cut"
-            RelativePanel.RightOf="copyButton" RelativePanel.Below="menuBar" Click="EditCut_Click">
+        <Button x:Name="butCut" AutomationProperties.Name="Cut" ToolTipService.ToolTip="Cut"
+            RelativePanel.RightOf="butCopy" RelativePanel.Below="menuBar" Click="EditCut_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8C6;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="pasteButton" AutomationProperties.Name="Paste" ToolTipService.ToolTip="Paste"
-            RelativePanel.RightOf="cutButton" RelativePanel.Below="menuBar" Click="EditPaste_Click">
+        <Button x:Name="butPaste" AutomationProperties.Name="Paste" ToolTipService.ToolTip="Paste"
+            RelativePanel.RightOf="butCut" RelativePanel.Below="menuBar" Click="EditPaste_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE77F;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="selectAllButton" AutomationProperties.Name="Select All" ToolTipService.ToolTip="Select All"
-            RelativePanel.RightOf="pasteButton" RelativePanel.Below="menuBar" Click="EditSelectAll_Click">
+        <Button x:Name="butSelectAll" AutomationProperties.Name="Select All" ToolTipService.ToolTip="Select All"
+            RelativePanel.RightOf="butPaste" RelativePanel.Below="menuBar" Click="EditSelectAll_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8B3;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="transformButton" AutomationProperties.Name="Transform" ToolTipService.ToolTip="Transform"
-            RelativePanel.RightOf="selectAllButton" RelativePanel.Below="menuBar" Click="TransformButton_Click">
+        <Button x:Name="butTransform" AutomationProperties.Name="Transform" ToolTipService.ToolTip="Transform"
+            RelativePanel.RightOf="butSelectAll" RelativePanel.Below="menuBar" Click="TransformButton_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE13C;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="toggleOutputButton" AutomationProperties.Name="Toggle Output" ToolTipService.ToolTip="Toggle Output"
-            RelativePanel.RightOf="transformButton" RelativePanel.Below="menuBar" Click="ToggleOutputButton_Click">
+        <Button x:Name="butToggleOutput" AutomationProperties.Name="Toggle Output" ToolTipService.ToolTip="Toggle Output"
+            RelativePanel.RightOf="butTransform" RelativePanel.Below="menuBar" Click="ToggleOutputButton_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE92F;"  />
             </Button.Content>
         </Button>
-        <!--<Button x:Name="runCodeButton" AutomationProperties.Name="Run Code" ToolTipService.ToolTip="Run Code"
-                RelativePanel.RightOf="toggleOutputButton" RelativePanel.Below="menuBar" Click="RunCodeButton_Click">
-            <Button.Content>
-                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE73E;"/>
-            </Button.Content>
-        </Button>-->
-        <Button x:Name="runCodeButton" AutomationProperties.Name="Run Code" ToolTipService.ToolTip="Run Code"
-                RelativePanel.RightOf="toggleOutputButton" RelativePanel.Below="menuBar" Click="RunCodeButton_Click" Background="DarkGreen" Foreground="White">
+
+        <Button x:Name="butGo" AutomationProperties.Name="Run Code" ToolTipService.ToolTip="Run Code"
+                RelativePanel.RightOf="butToggleOutput" RelativePanel.Below="menuBar" 
+                Click="RunCodeButton_Click" Background="DarkGreen" Foreground="White">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE73E;" FontWeight="ExtraBold" />
             </Button.Content>
+            <Button.Resources>
+                <ResourceDictionary>
+                    <ResourceDictionary.ThemeDictionaries>
+                        <ResourceDictionary x:Key="Light">
+                            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="White"/>
+                            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="DarkGreen"/>
+                        </ResourceDictionary>
+                    </ResourceDictionary.ThemeDictionaries>
+                </ResourceDictionary>
+            </Button.Resources>
         </Button>
 
-        <NavigationView x:Name="tabControl" PaneDisplayMode="Top" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" RelativePanel.Below="selectAllButton" RelativePanel.AlignLeftWithPanel="True"
+        <NavigationView x:Name="tabControl" PaneDisplayMode="Top" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" RelativePanel.Below="butSelectAll" RelativePanel.AlignLeftWithPanel="True"
                  RelativePanel.AlignRightWithPanel="True"  RelativePanel.Above="outputPanel" SelectionChanged="TabControl_SelectionChanged">
             <NavigationView.MenuItems>
-                <local:CustomTabItem x:Name="tab1" Content="Tab 1" Tag="Tab1" IsNewFile="True" Background="DarkGray" Foreground="White" />
+                <local:CustomTabItem x:Name="tab1" Content="Tab 1" Tag="Tab1" IsNewFile="True" Height="30" />
             </NavigationView.MenuItems>
         </NavigationView>
+        
         <Canvas x:Name="outputPanel" RelativePanel.Above="statusBar" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" 
                 Height="200" Background="LightGray" HorizontalAlignment="Stretch" MinHeight="100" MaxHeight="500" SizeChanged="OutputPanel_SizeChanged" >
             <Thumb x:Name="outputThumb"  Height="5" DragDelta="Thumb_DragDelta" DragCompleted="OutputThumb_DragCompleted"
@@ -308,11 +344,22 @@
             </TabView>
         </Canvas>
         <StackPanel x:Name="statusBar" RelativePanel.AlignBottomWithPanel="True" Orientation="Horizontal">
-            <TextBlock Text="Line 1, Char 0" Margin="10,0,40,0" Name="cursorPosition"/>
             <!--<TextBlock Text="0 words" Margin="0,0,20,0" Name="wordCount"/>-->
-            <TextBlock Text="Caps Lock: " Margin="0,0,30,0" Name="capsLock"/>
-            <TextBlock Text="Num Lock: " Margin="0,0,30,0" Name="numsLock"/>
-            <TextBlock Text="Language: " Margin="0,0,30,0" Name="languageName"/>
+            <TextBox IsReadOnly="True" Name="languageName" Width="200" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="ideStatus" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="tabCommandLine" Width="200" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="cursorPosition" Width="200" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="misc" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="CAPS" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="INS"  Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="NUM"  Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="SCRL" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="DATE" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="TIME" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="kana" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="kanji" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="junja" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
         </StackPanel>
+
     </RelativePanel>
 </Page>

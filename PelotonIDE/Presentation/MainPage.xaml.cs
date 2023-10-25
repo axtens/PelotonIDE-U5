@@ -1,20 +1,25 @@
 ﻿using Microsoft.UI;
 using Microsoft.UI.Input;
+using Microsoft.UI.Text;
 using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Documents;
+using Microsoft.UI.Xaml.Input;
+
+using Newtonsoft.Json;
+
 using System.Diagnostics;
+using System.Text;
+
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.Storage.Provider;
 using Windows.System;
-using Windows.UI.Core;
-using Newtonsoft.Json;
-using System.Text;
-using Microsoft.UI.Xaml.Documents;
 using Windows.UI;
-using Microsoft.UI.Text;
-using LanguageConfigJson = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, string>>>;
+using Windows.UI.Core;
+
+using LanguageConfigurationStructure = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, string>>>;
+using InterpreterParametersStructure = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, object>>;
 
 namespace PelotonIDE.Presentation
 {
@@ -32,92 +37,189 @@ namespace PelotonIDE.Presentation
         int currentLanguageId = 0;
         OutputPanelPosition outputPosition = OutputPanelPosition.Bottom;
         string pelotonEXE = string.Empty;
+        string pelotonARG = string.Empty;
+
+        InterpreterParametersStructure? GlobalInterpreterParameters = new();
+        InterpreterParametersStructure? PerTabInterpreterParameters = new();
+        LanguageConfigurationStructure? LanguageSettings = new();
 
         public MainPage()
         {
 
             this.InitializeComponent();
-            GetGlobals();
-            CustomRichEditBox richEditBox = new()
+
+            // GetGlobals();
+            CustomRichEditBox customREBox = new()
             {
                 Tag = "Tab1",
-                Background = new SolidColorBrush(new Color() { A = 0xFF, R = 0xf9, G = 0xf8, B = 0xbd }),
+                //Background = new SolidColorBrush(new Color() { A = 0xFF, R = 0xf9, G = 0xf8, B = 0xbd }),
+                //Foreground = new SolidColorBrush(new Color() { A = 0xFF, R = 0xf9, G = 0xf8, B = 0xbd })
             };
-            richEditBox.KeyDown += RichEditBox_KeyDown;
+            customREBox.KeyDown += RichEditBox_KeyDown;
+            customREBox.AcceptsReturn = true;
+
             // richEditBox.Background = 
-            tabControl.Content = richEditBox;
-            _richEditBoxes[richEditBox.Tag] = richEditBox;
+            tabControl.Content = customREBox;
+            _richEditBoxes[customREBox.Tag] = customREBox;
+            tab1.tabSettingJson = null;
             tabControl.SelectedItem = tab1;
-            var isCapsLocked = Console.CapsLock;
-            var isNumLocked = Console.NumberLock;
-            capsLock.Text = isCapsLocked ? "Caps Lock: On" : "Caps Lock: Off";
-            numsLock.Text = isNumLocked ? "Num Lock: On" : "Num Lock: Off";
             App._window.Closed += MainWindow_Closed;
-            FillLanguages();
+
+            FillLanguagesIntoMenu(mnuSettings, "mnuSelectLanguage", Internationalization_Click);
+            FillLanguagesIntoMenu(mnuRun, "mnuLanguage", MnuLanguage_Click);
+            UpdateTabCommandLine(tabCommandLine);
         }
 
-        private async void GetGlobals()
+        private InterpreterParametersStructure CopyFromGlobalCodeRunCargo()
+        {
+            InterpreterParametersStructure tsj = new();
+            foreach (var key in GlobalInterpreterParameters.Keys)
+            {
+                var kvp = GlobalInterpreterParameters[key];
+                tsj.Add(key, kvp);
+            }
+            return tsj;
+        }
+
+        private Dictionary<string, object> GetTabSettingsFromRegistry()
+        {
+            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+            Dictionary<string, object> dict = new();
+            foreach (var value in localSettings.Values)
+            {
+                if (value.Key.StartsWith("tab_"))
+                    dict.Add(value.Key, value.Value);
+            }
+            return dict;
+        }
+
+        public static async Task<InterpreterParametersStructure?> GetGlobalInterpreterParameters()
+        {
+            var tabSettingStorage = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\GlobalInterpreterParameters.json"));
+            string tabSettings = File.ReadAllText(tabSettingStorage.Path);
+            return JsonConvert.DeserializeObject<InterpreterParametersStructure>(tabSettings);
+        }
+
+        public static async Task<InterpreterParametersStructure?> GetPerTabInterpreterParameters()
+        {
+            var tabSettingStorage = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\PerTabInterpreterParameters.json"));
+            string tabSettings = File.ReadAllText(tabSettingStorage.Path);
+            return JsonConvert.DeserializeObject<InterpreterParametersStructure>(tabSettings);
+        }
+
+        private static async Task<Dictionary<string, object>?> GetGlobalSettings()
         {
             var globalSettings = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\GlobalSettings.json"));
             string globalSettingsString = File.ReadAllText(globalSettings.Path);
-            var global = JsonConvert.DeserializeObject<Dictionary<string, object>>(globalSettingsString);
-            outputPanelShowing = (bool)global["OutputPanelShowing"];
-            currentLanguageName = global["Language"].ToString() ?? "English";
-            currentLanguageId = (int)(long)global["LanguageID"];
-            Enum.TryParse(global["OutputPanelPosition"].ToString(), out outputPosition);
-            pelotonEXE = global["PelotonEXE"].ToString() ?? "C:\\protium\\bin\\pdb.exe";
+            return JsonConvert.DeserializeObject<Dictionary<string, object>>(globalSettingsString);
         }
-        private async void FillLanguages()
-        {
-            var languageJsonFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\LanguageConfig.json"));
-            string languageJsonString = File.ReadAllText(languageJsonFile.Path);
-            var languageJson = JsonConvert.DeserializeObject<LanguageConfigJson>(languageJsonString);
-            var items = new List<MenuFlyoutSubItem>();
 
-            foreach (var key in languageJson.Keys)
+        private async void FillLanguagesIntoMenu(MenuBarItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
+        {
+            var tabset = await GetGlobalInterpreterParameters();
+
+            var languageJsonFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\LanguageConfiguration.json"));
+            string languageJsonString = File.ReadAllText(languageJsonFile.Path);
+            var languageJsonObject = JsonConvert.DeserializeObject<LanguageConfigurationStructure>(languageJsonString);
+            LanguageSettings = languageJsonObject;
+
+            var sub = new MenuFlyoutSubItem
             {
-                MenuFlyoutSubItem menuFlyoutSubItem = new()
+                // <!--<MenuFlyoutSubItem Text="Choose interface language" BorderBrush="LightGray" BorderThickness="1" x:Name="SettingsBar_InterfaceLanguage" />-->
+                Text = languageJsonObject[currentLanguageName]["frmMain"][menuLabel],
+                BorderThickness = new Thickness(1, 1, 1, 1),
+                BorderBrush = new SolidColorBrush() { Color = Colors.LightGray },
+                Name = menuLabel
+            };
+
+
+            //var items = new List<MenuFlyoutItem>();
+
+            // what is current language?
+            var globals = LanguageSettings[currentLanguageName]["GLOBAL"];
+            var count = LanguageSettings.Keys.Count;
+            for (var i = 0; i < count; i++)
+            {
+                var x = from lang in LanguageSettings.Keys
+                        where LanguageSettings.ContainsKey(lang) && LanguageSettings[lang]["GLOBAL"]["ID"] == i.ToString()
+                        let name = LanguageSettings[lang]["GLOBAL"]["Name"]
+                        select name;
+                if (x.Any())
                 {
-                    Name = key,
-                    Text = languageJson[key]["GLOBAL"]["ID"]
-                };
-                items.Add(menuFlyoutSubItem);
+                    MenuFlyoutItem menuFlyoutItem = new()
+                    {
+                        Text = globals[$"{100 + i + 1}"],
+                        Name = x.First()  //languageJson[key]["GLOBAL"]["ID"]
+                    };
+                    menuFlyoutItem.Click += routedEventHandler; //  Internationalization_Click;
+                    sub.Items.Add(menuFlyoutItem);
+                }
             }
-            // SettingsBar_InterfaceLanguage.ContextFlyout = items;
-            SettingsBar_InterfaceLanguage.Click += Internationalization_Click;
-            /*foreach (string key in languageJson.Keys)
-            {
-                MenuFlyoutItem menuFlyoutItem = new()
-                {
-                    Name = key,
-                    Text = key
-                };
-                menuFlyoutItem.Click += Internationalization_Click; // MenuFlyoutItem_Click;
-                InternationalisationBar.Items.Add(menuFlyoutItem);
-            }*/
+            menuBarItem.Items.Add(sub);
         }
 
         /// <summary>
         /// Load previous editor settings
         /// </summary>
-        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-            /*string outputPos;
+
+            GlobalInterpreterParameters = await MainPage.GetGlobalInterpreterParameters();
+            PerTabInterpreterParameters = await MainPage.GetPerTabInterpreterParameters();
+
+            if (tab1.tabSettingJson == null)
+                tab1.tabSettingJson = PerTabInterpreterParameters;
+
+            UpdateMenuRunningMode(GlobalInterpreterParameters["Quietude"]);
+            UpdateTabCommandLine(tabCommandLine);
+
+            if ((bool)tab1.tabSettingJson["VariableLength"]["Defined"])
+            {
+                mnuVariableLength.Icon = (bool)tab1.tabSettingJson["VariableLength"]["Value"] ? tick : null;
+            }
+
+            CAPS.Text = Console.CapsLock ? "CAPS" : "caps";
+            NUM.Text = Console.NumberLock ? "NUM" : "num";
+
+            var GlobalSettings = await GetGlobalSettings();
+            foreach (var setting in GlobalSettings.Keys)
+            {
+                if (!localSettings.Values.ContainsKey(setting))
+                {
+                    localSettings.Values[setting] = GlobalSettings[setting];
+                }
+            }
+            foreach (var setting in GlobalInterpreterParameters.Keys)
+            {
+                if (!localSettings.Values.ContainsKey(setting))
+                {
+                    localSettings.Values[setting] = GlobalInterpreterParameters[setting]["Value"];
+                }
+            }
+
             if (localSettings.Values.ContainsKey("OutputPanelPosition"))
             {
-                outputPos = localSettings.Values["OutputPanelPosition"] as string ?? "Bottom";
+                var opp = localSettings.Values["OutputPanelPosition"];
+                outputPosition = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), (string)opp);
+                HandleOutputPanelChange(outputPosition);
             }
-            else
-            {
-                outputPos = "Bottom";
-            }
-            outputPosition = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), outputPos);
-            HandleOutputPanelChange(outputPosition);
 
             if (localSettings.Values.ContainsKey("OutputHeight"))
             {
-                outputPanel.Height = (double)localSettings.Values["OutputHeight"];
+                var loh = localSettings.Values["OutputHeight"];
+                if (loh != null)
+                {
+                    var lohType = loh.GetType().Name;
+                    if (lohType == "Double")
+                    {
+                        outputPanel.Height = (double)loh;
+                    }
+                    else if (lohType == "Int64")
+                    {
+                        outputPanel.Height = (long)loh;
+                    }
+                }
             }
 
             if (localSettings.Values.ContainsKey("OutputWidth"))
@@ -127,730 +229,90 @@ namespace PelotonIDE.Presentation
 
             if (localSettings.Values.ContainsKey("Language"))
             {
-                string savedLang = localSettings.Values["Language"] as string ?? "English";
-                HandleLanguageChange(savedLang);
+                var savedLang = localSettings.Values["Language"];
+                HandleLanguageChange((string)savedLang);
             }
 
             if (localSettings.Values.ContainsKey("PelotonEXE"))
             {
-                var exe = localSettings.Values["PelotonEXE"] as string;
-                pelotonEXE = string.IsNullOrEmpty(exe) ? @"c:\protium\bin\pdb.exe" : exe;
+                pelotonEXE = (string)localSettings.Values["PelotonEXE"];
             }
-            else
+        }
+
+        private void UpdateMenuRunningMode(Dictionary<string, object> quietude)
+        {
+            if ((bool)quietude["Defined"] == true)
             {
-                pelotonEXE = @"c:\protium\bin\pdb.exe";
+                foreach (var item in from key in new string[] { "mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit" }
+                                     let items = from item in mnuRunningMode.Items where item.Name == key select item
+                                     from item in items
+                                     select item)
+                {
+                    (item as MenuFlyoutItem).Icon = null;
+                }
+
+                var tick = new FontIcon() // FIXME make global-ish
+                {
+                    FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                    Glyph = "\uF0B7"
+                };
+
+                switch ((long)quietude["Value"])
+                {
+                    case 0:
+                        mnuQuiet.Icon = tick;
+                        break;
+                    case 1:
+                        mnuVerbose.Icon = tick;
+                        break;
+                    case 2:
+                        mnuVerbosePauseOnExit.Icon = tick;
+                        break;
+                }
             }
-            */
         }
 
         /// <summary>
         /// Save current editor settings
         /// </summary>
-        private void MainWindow_Closed(object sender, object e)
+        private void MainWindow_Closed(object sender, object e) //FIXME How do I save to JSON?
         {
-            /*ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
             localSettings.Values["OutputPanelPosition"] = outputPosition.ToString();
             localSettings.Values["OutputHeight"] = outputPanel.Height;
             localSettings.Values["OutputWidth"] = outputPanel.Width;
             localSettings.Values["Language"] = currentLanguageName; // currentLanguage.ToString();
             localSettings.Values["PelotonEXE"] = pelotonEXE;
-            */
-            var jsonFile = new Uri("ms-appx:///PelotonIDE\\Presentation\\GlobalSettings.json").AbsolutePath;
-            var json = JsonConvert.DeserializeObject<JSONGlobalSettings>(File.ReadAllText(jsonFile));
-            json.Language = currentLanguageName;
-            json.LanguageID = currentLanguageId;
-            json.OutputPanelPosition = outputPosition.ToString();
-            json.PelotonEXE = pelotonEXE.ToString();
-            json.OutputHeight = (int)outputPanel.Height;
-            json.OutputWidth = (int)outputPanel.Width;
-            json.OutputPanelShowing = outputPanelShowing;
-            File.WriteAllText(jsonFile, JsonConvert.SerializeObject(json));
+            // localSettings.Values["PelotonARG"] = pelotonARG;
         }
 
         #region Event Handlers
 
-        private void RichEditBox_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
-        {
-            Debug.WriteLine($"{e.Key}");
-            if (e.Key == VirtualKey.CapitalLock)
-            {
-                var isCapsLocked = Console.CapsLock;
-                capsLock.Text = isCapsLocked ? "Caps Lock: On" : "Caps Lock: Off";
-            }
-            if (e.Key == VirtualKey.NumberKeyLock)
-            {
-                var isNumLocked = Console.NumberLock;
-                numsLock.Text = isNumLocked ? "Num Lock: On" : "Num Lock: Off";
-            }
-            if (tabControl.Content is CustomRichEditBox currentRichEditBox)
-            {
-                currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string text);
-                //wordCount.Text = text.Split(' ').Length - 1 + " words";
-                int caretPosition = currentRichEditBox.Document.Selection.StartPosition;
-                int lineNumber = 1;
-                int charNumber = 0;
-                for (int i = 0; i < caretPosition; i++)
-                {
-                    charNumber++;
-                    if (text[i] == '\r')
-                    {
-                        lineNumber++;
-                        charNumber = 0;
-                    }
-                }
-                int charsSinceLastLineBreak = 1;
-                for (int i = caretPosition - 1; i >= 0; i--)
-                {
-                    if (text[i] == '\r')
-                    {
-                        break;
-                    }
-                    charsSinceLastLineBreak++;
-                }
-                cursorPosition.Text = "Line " + lineNumber + ", Char " + charsSinceLastLineBreak;
-            }
-        }
 
-        private void FileNew_Click(object sender, RoutedEventArgs e)
-        {
-            CreateNewRichEditBox();
-        }
-
-        private async void FileOpen_Click(object sender, RoutedEventArgs e)
-        {
-            Open();
-        }
-
-        private void FileClose_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
-        private async void FileSave_Click(object sender, RoutedEventArgs e)
-        {
-            Save();
-        }
-
-        private async void FileSaveAs_Click(object sender, RoutedEventArgs e)
-        {
-            SaveAs();
-        }
-
-        private void EditCopy_Click(object sender, RoutedEventArgs e)
-        {
-            CopyText();
-        }
-
-        private void EditCut_Click(object sender, RoutedEventArgs e)
-        {
-            Cut();
-        }
-
-        private async void EditPaste_Click(object sender, RoutedEventArgs e)
-        {
-            Paste();
-        }
-
-        private void EditSelectAll_Click(object sender, RoutedEventArgs e)
-        {
-            SelectAll();
-        }
-
-        private void TabControl_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
-        {
-            if (tabControl.SelectedItem != null)
-            {
-                CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-                tabControl.Content = _richEditBoxes[navigationViewItem.Tag];
-            }
-        }
-
-        private void OutputLeft_Click(object sender, RoutedEventArgs e)
-        {
-            HandleOutputPanelChange(OutputPanelPosition.Left);
-        }
-
-        private void OutputBottom_Click(object sender, RoutedEventArgs e)
-        {
-            HandleOutputPanelChange(OutputPanelPosition.Bottom);
-        }
-
-        private void OutputRight_Click(object sender, RoutedEventArgs e)
-        {
-            HandleOutputPanelChange(OutputPanelPosition.Right);
-        }
-
-        private async void TransformButton_Click(object sender, RoutedEventArgs e)
-        {
-            ContentDialog dialog = new()
-            {
-                XamlRoot = this.XamlRoot,
-                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                Title = "Reverse?",
-                PrimaryButtonText = "Yes",
-                SecondaryButtonText = "No"
-            };
-            DialogContentPage dialogContentPage = new();
-
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-            currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string selectedText);
-            selectedText = selectedText.TrimEnd('\r');
-            dialogContentPage.SetText(selectedText);
-            dialog.Content = dialogContentPage;
-
-            var result = await dialog.ShowAsync();
-
-            if (result == ContentDialogResult.Primary)
-            {
-                string reversedString = Reverse(selectedText);
-                CreateNewRichEditBox();
-                navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-                currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-                currentRichEditBox.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, reversedString);
-            }
-        }
-
-        private void ToggleOutputButton_Click(object sender, RoutedEventArgs e)
-        {
-            outputPanel.Visibility = outputPanelShowing ? Visibility.Collapsed : Visibility.Visible;
-            outputPanelShowing = !outputPanelShowing;
-        }
-
-        // InsertCodeTemplate_Click
-
-        private void InsertCodeTemplate_Click(object sender, RoutedEventArgs e)
-        {
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-            var selection = currentRichEditBox.Document.Selection;
-            if (selection != null)
-            {
-                selection.StartPosition = selection.EndPosition;
-                selection.Text = "<@ ></@>";
-                selection.EndPosition = selection.StartPosition;
-                currentRichEditBox.Document.Selection.Move(TextRangeUnit.Character, 3);
-            }
-
-        }
-
-        private void InsertVariableLengthCodeTemplate_Click(object sender, RoutedEventArgs e)
-        {
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-            var selection = currentRichEditBox.Document.Selection;
-            if (selection != null)
-            {
-                selection.StartPosition = selection.EndPosition;
-                selection.Text = "<# ></#>";
-                selection.EndPosition = selection.StartPosition;
-                currentRichEditBox.Document.Selection.Move(TextRangeUnit.Character, 3);
-            }
-
-        }
-
-        private void RunCodeButton_Click(object sender, RoutedEventArgs e)
-        {
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-            currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string selectedText);
-            selectedText = selectedText.TrimEnd('\r');
-
-            (string stdOut, string stdErr) = RunPeloton(pelotonEXE, $"/Q=1 /L={currentLanguageId}", selectedText);
-
-            Run run = new();
-            Paragraph paragraph = new();
-
-            if (!string.IsNullOrEmpty(stdOut))
-            {
-                run.Text = stdOut;
-                paragraph.Inlines.Add(run);
-                outputText.Blocks.Add(paragraph);
-            }
-            if (!string.IsNullOrEmpty(stdErr))
-            {
-                run.Text = stdErr;
-                paragraph.Inlines.Add(run);
-                errorText.Blocks.Add(paragraph);
-            }
-        }
-
-        private void RunSelectedCodeButton_Click(object sender, RoutedEventArgs e)
-        {
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-            var selection = currentRichEditBox.Document.Selection;
-            //currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string selectedText);
-            //selectedText = selectedText.TrimEnd('\r');
-
-            string selectedText = selection.Text;
-            selectedText.TrimEnd('\r');
-            if (selection.Text.Length > 0)
-            {
-                (string stdOut, string stdErr) = RunPeloton(pelotonEXE, $"/Q=1 /L={currentLanguageId}", selectedText);
-
-                Run run = new();
-                Paragraph paragraph = new();
-
-                if (!string.IsNullOrEmpty(stdOut))
-                {
-                    run.Text = stdOut;
-                    paragraph.Inlines.Add(run);
-                    outputText.Blocks.Add(paragraph);
-                }
-                if (!string.IsNullOrEmpty(stdErr))
-                {
-                    run.Text = stdErr;
-                    paragraph.Inlines.Add(run);
-                    errorText.Blocks.Add(paragraph);
-                }
-            }
-
-        }
-
-        private void HelpAbout_Click(object sender, RoutedEventArgs e)
-        {
-            ContentDialog dialog = new()
-            {
-                XamlRoot = this.XamlRoot,
-                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                Title = "PelotonIDE v20230614",
-                Content = "Based on original code by\r\nHakob Chalikyan <hchalikyan3@gmail.com>",
-                CloseButtonText = "OK"
-            };
-            _ = dialog.ShowAsync();
-        }
-
-        private void Thumb_DragDelta(object sender, Microsoft.UI.Xaml.Controls.Primitives.DragDeltaEventArgs e)
-        {
-            var yadjust = outputPanel.Height - e.VerticalChange;
-            var xRightAdjust = outputPanel.Width - e.HorizontalChange;
-            var xLeftAdjust = outputPanel.Width + e.HorizontalChange;
-            if (outputPosition == OutputPanelPosition.Bottom)
-            {
-                if (yadjust >= 0)
-                {
-                    outputPanel.Height = yadjust;
-                }
-            }
-            else if (outputPosition == OutputPanelPosition.Left)
-            {
-                if (xLeftAdjust >= 0)
-                {
-                    outputPanel.Width = xLeftAdjust;
-                }
-            }
-            else if (outputPosition == OutputPanelPosition.Right)
-            {
-                if (xRightAdjust >= 0)
-                {
-                    outputPanel.Width = xRightAdjust;
-                }
-            }
-
-            if (outputPosition == OutputPanelPosition.Bottom)
-            {
-                this.ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.SizeNorthSouth, 0));
-            }
-            else
-            {
-                this.ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.SizeWestEast, 0));
-            }
-        }
-
-        private void OutputPanel_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            if (outputPosition == OutputPanelPosition.Bottom)
-            {
-                outputPanelTabView.Width = outputPanel.ActualWidth;
-                outputThumb.Width = outputPanel.ActualWidth;
-                outputThumb.Height = 5;
-            }
-            else if (outputPosition == OutputPanelPosition.Right)
-            {
-                outputPanelTabView.Width = outputPanel.ActualWidth;
-                outputThumb.Width = 5;
-                outputThumb.Height = outputPanel.ActualHeight;
-            }
-            else if (outputPosition == OutputPanelPosition.Left)
-            {
-                outputPanelTabView.Width = outputPanel.ActualWidth;
-                outputThumb.Width = 5;
-                outputThumb.Height = outputPanel.ActualHeight;
-                Canvas.SetLeft(outputThumb, outputPanel.ActualWidth - 1);
-            }
-        }
-
-        private async void OutputThumb_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            if (outputPosition == OutputPanelPosition.Bottom)
-            {
-                this.ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.SizeNorthSouth, 0));
-            }
-            else
-            {
-                this.ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.SizeWestEast, 0));
-            }
-        }
-
-        private void OutputThumb_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            this.ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Arrow, 0));
-        }
-
-        private void OutputThumb_DragCompleted(object sender, DragCompletedEventArgs e)
-        {
-            this.ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Arrow, 0));
-        }
-
-        private void Internationalization_Click(object sender, RoutedEventArgs e)
-        {
-            HandleLanguageChange(currentLanguageName /*((MenuFlyoutItem)sender).Name */);
-        }
-        #endregion
-
-        #region Edit Handlers
+        #region Script Runner
 
         private void CreateNewRichEditBox()
         {
             CustomRichEditBox richEditBox = new()
             {
-                Background = new SolidColorBrush(Color.FromArgb(0xff, 0xf9, 0xf8, 0xbd))
+
             };
             richEditBox.KeyDown += RichEditBox_KeyDown;
+            richEditBox.AcceptsReturn = true;
+
             CustomTabItem navigationViewItem = new()
             {
                 Content = "Tab " + (tabControl.MenuItems.Count + 1),
                 Tag = "Tab" + (tabControl.MenuItems.Count + 1),
-                IsNewFile = true
+                IsNewFile = true,
+                tabSettingJson = PerTabInterpreterParameters
             };
             richEditBox.Tag = navigationViewItem.Tag;
             tabControl.Content = richEditBox;
             _richEditBoxes[richEditBox.Tag] = richEditBox;
             tabControl.MenuItems.Add(navigationViewItem);
-            tabControl.SelectedItem = navigationViewItem;
+            tabControl.SelectedItem = navigationViewItem; // in focus?
             richEditBox.Focus(FocusState.Keyboard);
-        }
-
-        private void Cut()
-        {
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-            string selectedText = currentRichEditBox.Document.Selection.Text;
-            var dataPackage = new DataPackage();
-            dataPackage.SetText(selectedText);
-            Clipboard.SetContent(dataPackage);
-            currentRichEditBox.Document.Selection.Delete(Microsoft.UI.Text.TextRangeUnit.Character, 1);
-        }
-
-        private async void Open()
-        {
-            FileOpenPicker open = new()
-            {
-                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-            };
-            open.FileTypeFilter.Add(".pr");
-            open.FileTypeFilter.Add(".p");
-
-            // For Uno.WinUI-based apps
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
-            WinRT.Interop.InitializeWithWindow.Initialize(open, hwnd);
-
-            StorageFile pickedFile = await open.PickSingleFileAsync();
-            if (pickedFile != null)
-            {
-                CreateNewRichEditBox();
-                CustomTabItem navigationViewItem = (CustomTabItem)tabControl.MenuItems[tabControl.MenuItems.Count - 1];
-                navigationViewItem.IsNewFile = false;
-                navigationViewItem.SavedFilePath = pickedFile;
-                navigationViewItem.Content = pickedFile.Name;
-                CustomRichEditBox newestRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-                using (Windows.Storage.Streams.IRandomAccessStream randAccStream =
-                    await pickedFile.OpenAsync(Windows.Storage.FileAccessMode.Read))
-                {
-                    // Load the file into the Document property of the RichEditBox.
-                    if (pickedFile.FileType == ".pr")
-                    {
-                        newestRichEditBox.Document.LoadFromStream(Microsoft.UI.Text.TextSetOptions.FormatRtf, randAccStream);
-                        newestRichEditBox.isRTF = true;
-                    }
-                    else if (pickedFile.FileType == ".p")
-                    {
-                        string text = File.ReadAllText(pickedFile.Path, Encoding.UTF8);
-                        newestRichEditBox.Document.SetText(Microsoft.UI.Text.TextSetOptions.UnicodeBidi, text);
-                        newestRichEditBox.isRTF = false;
-                    }
-                }
-                if (newestRichEditBox.isRTF)
-                {
-                    HandleCustomPropertyLoading(pickedFile, newestRichEditBox);
-                }
-            }
-        }
-
-        private async void Save()
-        {
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-
-            if (navigationViewItem != null)
-            {
-                if (navigationViewItem.IsNewFile)
-                {
-                    FileSavePicker savePicker = new()
-                    {
-                        SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-                    };
-
-                    // Dropdown of file types the user can save the file as
-                    savePicker.FileTypeChoices.Add("Rich Text", new List<string>() { ".pr" });
-                    savePicker.FileTypeChoices.Add("UTF-8", new List<string>() { ".p" });
-
-                    string? tabTitle = navigationViewItem.Content.ToString();
-                    savePicker.SuggestedFileName = tabTitle ?? "New Document";
-
-                    // For Uno.WinUI-based apps
-                    var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
-                    WinRT.Interop.InitializeWithWindow.Initialize(savePicker, hwnd);
-
-                    StorageFile file = await savePicker.PickSaveFileAsync();
-                    if (file != null)
-                    {
-                        CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-                        // Prevent updates to the remote version of the file until we
-                        // finish making changes and call CompleteUpdatesAsync.
-                        CachedFileManager.DeferUpdates(file);
-                        // write to file
-                        using (Windows.Storage.Streams.IRandomAccessStream randAccStream =
-                        await file.OpenAsync(Windows.Storage.FileAccessMode.ReadWrite))
-                        {
-                            randAccStream.Size = 0;
-                            if (file.FileType == ".pr")
-                            {
-                                currentRichEditBox.Document.SaveToStream(Microsoft.UI.Text.TextGetOptions.FormatRtf, randAccStream);
-                                currentRichEditBox.isRTF = true;
-                            }
-                            else if (file.FileType == ".p")
-                            {
-                                currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string plainText);
-                                using (var dataWriter = new Windows.Storage.Streams.DataWriter(randAccStream))
-                                {
-                                    dataWriter.WriteString(plainText);
-                                    await dataWriter.StoreAsync();
-                                    await randAccStream.FlushAsync();
-                                }
-                                currentRichEditBox.isRTF = false;
-                            }
-                        }
-
-                        // Let Windows know that we're finished changing the file so the
-                        // other app can update the remote version of the file.
-                        FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
-                        if (status != FileUpdateStatus.Complete)
-                        {
-                            Windows.UI.Popups.MessageDialog errorBox =
-                                new($"File {file.Name} couldn't be saved.");
-                            await errorBox.ShowAsync();
-                        }
-
-                        CustomTabItem savedItem = (CustomTabItem)tabControl.SelectedItem;
-                        savedItem.IsNewFile = false;
-                        savedItem.Content = file.Name;
-                        savedItem.SavedFilePath = file;
-                        if (currentRichEditBox.isRTF)
-                        {
-                            HandleCustomPropertySaving(file, currentRichEditBox);
-                        }
-                    }
-                }
-                else
-                {
-                    if (navigationViewItem.SavedFilePath != null)
-                    {
-                        CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-                        StorageFile file = navigationViewItem.SavedFilePath;
-                        CachedFileManager.DeferUpdates(file);
-                        // write to file
-                        using (Windows.Storage.Streams.IRandomAccessStream randAccStream =
-                            await file.OpenAsync(Windows.Storage.FileAccessMode.ReadWrite))
-                        {
-                            randAccStream.Size = 0;
-
-                            if (file.FileType == ".pr")
-                            {
-                                currentRichEditBox.Document.SaveToStream(Microsoft.UI.Text.TextGetOptions.FormatRtf, randAccStream);
-                                currentRichEditBox.isRTF = true;
-                            }
-                            else if (file.FileType == ".p")
-                            {
-                                currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string plainText);
-                                using (var dataWriter = new Windows.Storage.Streams.DataWriter(randAccStream))
-                                {
-                                    dataWriter.WriteString(plainText);
-                                    await dataWriter.StoreAsync();
-                                    await randAccStream.FlushAsync();
-                                }
-                                currentRichEditBox.isRTF = false;
-                            }
-                        }
-
-                        // Let Windows know that we're finished changing the file so the
-                        // other app can update the remote version of the file.
-                        FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
-                        if (status != FileUpdateStatus.Complete)
-                        {
-                            Windows.UI.Popups.MessageDialog errorBox =
-                                new("File " + file.Name + " couldn't be saved.");
-                            await errorBox.ShowAsync();
-                        }
-                        CustomTabItem savedItem = (CustomTabItem)tabControl.SelectedItem;
-                        savedItem.IsNewFile = false;
-                        savedItem.Content = file.Name;
-
-                        if (currentRichEditBox.isRTF)
-                        {
-                            HandleCustomPropertySaving(file, currentRichEditBox);
-                        }
-                    }
-                }
-            }
-        }
-
-        private async void SaveAs()
-        {
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-
-            if (navigationViewItem != null)
-            {
-                FileSavePicker savePicker = new()
-                {
-                    SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-                };
-
-                // Dropdown of file types the user can save the file as
-                if ((navigationViewItem.Content as string).EndsWith(".p"))
-                {
-                    savePicker.FileTypeChoices.Add("UTF-8", new List<string>() { ".p" });
-                    savePicker.FileTypeChoices.Add("Rich Text", new List<string>() { ".pr" });
-                }
-                else
-                {
-                    savePicker.FileTypeChoices.Add("Rich Text", new List<string>() { ".pr" });
-                    savePicker.FileTypeChoices.Add("UTF-8", new List<string>() { ".p" });
-                }
-
-                string? tabTitle = navigationViewItem.Content.ToString();
-                savePicker.SuggestedFileName = tabTitle ?? "New Document";
-
-                // For Uno.WinUI-based apps
-                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
-                WinRT.Interop.InitializeWithWindow.Initialize(savePicker, hwnd);
-
-                StorageFile file = await savePicker.PickSaveFileAsync();
-                if (file != null)
-                {
-                    CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-                    // Prevent updates to the remote version of the file until we
-                    // finish making changes and call CompleteUpdatesAsync.
-                    CachedFileManager.DeferUpdates(file);
-                    // write to file
-                    using (Windows.Storage.Streams.IRandomAccessStream randAccStream =
-                        await file.OpenAsync(Windows.Storage.FileAccessMode.ReadWrite))
-                    {
-                        randAccStream.Size = 0;
-
-                        if (file.FileType == ".pr")
-                        {
-                            currentRichEditBox.Document.SaveToStream(Microsoft.UI.Text.TextGetOptions.FormatRtf, randAccStream);
-                            currentRichEditBox.isRTF = true;
-                        }
-                        else if (file.FileType == ".p")
-                        {
-                            currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string plainText);
-                            using (var dataWriter = new Windows.Storage.Streams.DataWriter(randAccStream))
-                            {
-                                dataWriter.WriteString(plainText);
-                                await dataWriter.StoreAsync();
-                                await randAccStream.FlushAsync();
-                            }
-                            currentRichEditBox.isRTF = false;
-                        }
-                    }
-
-                    // Let Windows know that we're finished changing the file so the
-                    // other app can update the remote version of the file.
-                    FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
-                    if (status != FileUpdateStatus.Complete)
-                    {
-                        Windows.UI.Popups.MessageDialog errorBox =
-                            new($"File {file.Name} couldn't be saved.");
-                        await errorBox.ShowAsync();
-                    }
-                    CustomTabItem savedItem = (CustomTabItem)tabControl.SelectedItem;
-                    savedItem.IsNewFile = false;
-                    savedItem.Content = file.Name;
-                    savedItem.SavedFilePath = file;
-
-                    if (currentRichEditBox.isRTF)
-                    {
-                        HandleCustomPropertySaving(file, currentRichEditBox);
-                    }
-                }
-            }
-        }
-
-        private void CopyText()
-        {
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-            string selectedText = currentRichEditBox.Document.Selection.Text;
-            DataPackage dataPackage = new();
-            dataPackage.SetText(selectedText);
-            Clipboard.SetContent(dataPackage);
-        }
-
-        private void Close()
-        {
-            if (tabControl.MenuItems.Count > 0)
-            {
-                CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-                _richEditBoxes.Remove(navigationViewItem.Tag);
-                tabControl.MenuItems.Remove(tabControl.SelectedItem);
-                if (tabControl.MenuItems.Count > 0)
-                {
-                    tabControl.SelectedItem = tabControl.MenuItems[tabControl.MenuItems.Count - 1];
-                }
-                else
-                {
-                    tabControl.Content = null;
-                    tabControl.SelectedItem = null;
-                }
-            }
-        }
-
-        private async void Paste()
-        {
-            var dataPackageView = Clipboard.GetContent();
-            if (dataPackageView.Contains(StandardDataFormats.Text))
-            {
-                string textToPaste = await dataPackageView.GetTextAsync();
-
-                if (!string.IsNullOrEmpty(textToPaste))
-                {
-                    CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-                    CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-                    currentRichEditBox.Document.Selection.Paste(0);
-                }
-            }
-        }
-
-        private void SelectAll()
-        {
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-            currentRichEditBox.Focus(FocusState.Pointer);
-            currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out var allText);
-            var endPosition = allText.Length - 1;
-            currentRichEditBox.Document.Selection.SetRange(0, endPosition);
         }
 
         #endregion
@@ -864,15 +326,16 @@ namespace PelotonIDE.Presentation
 
         public static void HandleCustomPropertySaving(StorageFile file, CustomRichEditBox customRichEditBox)
         {
+
             string rtfContent = File.ReadAllText(file.Path);
 
-            string settingsJson = System.Text.Json.JsonSerializer.Serialize(customRichEditBox.tabSettings);
+            // string settingsJson = System.Text.Json.JsonSerializer.Serialize(customRichEditBox.TabCodeRunCargo);
 
             // Manipulate the RTF content
             StringBuilder rtfBuilder = new(rtfContent);
 
             // Add a \language section
-            rtfBuilder.Insert(rtfBuilder.Length, settingsJson);
+            // rtfBuilder.Insert(rtfBuilder.Length, settingsJson);
 
             // Write the modified RTF content back to the file
             File.WriteAllText(file.Path, rtfBuilder.ToString());
@@ -890,8 +353,8 @@ namespace PelotonIDE.Presentation
                 // Deserialize the object from JSON
                 if (System.Text.Json.JsonSerializer.Deserialize(serializedObject, typeof(TabSpecificSettings)) is TabSpecificSettings tabSpecificSettings)
                 {
-                    customRichEditBox.tabSettings.Setting1 = tabSpecificSettings.Setting1;
-                    customRichEditBox.tabSettings.Setting2 = tabSpecificSettings.Setting2;
+                    //customRichEditBox.tabSettings.Setting1 = tabSpecificSettings.Setting1;
+                    //customRichEditBox.tabSettings.Setting2 = tabSpecificSettings.Setting2;
                 }
             }
             catch (Exception ex)
@@ -902,179 +365,222 @@ namespace PelotonIDE.Presentation
 
         private async void HandleLanguageChange(string langName)
         {
-            var languageJsonFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\LanguageConfig.json"));
-            string languageJsonString = File.ReadAllText(languageJsonFile.Path);
-            var languageJson = JsonConvert.DeserializeObject<LanguageConfigJson>(languageJsonString);
-            var selectedLanguage = languageJson[langName];
+            var selectedLanguage = LanguageSettings[langName];
 
             SetMenuText(selectedLanguage["frmMain"]);
             var selLang = selectedLanguage["GLOBAL"]["153"];
-            currentLanguageName = selLang == langName ? $"{langName}" : $"{langName} - {selLang}";
+            currentLanguageName = langName;
             currentLanguageId = int.Parse(selectedLanguage["GLOBAL"]["ID"]);
-            languageName.Text = "Language: " + currentLanguageName;
+            languageName.Text = selectedLanguage["GLOBAL"]["101"];
+
+            // languageName.Document.Selection.SetText(TextSetOptions.None, "Language: " + selLang == langName ? $"{langName}" : $"{langName} - {selLang}");
         }
 
         private void SetMenuText(Dictionary<string, string> selectedLanguage)
         {
-            fileBar.Title = selectedLanguage["mnuFile"];
-            menuNew.Text = selectedLanguage["mnuNew"];
-            menuOpen.Text = selectedLanguage["mnuOpen"];
-            menuSave.Text = selectedLanguage["mnuSave"];
-            menuSaveAs.Text = selectedLanguage["mnuSaveAs"];
-            menuClose.Text = selectedLanguage["mnuClose"];
-            editBar.Title = selectedLanguage["mnuEdit"];
-            menuCopy.Text = selectedLanguage["mnuCopy"];
-            menuCut.Text = selectedLanguage["mnuCut"];
-            menuPaste.Text = selectedLanguage["mnuPaste"];
-            menuSelectAll.Text = selectedLanguage["mnuDeselect"]; // select all not in original system
-            helpBar.Title = selectedLanguage["mnuHelp"];
-            menuAbout.Text = selectedLanguage["mnuHelpAbout"];
-            SearchBar.Title = selectedLanguage["mnuSearch"];
-            FormatBar.Title = selectedLanguage["mnuFormat"];
-            ViewBar.Title = selectedLanguage["mnuView"];
-            InterpreterBar.Title = selectedLanguage["mnuRun"];
-            SourceBar.Title = selectedLanguage["mnuSource"];
-            SettingsBar.Title = selectedLanguage["mnuSettings"];
-            WindowBar.Title = selectedLanguage["mnuWindow"];
+            foreach (var mi in menuBar.Items)
+            {
+                Debug.WriteLine($"mi {mi.Name}");
+                MainPage.HandlePossibleAmpersand(selectedLanguage[mi.Name], mi);
 
-            ToolTipService.SetToolTip(newFileButton, selectedLanguage["mnuNew"]);
-            ToolTipService.SetToolTip(openFileButton, selectedLanguage["mnuOpen"]);
-            ToolTipService.SetToolTip(saveFileButton, selectedLanguage["mnuSave"]);
-            ToolTipService.SetToolTip(saveAsFileButton, selectedLanguage["mnuSaveAs"]);
-            ToolTipService.SetToolTip(closeFileButton, selectedLanguage["mnuClose"]);
-            ToolTipService.SetToolTip(copyButton, selectedLanguage["mnuCopy"]);
-            ToolTipService.SetToolTip(cutButton, selectedLanguage["mnuCut"]);
-            ToolTipService.SetToolTip(pasteButton, selectedLanguage["mnuPaste"]);
-            ToolTipService.SetToolTip(selectAllButton, selectedLanguage["mnuDeselect"]);
-            // ToolTipService.SetToolTip(transformButton, selectedLanguage["mnuTransform"]);
+                foreach (var mii in mi.Items)
+                {
+                    Debug.WriteLine($"mii {mii.Name}");
+                    if (selectedLanguage.ContainsKey(mii.Name))
+                        MainPage.HandlePossibleAmpersand(selectedLanguage[mii.Name], mii);
+                }
+            }
+
+            MainPage.HandlePossibleAmpersand(selectedLanguage["mnuQuiet"], mnuQuiet);
+            MainPage.HandlePossibleAmpersand(selectedLanguage["mnuVerbose"], mnuVerbose);
+            MainPage.HandlePossibleAmpersand(selectedLanguage["mnuVerbosePauseOnExit"], mnuVerbosePauseOnExit);
+
+
+            ToolTipService.SetToolTip(butNew, selectedLanguage["new.Tip"]);
+            ToolTipService.SetToolTip(butOpen, selectedLanguage["open.Tip"]);
+            ToolTipService.SetToolTip(butSave, selectedLanguage["save.Tip"]);
+            ToolTipService.SetToolTip(butSaveAs, selectedLanguage["save.Tip"]);
+            // ToolTipService.SetToolTip(butClose, selectedLanguage["close.Tip"]);
+            ToolTipService.SetToolTip(butCopy, selectedLanguage["copy.Tip"]);
+            ToolTipService.SetToolTip(butCut, selectedLanguage["cut.Tip"]);
+            ToolTipService.SetToolTip(butPaste, selectedLanguage["paste.Tip"]);
+            //ToolTipService.SetToolTip(butSelectAll, selectedLanguage["mnuDeselect"]);
+            ToolTipService.SetToolTip(butTransform, selectedLanguage["mnuTranslate"]);
             // ToolTipService.SetToolTip(toggleOutputButton, selectedLanguage["mnuToggleOutput"]);
-            //ToolTipService.SetToolTip(runCodeButton, selectedLanguage["mnuRunCode"]);
+            ToolTipService.SetToolTip(butGo, selectedLanguage["run.Tip"]);
         }
 
-        private void HandleOutputPanelChange(OutputPanelPosition panelPos)
+        private static void HandlePossibleAmpersand(string name, MenuFlyoutItemBase mfib)
         {
-            if (panelPos == OutputPanelPosition.Left)
+            if (name.Contains('&'))
             {
-                outputPosition = OutputPanelPosition.Left;
-
-                RelativePanel.SetAlignLeftWithPanel(outputPanel, true);
-                RelativePanel.SetAlignRightWithPanel(outputPanel, false);
-                RelativePanel.SetBelow(outputPanel, newFileButton);
-                outputPanel.Width = 200;
-                outputPanel.MinWidth = 175;
-                outputPanel.MaxWidth = 700;
-                outputPanel.ClearValue(HeightProperty);
-                outputPanel.ClearValue(MaxHeightProperty);
-
-                RelativePanel.SetAbove(tabControl, statusBar);
-                RelativePanel.SetRightOf(tabControl, outputPanel);
-                RelativePanel.SetAlignLeftWithPanel(tabControl, false);
-                RelativePanel.SetAlignRightWithPanel(tabControl, true);
-
-                outputLeftButton.BorderBrush = new SolidColorBrush(Colors.DodgerBlue);
-                outputBottomButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
-                outputRightButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
-
-                outputLeftButton.Background = new SolidColorBrush(Colors.DeepSkyBlue);
-                outputBottomButton.Background = new SolidColorBrush(Colors.Transparent);
-                outputRightButton.Background = new SolidColorBrush(Colors.Transparent);
-
-                Canvas.SetLeft(outputThumb, outputPanel.Width - 1);
-                Canvas.SetTop(outputThumb, 0);
-
-                outputDockingFlyout.Hide();
+                string accel = name.Substring(name.IndexOf("&") + 1, 1);
+                mfib.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = Enum.Parse<VirtualKey>(accel.ToUpperInvariant()), Modifiers = VirtualKeyModifiers.Menu });
+                name = name.Replace("&", "");
             }
-            else if (panelPos == OutputPanelPosition.Bottom)
+            switch (mfib.GetType().Name)
             {
-                outputPosition = OutputPanelPosition.Bottom;
-
-                RelativePanel.SetAlignLeftWithPanel(tabControl, true);
-                RelativePanel.SetAlignRightWithPanel(tabControl, true);
-                RelativePanel.SetRightOf(tabControl, null);
-                RelativePanel.SetAbove(tabControl, outputPanel);
-
-                RelativePanel.SetAlignLeftWithPanel(outputPanel, true);
-                RelativePanel.SetAlignRightWithPanel(outputPanel, true);
-                RelativePanel.SetBelow(outputPanel, null);
-                outputPanel.Height = 200;
-                outputPanel.MaxHeight = 500;
-                outputPanel.ClearValue(WidthProperty);
-                outputPanel.ClearValue(MaxWidthProperty);
-
-                outputBottomButton.BorderBrush = new SolidColorBrush(Colors.DodgerBlue);
-                outputLeftButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
-                outputRightButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
-
-                outputBottomButton.Background = new SolidColorBrush(Colors.DeepSkyBlue);
-                outputLeftButton.Background = new SolidColorBrush(Colors.Transparent);
-                outputRightButton.Background = new SolidColorBrush(Colors.Transparent);
-
-                Canvas.SetLeft(outputThumb, 0);
-                Canvas.SetTop(outputThumb, -4);
-
-                outputDockingFlyout.Hide();
-            }
-            else if (panelPos == OutputPanelPosition.Right)
-            {
-                outputPosition = OutputPanelPosition.Right;
-
-                RelativePanel.SetAlignLeftWithPanel(outputPanel, false);
-                RelativePanel.SetAlignRightWithPanel(outputPanel, true);
-                RelativePanel.SetBelow(outputPanel, newFileButton);
-                outputPanel.Width = 200;
-                outputPanel.MinWidth = 175;
-                outputPanel.MaxWidth = 700;
-                outputPanel.ClearValue(HeightProperty);
-                outputPanel.ClearValue(MaxHeightProperty);
-
-                RelativePanel.SetAbove(tabControl, statusBar);
-                RelativePanel.SetLeftOf(tabControl, outputPanel);
-                RelativePanel.SetAlignLeftWithPanel(tabControl, true);
-                RelativePanel.SetAlignRightWithPanel(tabControl, false);
-
-                outputRightButton.BorderBrush = new SolidColorBrush(Colors.DodgerBlue);
-                outputBottomButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
-                outputLeftButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
-
-                outputRightButton.Background = new SolidColorBrush(Colors.DeepSkyBlue);
-                outputBottomButton.Background = new SolidColorBrush(Colors.Transparent);
-                outputLeftButton.Background = new SolidColorBrush(Colors.Transparent);
-
-                Canvas.SetLeft(outputThumb, -4);
-                Canvas.SetTop(outputThumb, 0);
-
-                outputDockingFlyout.Hide();
+                case "MenuFlyoutSubItem":
+                    ((MenuFlyoutSubItem)mfib).Text = name;
+                    break;
+                case "MenuFlyoutItem":
+                    ((MenuFlyoutItem)mfib).Text = name;
+                    break;
+                default:
+                    Debugger.Launch();
+                    break;
             }
         }
 
-        public static (string StdOut, string StdErr) RunPeloton(string pelotonPath, string extraArguments, string buffer)
+        private static void HandlePossibleAmpersand(string name, MenuBarItem mbi)
         {
-            var tempfile = Path.GetTempFileName();
-            File.WriteAllText(tempfile, buffer);
-            ProcessStartInfo startInfo = new()
+            if (name.Contains('&'))
             {
-                Arguments = $"{tempfile} {extraArguments}",
-                FileName = pelotonPath,
+                string accel = name.Substring(name.IndexOf("&") + 1, 1);
+                mbi.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = Enum.Parse<VirtualKey>(accel.ToUpperInvariant()), Modifiers = VirtualKeyModifiers.Menu });
+                name = name.Replace("&", "");
+            }
+            mbi.Title = name;
+        }
+
+        private static void HandlePossibleAmpersand(string name, MenuFlyoutItem mfi)
+        {
+            if (name.Contains('&'))
+            {
+                string accel = name.Substring(name.IndexOf("&") + 1, 1);
+                mfi.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = Enum.Parse<VirtualKey>(accel.ToUpperInvariant()), Modifiers = VirtualKeyModifiers.Menu });
+                name = name.Replace("&", "");
+            }
+            mfi.Text = name;
+        }
+
+        private string BuildTabCommandLine()
+        {
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+
+            List<string> paras = new();
+            foreach (var key in GlobalInterpreterParameters.Keys)
+            {
+                if ((bool)GlobalInterpreterParameters[key]["Defined"])
+                {
+                    var entry = $"/{GlobalInterpreterParameters[key]["Key"]}";
+                    var value = GlobalInterpreterParameters[key]["Value"];
+                    var type = value.GetType().Name;
+                    switch (type)
+                    {
+                        case "Boolean":
+                            paras.Add(entry);
+                            break;
+                        default:
+                            paras.Add($"{entry}:{value}");
+                            break;
+                    }
+                }
+            }
+
+            var inTab = navigationViewItem.tabSettingJson;
+
+            if (inTab != null)
+            {
+                foreach (var key in inTab.Keys)
+                {
+                    if ((bool)inTab[key]["Defined"])
+                    {
+                        var entry = $"/{inTab[key]["Key"]}";
+                        var value = inTab[key]["Value"];
+                        var type = value.GetType().Name;
+                        switch (type)
+                        {
+                            case "Boolean":
+                                paras.Add(entry);
+                                break;
+                            default:
+                                paras.Add($"{entry}:{value}");
+                                break;
+                        }
+                    }
+                }
+            }
+            return string.Join(" ", paras.ToArray());
+        }
+
+        private void UpdateTabCommandLine(TextBox tabCommandLine)
+        {
+            tabCommandLine.Text = BuildTabCommandLine();
+        }
+
+        private void ExecuteInterpreter(string selectedText)
+        {
+            // load tab settings
+            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+            //foreach (var setting in localSettings.Values)
+            //{
+            //    if (setting.Key.StartsWith("tab_"))
+            //        Debug.WriteLine("{0} => {1}", setting.Key, setting.Value);
+            //}
+
+            pelotonARG = BuildTabCommandLine();
+
+            // override with matching tab settings
+            // generate arguments string
+            (string stdOut, string stdErr) = RunPeloton(pelotonEXE, pelotonARG, selectedText);
+
+            Run run = new();
+            Paragraph paragraph = new();
+            if (!string.IsNullOrEmpty(stdOut))
+            {
+                run.Text = stdOut;
+                paragraph.Inlines.Add(run);
+                outputText.Blocks.Add(paragraph);
+            }
+
+            run = new();
+            paragraph = new();
+            if (!string.IsNullOrEmpty(stdErr))
+            {
+                run.Text = stdErr;
+                paragraph.Inlines.Add(run);
+                errorText.Blocks.Add(paragraph);
+            }
+        }
+
+
+        public static (string StdOut, string StdErr) RunPeloton(string exe, string args, string buff)
+        {
+            //var temp = Path.GetTempFileName();
+            //File.WriteAllText(temp, buff);
+            ProcessStartInfo info = new()
+            {
+                Arguments = $"{args}",
+                FileName = exe,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
+                RedirectStandardInput = true,
+                // CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden
             };
 
-            var theProcess = Process.Start(startInfo);
+            var proc = Process.Start(info);
             StringBuilder stdout = new();
             StringBuilder stderr = new();
 
-            theProcess.OutputDataReceived += (object sender, DataReceivedEventArgs e) => stdout.Append(e.Data);
-            theProcess.ErrorDataReceived += (object sender, DataReceivedEventArgs e) => stderr.Append(e.Data);
+            StreamWriter stream = proc.StandardInput;
+            stream.Write(buff);
+            stream.Close();
 
-            theProcess.BeginErrorReadLine();
-            theProcess.BeginOutputReadLine();
+            proc.OutputDataReceived += (object sender, DataReceivedEventArgs e) => stdout.Append(e.Data);
+            proc.ErrorDataReceived += (object sender, DataReceivedEventArgs e) => stderr.Append(e.Data);
 
-            theProcess.WaitForExit();
-            theProcess.Dispose();
+            proc.BeginErrorReadLine();
+            proc.BeginOutputReadLine();
+
+            proc.WaitForExit();
+            proc.Dispose();
 
             return (StdOut: stdout.ToString(), StdErr: stderr.ToString());
         }
+        #endregion
     }
 }

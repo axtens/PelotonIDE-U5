@@ -10,21 +10,20 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.System;
 using Windows.UI.Core;
 
+using TabSettingJson = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, object>>;
+
 namespace PelotonIDE.Presentation
 {
     public partial class CustomRichEditBox : RichEditBox
     {
-        public TabSpecificSettings tabSettings { get; set; }
         public bool isRTF { get; set; }
 
         public CustomRichEditBox()
         {
             IsSpellCheckEnabled = false;
-            tabSettings = new TabSpecificSettings();
             isRTF = true;
             SelectionFlyout = null;
             ContextFlyout = null;
-            
         }
 
         protected override void OnKeyDown(KeyRoutedEventArgs e)

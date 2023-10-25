@@ -1,11 +1,8 @@
 {
   "Language": "English",
   "LanguageID": 0,
-  "OutputPanelPosition": "Bottom",
-  "DefaultTabBackground": "FFf9f8bd",
-  "PelotonEXE": "c:\\protium\\bin\\pdb.exe",
-  "PelotonCMDLine": "/L:0",
+  "PelotonEXE": "c:\\bin\\stud\\stud.exe",
   "OutputHeight": 200,
-  "OutputWidth": 0,
-  "OutputPanelShowing":  true
+  "OutputPanelShowing": true,
+  "OutputPanelPosition": "Bottom"
 }
