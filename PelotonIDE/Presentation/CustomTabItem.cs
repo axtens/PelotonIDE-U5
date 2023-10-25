@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
 
+using TabSettingJson = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, object>>;
+
 namespace PelotonIDE.Presentation
 {
     public partial class CustomTabItem : NavigationViewItem
@@ -12,6 +14,8 @@ namespace PelotonIDE.Presentation
         public bool IsNewFile { get; set; }
 
         public StorageFile? SavedFilePath { get; set; }
+
+        public TabSettingJson? tabSettingJson { get; set; }
 
         public CustomTabItem()
         {
