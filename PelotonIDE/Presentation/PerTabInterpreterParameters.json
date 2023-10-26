@@ -1,49 +1,4 @@
 {
-  "Help": {
-    "Defined": false,
-    "Key": "?",
-    "Value": false
-  },
-  "Exclaim": {
-    "Defined": false,
-    "Key": "!",
-    "Value": false
-  },
-  "Literate": {
-    "Defined": false,
-    "Key": "*",
-    "Value": false
-  },
-  "VariableLength": {
-    "Defined": false,
-    "Key": "#",
-    "Value": false
-  },
-  "Listen": {
-    "Defined": false,
-    "Key": ".",
-    "Value": -1
-  },
-  "Comma": {
-    "Defined": false,
-    "Key": ",",
-    "Value": false
-  },
-  "Brace": {
-    "Defined": false,
-    "Key": "{",
-    "Value": false
-  },
-  "Brackets": {
-    "Defined": false,
-    "Key": "(",
-    "Value": false
-  },
-  "Before": {
-    "Defined": false,
-    "Key": "-",
-    "Value": ""
-  },
   "After": {
     "Defined": false,
     "Key": "+",
@@ -59,9 +14,29 @@
     "Key": "B",
     "Value": ""
   },
+  "Before": {
+    "Defined": false,
+    "Key": "-",
+    "Value": ""
+  },
+  "Brace": {
+    "Defined": false,
+    "Key": "{",
+    "Value": false
+  },
+  "Brackets": {
+    "Defined": false,
+    "Key": "(",
+    "Value": false
+  },
   "Check": {
     "Defined": false,
     "Key": "C",
+    "Value": false
+  },
+  "Comma": {
+    "Defined": false,
+    "Key": ",",
     "Value": false
   },
   "Debug": {
@@ -74,6 +49,16 @@
     "Key": "E",
     "Value": ""
   },
+  "Exclaim": {
+    "Defined": false,
+    "Key": "!",
+    "Value": false
+  },
+  "eXecute": {
+    "Defined": false,
+    "Key": "X",
+    "Value": ""
+  },
   "Filespec": {
     "Defined": false,
     "Key": "F",
@@ -83,6 +68,11 @@
     "Defined": false,
     "Key": "G",
     "Value": ""
+  },
+  "Help": {
+    "Defined": false,
+    "Key": "?",
+    "Value": false
   },
   "Host": {
     "Defined": false,
@@ -105,9 +95,19 @@
     "Value": ""
   },
   "Language": {
-    "Defined": false,
+    "Defined": true,
     "Key": "L",
     "Value": 0
+  },
+  "Listen": {
+    "Defined": false,
+    "Key": ".",
+    "Value": -1
+  },
+  "Literate": {
+    "Defined": false,
+    "Key": "*",
+    "Value": false
   },
   "Memory": {
     "Defined": false,
@@ -139,6 +139,11 @@
     "Key": "R",
     "Value": ""
   },
+  "Spaced": {
+    "Defined": false,
+    "Key": "@",
+    "Value": false
+  },
   "Structure": {
     "Defined": false,
     "Key": "S",
@@ -154,6 +159,11 @@
     "Key": "U",
     "Value": ""
   },
+  "VariableLength": {
+    "Defined": false,
+    "Key": "#",
+    "Value": false
+  },
   "Variables": {
     "Defined": false,
     "Key": "V",
@@ -162,11 +172,6 @@
   "Workspace": {
     "Defined": false,
     "Key": "W",
-    "Value": ""
-  },
-  "eXecute": {
-    "Defined": false,
-    "Key": "X",
     "Value": ""
   },
   "Yonder": {

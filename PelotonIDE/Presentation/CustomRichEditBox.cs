@@ -17,6 +17,7 @@ namespace PelotonIDE.Presentation
     public partial class CustomRichEditBox : RichEditBox
     {
         public bool isRTF { get; set; }
+        public bool isDirty { get; set; }
 
         public CustomRichEditBox()
         {
@@ -49,6 +50,12 @@ namespace PelotonIDE.Presentation
             if (e.Key == VirtualKey.A && isCtrlPressed)
             {
                 SelectAll();
+                return;
+            }
+            if (e.Key == VirtualKey.Tab)
+            {
+                Document.Selection.TypeText("\t");
+                e.Handled = true;
                 return;
             }
             base.OnKeyDown(e);

@@ -59,7 +59,7 @@ namespace PelotonIDE.Presentation
                     break;
             }
             GlobalInterpreterParameters["Quietude"]["Defined"] = true;
-            UpdateTabCommandLine(tabCommandLine);
+            UpdateTabCommandLine();
         }
 
         private void FileNew_Click(object sender, RoutedEventArgs e)
@@ -128,6 +128,15 @@ namespace PelotonIDE.Presentation
             {
                 CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
                 tabControl.Content = _richEditBoxes[navigationViewItem.Tag];
+                if (navigationViewItem.tabSettingJson != null)
+                {
+                    var currentLanguageName = GetTabsLanguageName(navigationViewItem.tabSettingJson);
+                    if (languageName.Text != currentLanguageName)
+                    {
+                        languageName.Text = currentLanguageName;
+                    }
+                    UpdateTabCommandLine();
+                }
             }
         }
 
@@ -151,6 +160,7 @@ namespace PelotonIDE.Presentation
             }
             if (tabControl.Content is CustomRichEditBox currentRichEditBox)
             {
+                currentRichEditBox.isDirty = true;
                 currentRichEditBox.Document.GetText(TextGetOptions.None, out string text);
                 //wordCount.Text = text.Split(' ').Length - 1 + " words";
                 int caretPosition = currentRichEditBox.Document.Selection.StartPosition;
@@ -280,7 +290,7 @@ namespace PelotonIDE.Presentation
 
         private async void TransformButton_Click(object sender, RoutedEventArgs e)
         {
-            ContentDialog dialog = new()
+            /*ContentDialog dialog = new()
             {
                 XamlRoot = this.XamlRoot,
                 Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
@@ -306,7 +316,16 @@ namespace PelotonIDE.Presentation
                 navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
                 currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
                 currentRichEditBox.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, reversedString);
-            }
+            }*/
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = "Translator - Currently not implemented",
+                PrimaryButtonText = "OK",                
+            };
+            var result = await dialog.ShowAsync();
+
         }
 
         private void ToggleOutputButton_Click(object sender, RoutedEventArgs e)
@@ -387,7 +406,7 @@ namespace PelotonIDE.Presentation
                 navigationViewItem.tabSettingJson["VariableLength"]["Value"] = false;
             }
 
-            UpdateTabCommandLine(tabCommandLine);
+            UpdateTabCommandLine();
         }
 
         private void MnuLanguage_Click(object sender, RoutedEventArgs e)
@@ -403,11 +422,12 @@ namespace PelotonIDE.Presentation
             var id = LanguageSettings[lang]["GLOBAL"]["ID"];
 
             navigationViewItem.tabSettingJson["Language"]["Defined"] = true;
-            navigationViewItem.tabSettingJson["Language"]["Value"] = id;
+            navigationViewItem.tabSettingJson["Language"]["Value"] = int.Parse(id);
 
-            languageName.Text = LanguageSettings[currentLanguageName]["GLOBAL"][$"{101+int.Parse(id)}"]; // the international language setting actually, not lang
+            UpdateLanguageName(navigationViewItem.tabSettingJson);
+            //languageName.Text = LanguageSettings[currentLanguageName]["GLOBAL"][$"{101+int.Parse(id)}"]; // FIXME? the international language setting actually, not lang
                 
-            UpdateTabCommandLine(tabCommandLine);
+            UpdateTabCommandLine();
         }
 
         private async void ResetToFactorySettings_Click(object sender, RoutedEventArgs e)
@@ -417,7 +437,18 @@ namespace PelotonIDE.Presentation
                 Debug.WriteLine($"{setting.Key} => {setting.Value}");
                 ApplicationData.Current.LocalSettings.DeleteContainer(setting.Key);
             }
-            await ApplicationData.Current.ClearAsync(); 
+            await ApplicationData.Current.ClearAsync();
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = "Factory Reset completed",
+                Content = "The IDE will now shutdown.",
+                CloseButtonText = "OK"
+            };
+            _ = await dialog.ShowAsync();
+            Environment.Exit(0);
+
         }
         private void HelpAbout_Click(object sender, RoutedEventArgs e)
         {

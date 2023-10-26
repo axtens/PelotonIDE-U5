@@ -26,6 +26,7 @@
         <SolidColorBrush Color="DarkSlateGray" x:Key="TopNavigationViewItemBackgroundSelectedPointerOver"/>
         <SolidColorBrush Color="DarkGray" x:Key="TopNavigationViewItemBackgroundPressed"/>
         <SolidColorBrush Color="DarkSlateGray" x:Key="TopNavigationViewItemBackgroundSelectedPressed"/>
+        
     </Page.Resources>
     <RelativePanel x:Name="relativePanel" Margin="0,0,0,0" HorizontalAlignment="Stretch">
         <RelativePanel.Resources>
@@ -343,22 +344,22 @@
                 </TabView.TabItems>
             </TabView>
         </Canvas>
-        <StackPanel x:Name="statusBar" RelativePanel.AlignBottomWithPanel="True" Orientation="Horizontal">
+        <StackPanel x:Name="statusBar" RelativePanel.AlignBottomWithPanel="True" Orientation="Horizontal" Height="35">
             <!--<TextBlock Text="0 words" Margin="0,0,20,0" Name="wordCount"/>-->
-            <TextBox IsReadOnly="True" Name="languageName" Width="200" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
-            <TextBox IsReadOnly="True" Name="ideStatus" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
-            <TextBox IsReadOnly="True" Name="tabCommandLine" Width="200" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
-            <TextBox IsReadOnly="True" Name="cursorPosition" Width="200" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
-            <TextBox IsReadOnly="True" Name="misc" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
-            <TextBox IsReadOnly="True" Name="CAPS" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
-            <TextBox IsReadOnly="True" Name="INS"  Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
-            <TextBox IsReadOnly="True" Name="NUM"  Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
-            <TextBox IsReadOnly="True" Name="SCRL" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
-            <TextBox IsReadOnly="True" Name="DATE" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
-            <TextBox IsReadOnly="True" Name="TIME" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
-            <TextBox IsReadOnly="True" Name="kana" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
-            <TextBox IsReadOnly="True" Name="kanji" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
-            <TextBox IsReadOnly="True" Name="junja" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="languageName" Height="30" Width="200" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="ideStatus" Height="30" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="tabCommandLine" Height="30" Width="200" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="cursorPosition" Height="30" Width="200" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="misc" Height="30"  Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="CAPS" Height="30" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="INS"  Height="30" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="NUM"  Height="30" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="SCRL" Height="30" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="DATE" Height="30" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="TIME" Height="30" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="kana" Height="30" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="kanji" Height="30" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
+            <TextBox IsReadOnly="True" Name="junja" Height="30" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
         </StackPanel>
 
     </RelativePanel>

@@ -1,6 +1,7 @@
 ﻿using Microsoft.UI;
 using Microsoft.UI.Input;
 using Microsoft.UI.Text;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 
@@ -47,7 +48,7 @@ namespace PelotonIDE.Presentation
                 navigationViewItem.Content = pickedFile.Name;
                 navigationViewItem.Height = 30; // FIXME is this where to do it?
                 // navigationViewItem.MaxHeight = 60; // FIXME is this where to do it?
-                navigationViewItem.VerticalAlignment = VerticalAlignment.Bottom;
+                // navigationViewItem.VerticalAlignment = VerticalAlignment.Bottom;
                 CustomRichEditBox newestRichEditBox = _richEditBoxes[navigationViewItem.Tag];
                 using (Windows.Storage.Streams.IRandomAccessStream randAccStream =
                     await pickedFile.OpenAsync(FileAccessMode.Read))
@@ -57,18 +58,24 @@ namespace PelotonIDE.Presentation
                     {
                         newestRichEditBox.Document.LoadFromStream(Microsoft.UI.Text.TextSetOptions.FormatRtf, randAccStream);
                         newestRichEditBox.isRTF = true;
+                        newestRichEditBox.isDirty = false;
                     }
                     else if (pickedFile.FileType == ".p")
                     {
                         string text = File.ReadAllText(pickedFile.Path, Encoding.UTF8);
                         newestRichEditBox.Document.SetText(Microsoft.UI.Text.TextSetOptions.UnicodeBidi, text);
                         newestRichEditBox.isRTF = false;
+                        newestRichEditBox.isDirty = false;
                     }
                 }
                 if (newestRichEditBox.isRTF)
                 {
-                    HandleCustomPropertyLoading(pickedFile, newestRichEditBox);
+                    HandleCustomPropertyLoading(pickedFile, newestRichEditBox, navigationViewItem);
                 }
+                // FIXME the language id of the RTF, usually
+                // navigationViewItem.tabSettingJson["Language"]["Defined"] = true;
+                // navigationViewItem.tabSettingJson["Language"]["Value"] = currentLanguageId;
+
             }
         }
 
@@ -142,7 +149,7 @@ namespace PelotonIDE.Presentation
                         savedItem.SavedFilePath = file;
                         if (currentRichEditBox.isRTF)
                         {
-                            HandleCustomPropertySaving(file, currentRichEditBox);
+                            HandleCustomPropertySaving(file, currentRichEditBox, navigationViewItem);
                         }
                     }
                 }
@@ -192,7 +199,7 @@ namespace PelotonIDE.Presentation
 
                         if (currentRichEditBox.isRTF)
                         {
-                            HandleCustomPropertySaving(file, currentRichEditBox);
+                            HandleCustomPropertySaving(file, currentRichEditBox, navigationViewItem);
                         }
                     }
                 }
@@ -276,7 +283,7 @@ namespace PelotonIDE.Presentation
 
                     if (currentRichEditBox.isRTF)
                     {
-                        HandleCustomPropertySaving(file, currentRichEditBox);
+                        HandleCustomPropertySaving(file, currentRichEditBox, navigationViewItem);
                     }
                 }
             }
@@ -292,11 +299,16 @@ namespace PelotonIDE.Presentation
             Clipboard.SetContent(dataPackage);
         }
 
-        private void Close()
+        private async void Close()
         {
             if (tabControl.MenuItems.Count > 0)
             {
                 CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+                CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+                var t1 = tab1;
+                if (currentRichEditBox.isDirty) {
+                    if (!await AreYouSureToClose()) return;
+                }
                 _richEditBoxes.Remove(navigationViewItem.Tag);
                 tabControl.MenuItems.Remove(tabControl.SelectedItem);
                 if (tabControl.MenuItems.Count > 0)
@@ -309,6 +321,22 @@ namespace PelotonIDE.Presentation
                     tabControl.SelectedItem = null;
                 }
             }
+        }
+
+        private async Task<bool> AreYouSureToClose()
+        {
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = "Document changed but not saved. Close?",
+                PrimaryButtonText = "No",
+                SecondaryButtonText = "Yes"
+            };
+            var result = await dialog.ShowAsync();
+            if (result == ContentDialogResult.Secondary) { return true; }
+            if (result == ContentDialogResult.Primary) { return false; }
+            return false;
         }
 
         private async void Paste()
