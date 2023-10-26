@@ -220,18 +220,21 @@ namespace PelotonIDE.Presentation
             if (outputPosition == OutputPanelPosition.Bottom)
             {
                 outputPanelTabView.Width = outputPanel.ActualWidth;
+                outputPanelTabView.Height = outputPanel.ActualHeight;
                 outputThumb.Width = outputPanel.ActualWidth;
                 outputThumb.Height = 5;
             }
             else if (outputPosition == OutputPanelPosition.Right)
             {
                 outputPanelTabView.Width = outputPanel.ActualWidth;
+                outputPanelTabView.Height = outputPanel.ActualHeight;
                 outputThumb.Width = 5;
                 outputThumb.Height = outputPanel.ActualHeight;
             }
             else if (outputPosition == OutputPanelPosition.Left)
             {
                 outputPanelTabView.Width = outputPanel.ActualWidth;
+                outputPanelTabView.Height = outputPanel.ActualHeight;
                 outputThumb.Width = 5;
                 outputThumb.Height = outputPanel.ActualHeight;
                 Canvas.SetLeft(outputThumb, outputPanel.ActualWidth - 1);

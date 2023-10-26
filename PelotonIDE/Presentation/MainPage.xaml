@@ -280,7 +280,7 @@
             <Thumb x:Name="outputThumb"  Height="5" DragDelta="Thumb_DragDelta" DragCompleted="OutputThumb_DragCompleted"
                    Canvas.Left="0" Canvas.Top="-5" PointerEntered="OutputThumb_PointerEntered" PointerExited="OutputThumb_PointerExited"/>
             <TabView x:Name="outputPanelTabView" IsAddTabButtonVisible="False" TabWidthMode="SizeToContent" 
-                     VerticalAlignment="Stretch" HorizontalAlignment="Stretch" >
+                     VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="200">
                 <TabView.TabStripFooter>
                     <Button VerticalAlignment="Center" HorizontalAlignment="Right">
                         <Button.Content>
@@ -322,9 +322,10 @@
                 </TabView.TabStripFooter>
                 <TabView.TabItems>
                     <TabViewItem Header="Output" IsSelected="True" IsClosable="False" Background="DarkGray" Foreground="White">
-                        <Border Background="LightGray" Margin="5" Padding="0">
+                        <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                             <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto"
-                                          HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto">
+                                          HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto"
+                                          VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                                 <RichTextBlock x:Name="outputText" IsTextSelectionEnabled="True" >
                                     <Paragraph>
 
@@ -335,11 +336,12 @@
                     </TabViewItem>
                     <TabViewItem Header="Error" IsClosable="False" Background="DarkGray" Foreground="White">
                         <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto"
-                                          HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto">
-                                <RichTextBlock x:Name="errorText" IsTextSelectionEnabled="True" >
+                            <ScrollViewer VerticalScrollBarVisibility="Auto"  VerticalScrollMode="Auto"
+                                          HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto"
+                                          VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                <RichTextBlock x:Name="errorText" IsTextSelectionEnabled="True">
                                     <Paragraph>
-
+                                        
                                     </Paragraph>
                                 </RichTextBlock>
                             </ScrollViewer>
