@@ -9,7 +9,7 @@
   <Identity
     Name="PelotonProjectMultilingualIDE"
     Publisher="CN=Peloton Project"
-    Version="1.0.18.0" />
+    Version="1.0.19.0" />
 
   <Properties>
 	<DisplayName>PelotonIDE</DisplayName>

@@ -15,7 +15,7 @@ namespace PelotonIDE.Presentation
 
         public StorageFile? SavedFilePath { get; set; }
 
-        public TabSettingJson? tabSettingJson { get; set; }
+        public TabSettingJson? TabSettingsDict { get; set; }
 
         public CustomTabItem()
         {
