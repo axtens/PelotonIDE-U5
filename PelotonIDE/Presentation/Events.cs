@@ -167,13 +167,6 @@ namespace PelotonIDE.Presentation
             if (tabControl.Content is CustomRichEditBox currentRichEditBox)
             {
                 currentRichEditBox.isDirty = true;
-            }
-        }
-
-        private void CustomREBox_SelectionChanged(object sender, RoutedEventArgs e)
-        {
-            if (tabControl.Content is CustomRichEditBox currentRichEditBox)
-            {
                 currentRichEditBox.Document.GetText(TextGetOptions.None, out string text);
                 //wordCount.Text = text.Split(' ').Length - 1 + " words";
                 int caretPosition = currentRichEditBox.Document.Selection.StartPosition;
@@ -182,7 +175,7 @@ namespace PelotonIDE.Presentation
                 for (int i = 0; i < caretPosition; i++)
                 {
                     charNumber++;
-                    if (text[i] == '\v' || text[i] == '\r')
+                    if (text[i] == '\r')
                     {
                         lineNumber++;
                         charNumber = 0;
@@ -191,13 +184,13 @@ namespace PelotonIDE.Presentation
                 int charsSinceLastLineBreak = 1;
                 for (int i = caretPosition - 1; i >= 0; i--)
                 {
-                    if (text[i] == '\v' || text[i] == '\r')
+                    if (text[i] == '\r')
                     {
                         break;
                     }
                     charsSinceLastLineBreak++;
                 }
-                cursorPosition.Text = "Line " + lineNumber + ", Char " + charNumber;
+                cursorPosition.Text = "Line " + lineNumber + ", Char " + charsSinceLastLineBreak;
             }
         }
 
