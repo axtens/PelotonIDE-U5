@@ -61,7 +61,7 @@ namespace PelotonIDE
             views.Register(
                 new ViewMap(ViewModel: typeof(ShellViewModel)),
                 new ViewMap<MainPage, MainViewModel>(),
-                new DataViewMap<SecondPage, SecondViewModel, Entity>()
+                new DataViewMap<IDEConfigPage, IDEConfigViewModel, Entity>()
             );
 
             routes.Register(
@@ -69,7 +69,7 @@ namespace PelotonIDE
                     Nested: new RouteMap[]
                     {
                     new RouteMap("Main", View: views.FindByViewModel<MainViewModel>()),
-                    new RouteMap("Second", View: views.FindByViewModel<SecondViewModel>()),
+                    new RouteMap("Second", View: views.FindByViewModel<IDEConfigViewModel>()),
                     }
                 )
             );
