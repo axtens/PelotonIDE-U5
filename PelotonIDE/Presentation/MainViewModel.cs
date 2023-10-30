@@ -11,7 +11,7 @@ namespace PelotonIDE.Presentation
         [ObservableProperty]
         private string? name;
 
-        public ICommand GoToIDEConfig { get; }
+        public ICommand GoToSecond { get; }
 
         public MainViewModel(
             INavigator navigator,
@@ -19,12 +19,12 @@ namespace PelotonIDE.Presentation
         {
             _navigator = navigator;
             Title = $"Main - {localizer["ApplicationName"]}";
-            GoToIDEConfig = new AsyncRelayCommand(GoToIDEConfigView);
+            GoToSecond = new AsyncRelayCommand(GoToSecondView);
         }
 
-        private async Task GoToIDEConfigView()
+        private async Task GoToSecondView()
         {
-            await _navigator.NavigateViewModelAsync<IDEConfigViewModel>(this, data: new Entity(Name!));
+            await _navigator.NavigateViewModelAsync<SecondViewModel>(this, data: new Entity(Name!));
         }
 
         private INavigator _navigator;
