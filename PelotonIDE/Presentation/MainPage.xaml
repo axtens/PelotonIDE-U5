@@ -173,7 +173,7 @@
             </MenuBarItem>
             
             <MenuBarItem Title="Settings" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuSettings" >
-                <MenuFlyoutItem x:Name="mnuIDEConfiguration" Text="Editor Configuration" Click="mnuIDEConfiguration_Click" />
+                <MenuFlyoutItem x:Name="mnuIDEConfiguration" Text="Editor Configuration" Click="mnuIDEConfiguration_Click"  Command="{Binding GoToIDEConfig}" />
             </MenuBarItem>
 
             <MenuBarItem Title="Window" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuWindow" />
@@ -277,82 +277,84 @@
                 <local:CustomTabItem x:Name="tab1" Content="Tab 1" Tag="Tab1" IsNewFile="True" Height="30" />
             </NavigationView.MenuItems>
         </NavigationView>
-        
-        <Canvas x:Name="outputPanel" RelativePanel.Above="statusBar" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" 
-                Height="200" Background="LightGray" HorizontalAlignment="Stretch" MinHeight="100" MaxHeight="500" SizeChanged="OutputPanel_SizeChanged" >
-            <Thumb x:Name="outputThumb"  Height="5" DragDelta="Thumb_DragDelta" DragCompleted="OutputThumb_DragCompleted"
-                   Canvas.Left="0" Canvas.Top="-5" PointerEntered="OutputThumb_PointerEntered" PointerExited="OutputThumb_PointerExited"/>
-            <TabView x:Name="outputPanelTabView" IsAddTabButtonVisible="False" TabWidthMode="SizeToContent" 
-                     VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="200">
-                <TabView.TabStripFooter>
-                    <Button VerticalAlignment="Center" HorizontalAlignment="Right">
-                        <Button.Content>
-                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE712;"/>
-                        </Button.Content>
-                        <Button.Flyout>
-                            <Flyout x:Name="outputDockingFlyout" Placement="Bottom">
-                                <Flyout.FlyoutPresenterStyle>
-                                    <Style TargetType="FlyoutPresenter">
-                                        <Setter Property="CornerRadius" Value="20"/>
-                                        <Setter Property="Background" Value="White"/>
-                                    </Style>
-                                </Flyout.FlyoutPresenterStyle>
-                                <StackPanel Orientation="Horizontal" Background="White" CornerRadius="20">
-                                    <TextBlock Text="Dock Side" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    <Button x:Name="outputLeftButton" Background="Transparent" Foreground="Black" BorderBrush="LightGray" 
-                                            BorderThickness="1" Margin="5" Padding="0" Width="30" Height="30" Click="OutputLeft_Click">
-                                        <Button.Content>
-                                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE90C;"/>
-                                        </Button.Content>
-                                    </Button>
-                                    <Button x:Name="outputBottomButton" Background="DeepSkyBlue" Foreground="Black" BorderBrush="DodgerBlue" 
-                                            BorderThickness="1" Margin="5" Padding="0" Width="30" Height="30" Click="OutputBottom_Click">
-                                        <Button.Content>
-                                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE90E;"/>
-                                        </Button.Content>
-                                    </Button>
-                                    <Button x:Name="outputRightButton" Background="Transparent" Foreground="Black" BorderBrush="LightGray" 
-                                            BorderThickness="1" Margin="5" Padding="0" Width="30" Height="30" Click="OutputRight_Click">
-                                        <Button.Content>
-                                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE90D;"/>
-                                        </Button.Content>
-                                    </Button>
-                                </StackPanel>
-                            </Flyout>
-                        </Button.Flyout>
 
-                    </Button>
-                </TabView.TabStripFooter>
-                <TabView.TabItems>
-                    <TabViewItem Header="Output" IsSelected="True" IsClosable="False" Background="DarkGray" Foreground="White">
-                        <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto"
-                                          HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto"
-                                          VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                                <RichTextBlock x:Name="outputText" IsTextSelectionEnabled="True" >
-                                    <Paragraph>
+        <Border x:Name="outputPanel" RelativePanel.Above="statusBar" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" 
+                    Height="200" Background="LightGray" MinHeight="100" MaxHeight="500" Margin="5, 0, 5, 0" SizeChanged="OutputPanel_SizeChanged">
+            <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <Thumb x:Name="outputThumb" Height="5" DragDelta="Thumb_DragDelta" DragCompleted="OutputThumb_DragCompleted"
+                       Canvas.Top="-5" PointerEntered="OutputThumb_PointerEntered" PointerExited="OutputThumb_PointerExited"/>
+                <TabView x:Name="outputPanelTabView" IsAddTabButtonVisible="False" TabWidthMode="SizeToContent" 
+                         VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="200">
+                    <TabView.TabStripFooter>
+                        <Button VerticalAlignment="Center" HorizontalAlignment="Right">
+                            <Button.Content>
+                                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE712;"/>
+                            </Button.Content>
+                            <Button.Flyout>
+                                <Flyout x:Name="outputDockingFlyout" Placement="Bottom">
+                                    <Flyout.FlyoutPresenterStyle>
+                                        <Style TargetType="FlyoutPresenter">
+                                            <Setter Property="CornerRadius" Value="20"/>
+                                            <Setter Property="Background" Value="White"/>
+                                        </Style>
+                                    </Flyout.FlyoutPresenterStyle>
+                                    <StackPanel Orientation="Horizontal" Background="White" CornerRadius="20">
+                                        <TextBlock Text="Dock Side" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Button x:Name="outputLeftButton" Background="Transparent" Foreground="Black" BorderBrush="LightGray" 
+                                                BorderThickness="1" Margin="5" Padding="0" Width="30" Height="30" Click="OutputLeft_Click">
+                                            <Button.Content>
+                                                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE90C;"/>
+                                            </Button.Content>
+                                        </Button>
+                                        <Button x:Name="outputBottomButton" Background="DeepSkyBlue" Foreground="Black" BorderBrush="DodgerBlue" 
+                                                BorderThickness="1" Margin="5" Padding="0" Width="30" Height="30" Click="OutputBottom_Click">
+                                            <Button.Content>
+                                                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE90E;"/>
+                                            </Button.Content>
+                                        </Button>
+                                        <Button x:Name="outputRightButton" Background="Transparent" Foreground="Black" BorderBrush="LightGray" 
+                                                BorderThickness="1" Margin="5" Padding="0" Width="30" Height="30" Click="OutputRight_Click">
+                                            <Button.Content>
+                                                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE90D;"/>
+                                            </Button.Content>
+                                        </Button>
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
 
-                                    </Paragraph>
-                                </RichTextBlock>
-                            </ScrollViewer>
-                        </Border>
-                    </TabViewItem>
-                    <TabViewItem Header="Error" IsClosable="False" Background="DarkGray" Foreground="White">
-                        <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto"  VerticalScrollMode="Auto"
-                                          HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto"
-                                          VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                                <RichTextBlock x:Name="errorText" IsTextSelectionEnabled="True">
-                                    <Paragraph>
-                                        
-                                    </Paragraph>
-                                </RichTextBlock>
-                            </ScrollViewer>
-                        </Border>
-                    </TabViewItem>
-                </TabView.TabItems>
-            </TabView>
-        </Canvas>
+                        </Button>
+                    </TabView.TabStripFooter>
+                    <TabView.TabItems>
+                        <TabViewItem Header="Output" IsSelected="True" IsClosable="False" Background="DarkGray" Foreground="White">
+                            <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto"
+                                              HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto"
+                                              VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                    <RichTextBlock x:Name="outputText" IsTextSelectionEnabled="True" >
+                                        <Paragraph>
+
+                                        </Paragraph>
+                                    </RichTextBlock>
+                                </ScrollViewer>
+                            </Border>
+                        </TabViewItem>
+                        <TabViewItem Header="Error" IsClosable="False" Background="DarkGray" Foreground="White">
+                            <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto"  VerticalScrollMode="Auto"
+                                              HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto"
+                                              VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                    <RichTextBlock x:Name="errorText" IsTextSelectionEnabled="True">
+                                        <Paragraph>
+
+                                        </Paragraph>
+                                    </RichTextBlock>
+                                </ScrollViewer>
+                            </Border>
+                        </TabViewItem>
+                    </TabView.TabItems>
+                </TabView>
+            </Canvas>
+        </Border>
         <StackPanel x:Name="statusBar" RelativePanel.AlignBottomWithPanel="True" Orientation="Horizontal" Height="35">
             <!--<TextBlock Text="0 words" Margin="0,0,20,0" Name="wordCount"/>-->
             <TextBox IsReadOnly="True" Name="languageName" Height="30" Width="200" VerticalAlignment="Center" HorizontalAlignment="Center" HorizontalContentAlignment="Center"></TextBox>
