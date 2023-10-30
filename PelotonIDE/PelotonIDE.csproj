@@ -87,6 +87,7 @@
       <Page Remove="Presentation\InterpreterSelectionDialog.xaml" />
     </ItemGroup>
     <ItemGroup>
+        <UpToDateCheckInput Remove="Presentation\IDEConfigPage.xaml" />
         <UpToDateCheckInput Remove="presentation\InterpreterSelectionDialog.xaml" />
     </ItemGroup>
     <ItemGroup>

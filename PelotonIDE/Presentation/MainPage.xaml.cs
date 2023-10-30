@@ -84,6 +84,7 @@ namespace PelotonIDE.Presentation
                 //Foreground = new SolidColorBrush(new Color() { A = 0xFF, R = 0xf9, G = 0xf8, B = 0xbd })
             };
             customREBox.KeyDown += RichEditBox_KeyDown;
+            customREBox.SelectionChanged += CustomREBox_SelectionChanged;
             customREBox.AcceptsReturn = true;
 
             // richEditBox.Background = 
@@ -488,6 +489,7 @@ namespace PelotonIDE.Presentation
                 isDirty = false,
             };
             richEditBox.KeyDown += RichEditBox_KeyDown;
+            richEditBox.SelectionChanged += CustomREBox_SelectionChanged;
             richEditBox.AcceptsReturn = true;
 
             CustomTabItem navigationViewItem = new()
