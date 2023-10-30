@@ -18,12 +18,16 @@ using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
 
+using InterpreterParameterStructure = System.Collections.Generic.Dictionary<string, object>;
 using LanguageConfigurationStructure = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, string>>>;
 using InterpreterParametersStructure = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, object>>;
+using FactorySettingsStructure = System.Collections.Generic.Dictionary<string, object>;
+
 using System.Text.RegularExpressions;
 using Windows.Storage.Streams;
 using Windows.Foundation;
 using System.Timers;
+using Newtonsoft.Json.Linq;
 
 
 namespace PelotonIDE.Presentation
@@ -38,11 +42,19 @@ namespace PelotonIDE.Presentation
             Bottom,
             Right
         }
-        string currentLanguageName = "English";
-        int currentLanguageId = 0;
-        OutputPanelPosition outputPosition = OutputPanelPosition.Bottom;
+        string? InterfaceLanguageName = "English";
+        long InterfaceLanguageID = 0;
+        
+        string? LastSelectedInterpreterLanguageName;
+        long LastSelectedInterpreterLanguageID;
+
+        long LastSelectedVariableLength = 0;
+        long LastSelectedSpaced = 0;
+
+
+        OutputPanelPosition outputPanelPosition = OutputPanelPosition.Bottom;
         string pelotonEXE = string.Empty;
-        string pelotonARG = string.Empty;
+        //string pelotonARG = string.Empty;
 
         InterpreterParametersStructure? GlobalInterpreterParameters = new();
         InterpreterParametersStructure? PerTabInterpreterParameters = new();
@@ -53,15 +65,15 @@ namespace PelotonIDE.Presentation
 
             this.InitializeComponent();
 
-            System.Timers.Timer t = new(1000)
-            {
-                AutoReset = true,
-                Enabled = true,
+            //System.Timers.Timer t = new(1000)
+            //{
+            //    AutoReset = true,
+            //    Enabled = true,
 
-                //Elapsed += new ElapsedEventHandler(OnTimedEvent_Tick)
-            };
-            t.Elapsed += TimerTick;
-            t.Start();
+            //    //Elapsed += new ElapsedEventHandler(OnTimedEvent_Tick)
+            //};
+            //t.Elapsed += TimerTick;
+            //t.Start();
             
 
             // GetGlobals();
@@ -124,26 +136,34 @@ namespace PelotonIDE.Presentation
             return JsonConvert.DeserializeObject<InterpreterParametersStructure>(tabSettings);
         }
 
-        private static async Task<Dictionary<string, object>?> GetGlobalSettings()
+        private static async Task<FactorySettingsStructure?> GetFactorySettings()
         {
-            var globalSettings = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\GlobalSettings.json"));
+            var globalSettings = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\FactorySettings.json"));
             string globalSettingsString = File.ReadAllText(globalSettings.Path);
-            return JsonConvert.DeserializeObject<Dictionary<string, object>>(globalSettingsString);
+            return JsonConvert.DeserializeObject<FactorySettingsStructure>(globalSettingsString);
         }
 
+        private static async Task<LanguageConfigurationStructure?> GetLanguageConfiguration()
+        {
+            var languageConfig = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\LanguageConfiguration.json"));
+            string languageConfigString = File.ReadAllText(languageConfig.Path);
+            return JsonConvert.DeserializeObject<LanguageConfigurationStructure>(languageConfigString);
+        }
         private async void FillLanguagesIntoMenu(MenuBarItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
         {
             var tabset = await GetGlobalInterpreterParameters();
 
-            var languageJsonFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\LanguageConfiguration.json"));
-            string languageJsonString = File.ReadAllText(languageJsonFile.Path);
-            var languageJsonObject = JsonConvert.DeserializeObject<LanguageConfigurationStructure>(languageJsonString);
-            LanguageSettings = languageJsonObject;
+            LanguageSettings = await GetLanguageConfiguration();
+
+            if (InterfaceLanguageName == null || !LanguageSettings.ContainsKey(InterfaceLanguageName))
+            {
+                return;
+            }
 
             var sub = new MenuFlyoutSubItem
             {
-                // <!--<MenuFlyoutSubItem Text="Choose interface language" BorderBrush="LightGray" BorderThickness="1" x:Name="SettingsBar_InterfaceLanguage" />-->
-                Text = languageJsonObject[currentLanguageName]["frmMain"][menuLabel],
+                // <!--<MenuFlyoutSubItem Text="Choose interface language" BorderBrush="LightGray" BorderThickness="1" names:Name="SettingsBar_InterfaceLanguage" />-->
+                Text = LanguageSettings[InterfaceLanguageName]["frmMain"][menuLabel],
                 BorderThickness = new Thickness(1, 1, 1, 1),
                 BorderBrush = new SolidColorBrush() { Color = Colors.LightGray },
                 Name = menuLabel
@@ -153,20 +173,20 @@ namespace PelotonIDE.Presentation
             //var items = new List<MenuFlyoutItem>();
 
             // what is current language?
-            var globals = LanguageSettings[currentLanguageName]["GLOBAL"];
+            var globals = LanguageSettings[InterfaceLanguageName]["GLOBAL"];
             var count = LanguageSettings.Keys.Count;
             for (var i = 0; i < count; i++)
             {
-                var x = from lang in LanguageSettings.Keys
+                var names = from lang in LanguageSettings.Keys
                         where LanguageSettings.ContainsKey(lang) && LanguageSettings[lang]["GLOBAL"]["ID"] == i.ToString()
                         let name = LanguageSettings[lang]["GLOBAL"]["Name"]
                         select name;
-                if (x.Any())
+                if (names.Any())
                 {
                     MenuFlyoutItem menuFlyoutItem = new()
                     {
                         Text = globals[$"{100 + i + 1}"],
-                        Name = x.First()  //languageJson[key]["GLOBAL"]["ID"]
+                        Name = names.First()  //languageJson[key]["GLOBAL"]["ID"]
                     };
                     menuFlyoutItem.Click += routedEventHandler; //  Internationalization_Click;
                     sub.Items.Add(menuFlyoutItem);
@@ -184,95 +204,235 @@ namespace PelotonIDE.Presentation
 
             GlobalInterpreterParameters = await MainPage.GetGlobalInterpreterParameters();
             PerTabInterpreterParameters = await MainPage.GetPerTabInterpreterParameters();
+            CAPS.Text = Console.CapsLock ? "CAPS" : "caps";
+            NUM.Text = Console.NumberLock ? "NUM" : "num";
+
+            var FactorySettings = await GetFactorySettings();
+
+            outputPanelShowing = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("OutputPanelShowing", true, FactorySettings, localSettings);
+
+            var outputPanelPosition = GetFactorySettingsWithLocalSettingsOverrideOrDefault("OutputPanelPosition", (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), "Bottom"), FactorySettings, localSettings);
+
+            HandleOutputPanelChange(outputPanelPosition);
+            
+            outputPanel.Height = GetFactorySettingsWithLocalSettingsOverrideOrDefault<double>("OutputPanelHeight",200, FactorySettings, localSettings);
+            InterfaceLanguageName = GetFactorySettingsWithLocalSettingsOverrideOrDefault<string>("InterfaceLanguageName", "English", FactorySettings, localSettings);
+            InterfaceLanguageID = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("InterfaceLanguageID",0, FactorySettings, localSettings);
+
+            pelotonEXE = GetFactorySettingsWithLocalSettingsOverrideOrDefault("PelotonEXE", @"C:\protium\bin\pdb.exe", FactorySettings, localSettings) ?? @"C:\protium\bin\pdb.exe";
+
+            LastSelectedInterpreterLanguageName = GetFactorySettingsWithLocalSettingsOverrideOrDefault<string>("LastSelectedInterpreterLanguageName", "English", FactorySettings, localSettings);
+            LastSelectedInterpreterLanguageID = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("LastSelectedInterpreterLanguageID", 0, FactorySettings, localSettings);
+
+            LastSelectedVariableLength = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("LastSelectedVariableLength", 0, FactorySettings, localSettings);
+            LastSelectedSpaced = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("LastSelectedSpaced", 0, FactorySettings, localSettings);
 
             if (tab1.TabSettingsDict == null)
                 tab1.TabSettingsDict = Clone(PerTabInterpreterParameters);
 
             tab1.TabSettingsDict["Language"]["Defined"] = true;
-            tab1.TabSettingsDict["Language"]["Value"] = currentLanguageId; // FIXME?
+            tab1.TabSettingsDict["Language"]["Value"] = LastSelectedInterpreterLanguageID;
 
             UpdateMenuRunningMode(GlobalInterpreterParameters["Quietude"]);
+            UpdateVariableLengthMode(tab1.TabSettingsDict["VariableLength"]);
+            UpdateSpacedMode(tab1.TabSettingsDict["Spaced"]);
+            UpdateLanguageName(tab1.TabSettingsDict);
             UpdateTabCommandLine();
 
-            if ((bool)tab1.TabSettingsDict["VariableLength"]["Defined"])
-            {
-                mnuVariableLength.Icon = (bool)tab1.TabSettingsDict["VariableLength"]["Value"] ? tick : null;
-            } else
-            {
-                mnuVariableLength.Icon = (bool)tab1.TabSettingsDict["VariableLength"]["Value"] ? tick : null;
-            }
+        }
 
-            if ((bool)tab1.TabSettingsDict["Spaced"]["Defined"])
+        private T? GetFactorySettingsWithLocalSettingsOverrideOrDefault<T>(string name, T value, FactorySettingsStructure? factory, ApplicationDataContainer? container)
+        {
+            T? result = default;
+            bool noFactory = false;
+            bool noContainer = false;
+            if (factory.ContainsKey(name))
             {
-                mnuSpaced.Icon = (bool)tab1.TabSettingsDict["Spaced"]["Value"] ? tick : null;
+                result = (T)factory[name];
             }
             else
             {
-                mnuSpaced.Icon = (bool)tab1.TabSettingsDict["Spaced"]["Value"] ? tick : null;
+                noFactory = true;
             }
-
-            CAPS.Text = Console.CapsLock ? "CAPS" : "caps";
-            NUM.Text = Console.NumberLock ? "NUM" : "num";
-
-            var GlobalSettings = await GetGlobalSettings();
-            foreach (var setting in GlobalSettings.Keys)
+            if (container.Values.ContainsKey(name))
             {
-                if (!localSettings.Values.ContainsKey(setting))
-                {
-                    localSettings.Values[setting] = GlobalSettings[setting];
-                }
+                result = (T)container.Values[name];
             }
-            foreach (var setting in GlobalInterpreterParameters.Keys)
+            else
             {
-                if (!localSettings.Values.ContainsKey(setting))
-                {
-                    localSettings.Values[setting] = GlobalInterpreterParameters[setting]["Value"];
-                }
+                noContainer = true;
             }
-
-            if (localSettings.Values.ContainsKey("OutputPanelPosition"))
+            if (noFactory && noContainer)
             {
-                var opp = localSettings.Values["OutputPanelPosition"];
-                outputPosition = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), (string)opp);
-                HandleOutputPanelChange(outputPosition);
+                result = value;
             }
-
-            if (localSettings.Values.ContainsKey("OutputHeight"))
-            {
-                var loh = localSettings.Values["OutputHeight"];
-                if (loh != null)
-                {
-                    var lohType = loh.GetType().Name;
-                    if (lohType == "Double")
-                    {
-                        outputPanel.Height = (double)loh;
-                    }
-                    else if (lohType == "Int64")
-                    {
-                        outputPanel.Height = (long)loh;
-                    }
-                }
-            }
-
-            if (localSettings.Values.ContainsKey("OutputWidth"))
-            {
-                outputPanel.Width = (double)localSettings.Values["OutputWidth"];
-            }
-
-            if (localSettings.Values.ContainsKey("Language"))
-            {
-                var savedLang = localSettings.Values["Language"];
-                HandleLanguageChange((string)savedLang);
-            }
-
-            if (localSettings.Values.ContainsKey("PelotonEXE"))
-            {
-                pelotonEXE = (string)localSettings.Values["PelotonEXE"];
-            }
+            return result;
         }
 
-        private void UpdateMenuRunningMode(Dictionary<string, object> quietude)
+        private int GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, int value, FactorySettingsStructure? factory, ApplicationDataContainer? container)
         {
+            int result = default;
+            bool noFactory = false;
+            bool noContainer = false;
+            if (factory.ContainsKey(name))
+            {
+                result = (int)factory[name];
+            } else
+            {
+                noFactory = true;
+            }
+            if (container.Values.ContainsKey(name))
+            {
+                result = (int)container.Values[name];
+            } else
+            {
+                noContainer = true;
+            }
+            if (noFactory && noContainer)
+            {
+                result = value;
+            }
+            return result;
+        }
+        private long GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, long value, FactorySettingsStructure? factory, ApplicationDataContainer? container)
+        {
+            long result = default;
+            bool noFactory = false;
+            bool noContainer = false;
+            if (factory.ContainsKey(name))
+            {
+                result = (long)factory[name];
+            }
+            else
+            {
+                noFactory = true;
+            }
+            if (container.Values.ContainsKey(name))
+            {
+                result = (long)container.Values[name];
+            }
+            else
+            {
+                noContainer = true;
+            }
+            if (noFactory && noContainer)
+            {
+                result = value;
+            }
+            return result;
+        }
+        private bool GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, bool value, FactorySettingsStructure? factory, ApplicationDataContainer? container)
+        {
+            bool result = default;
+            bool noFactory = false;
+            bool noContainer = false;
+            if (factory.ContainsKey(name))
+            {
+                result = (bool)factory[name];
+            }
+            else
+            {
+                noFactory = true;
+            }
+            if (container.Values.ContainsKey(name))
+            {
+                result = (bool)container.Values[name];
+            }
+            else
+            {
+                noContainer = true;
+            }
+            if (noFactory && noContainer)
+            {
+                result = value;
+            }
+            return result;
+        }
+
+        private OutputPanelPosition GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, OutputPanelPosition value, FactorySettingsStructure? factory, ApplicationDataContainer? container)
+        {
+            OutputPanelPosition result = default;
+            bool noFactory = false;
+            bool noContainer = false;
+            if (factory.ContainsKey(name))
+            {
+                result = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), (string)factory[name]);
+            }
+            else
+            {
+                noFactory = true;
+            }
+            if (container.Values.ContainsKey(name))
+            {
+                result = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), (string)container.Values[name]);
+            }
+            else
+            {
+                noContainer = true;
+            }
+            if (noFactory && noContainer)
+            {
+                result = value;
+            }
+            return result;
+        }
+
+        private string? GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, string value, FactorySettingsStructure? factory, ApplicationDataContainer? container)
+        {
+            string? result = default;
+            bool noFactory = false;
+            bool noContainer = false;
+            if (factory.ContainsKey(name))
+            {
+                result = (string)factory[name];
+            }
+            else
+            {
+                noFactory = true;
+            }
+            if (container.Values.ContainsKey(name))
+            {
+                result = (string)container.Values[name];
+            }
+            else
+            {
+                noContainer = true;
+            }
+            if (noFactory && noContainer)
+            {
+                result = value;
+            }
+            return result;
+        }
+
+        private void UpdateVariableLengthMode(InterpreterParameterStructure variableLength)
+        {
+            FontIcon tickIcon = new FontIcon()
+            {
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                Glyph = "\uF0B7"
+            };
+
+            mnuVariableLength.Icon = ((bool)variableLength["Defined"]) ? tickIcon : null;
+        }
+        private void UpdateSpacedMode(InterpreterParameterStructure spaced)
+        {
+            FontIcon tickIcon = new FontIcon()
+            {
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                Glyph = "\uF0B7"
+            };
+
+            mnuSpaced.Icon = ((bool)spaced["Defined"]) ? tickIcon : null;
+        }
+        private void UpdateMenuRunningMode(InterpreterParameterStructure quietude)
+        {
+            FontIcon tickIcon = new FontIcon()
+            {
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                Glyph = "\uF0B7"
+            };
+
             if ((bool)quietude["Defined"] == true)
             {
                 foreach (var item in from key in new string[] { "mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit" }
@@ -283,22 +443,16 @@ namespace PelotonIDE.Presentation
                     (item as MenuFlyoutItem).Icon = null;
                 }
 
-                var tick = new FontIcon() // FIXME make global-ish
-                {
-                    FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                    Glyph = "\uF0B7"
-                };
-
                 switch ((long)quietude["Value"])
                 {
                     case 0:
-                        mnuQuiet.Icon = tick;
+                        mnuQuiet.Icon = tickIcon;
                         break;
                     case 1:
-                        mnuVerbose.Icon = tick;
+                        mnuVerbose.Icon = tickIcon;
                         break;
                     case 2:
-                        mnuVerbosePauseOnExit.Icon = tick;
+                        mnuVerbosePauseOnExit.Icon = tickIcon;
                         break;
                 }
             }
@@ -310,10 +464,15 @@ namespace PelotonIDE.Presentation
         private void MainWindow_Closed(object sender, object e) //FIXME How do I save to JSON?
         {
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-            localSettings.Values["OutputPanelPosition"] = outputPosition.ToString();
+            localSettings.Values["OutputPanelPosition"] = outputPanelPosition.ToString();
             localSettings.Values["OutputHeight"] = outputPanel.Height;
             localSettings.Values["OutputWidth"] = outputPanel.Width;
-            localSettings.Values["Language"] = currentLanguageName; 
+            localSettings.Values["InterfaceLanguageName"] = InterfaceLanguageName;
+            localSettings.Values["InterfaceLanguageID"] = InterfaceLanguageID;
+            localSettings.Values["LastSelectedInterpreterLanguageName"] = LastSelectedInterpreterLanguageName;
+            localSettings.Values["LastSelectedInterpreterLanguageID"] = LastSelectedInterpreterLanguageID;
+            localSettings.Values["LastSelectedVariableLength"] = LastSelectedVariableLength;
+            localSettings.Values["LastSelectedSpaced"] = LastSelectedSpaced;
             localSettings.Values["PelotonEXE"] = pelotonEXE;
         }
 
@@ -346,8 +505,8 @@ namespace PelotonIDE.Presentation
             tabControl.SelectedItem = navigationViewItem; // in focus?
             richEditBox.Focus(FocusState.Keyboard);
             //navigationViewItem.tabSettingJson["Language"]["Defined"] = true;
-            //navigationViewItem.tabSettingJson["Language"]["Value"] = currentLanguageId;
-            //languageName.Text = LanguageSettings[currentLanguageName]["GLOBAL"][$"{101 + currentLanguageId}"];
+            //navigationViewItem.tabSettingJson["Language"]["Value"] = InterfaceLanguageID;
+            //languageName.Text = LanguageSettings[InterfaceLanguageName]["GLOBAL"][$"{101 + InterfaceLanguageID}"];
             UpdateLanguageName(navigationViewItem.TabSettingsDict);
             UpdateTabCommandLine();
         }
@@ -369,11 +528,11 @@ namespace PelotonIDE.Presentation
 
         public string GetTabsLanguageName(InterpreterParametersStructure? tabSettingJson)
         {
-            var langValue = currentLanguageId;
+            var langValue = InterfaceLanguageID;
             var langName = string.Empty;
             // select from LanguageSettings the record where GLOBAL.ID matches langValue
             var languages = from lang in LanguageSettings.Keys
-                            where int.Parse(LanguageSettings[lang]["GLOBAL"]["ID"]) == langValue
+                            where long.Parse(LanguageSettings[lang]["GLOBAL"]["ID"]) == langValue
                             select LanguageSettings[lang];
             if (languages.Count() > 0)
             {
@@ -399,7 +558,6 @@ namespace PelotonIDE.Presentation
 
         private void UpdateLanguageName(InterpreterParametersStructure? tabSettingJson)
         {
-
             languageName.Text = GetTabsLanguageName(tabSettingJson);
         }
 
@@ -443,19 +601,6 @@ namespace PelotonIDE.Presentation
                 var j = i + start.Length;
                 rtfBuilder.Insert(j, info);
             }
-            // is there an \info section?
-            // yes:
-            //  upsert \ilang \ipadout and \ilength
-            // write back    
-
-            // string settingsJson = System.Text.Json.JsonSerializer.Serialize(customRichEditBox.TabCodeRunCargo);
-
-            // Manipulate the RTF content
-
-            // Add a \language section
-            // rtfBuilder.Insert(rtfBuilder.Length, settingsJson);
-
-            // Write the modified RTF content back to the file
             File.WriteAllText(file.Path, rtfBuilder.ToString());
         }
 
@@ -476,7 +621,7 @@ namespace PelotonIDE.Presentation
                     if (items.Any())
                     {
                         navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
-                        navigationViewItem.TabSettingsDict["Language"]["Value"] = int.Parse(items[1].Replace("}", ""));
+                        navigationViewItem.TabSettingsDict["Language"]["Value"] = long.Parse(items[1].Replace("}", ""));
                     }
                 }
                 var ilength = from match in matches where match.Value.Contains(@"\ilength") select match;
@@ -527,25 +672,6 @@ namespace PelotonIDE.Presentation
                     navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = rtfContent.Contains("<# ");
                 }
             }
-
-            //int startIndex = modifiedRtfContent.LastIndexOf('{');
-            //int endIndex = modifiedRtfContent.Length;
-            //string serializedObject = modifiedRtfContent[startIndex..endIndex];
-
-            /*try
-            {
-                // Deserialize the object from JSON
-                if (System.Text.Json.JsonSerializer.Deserialize(serializedObject, typeof(TabSpecificSettings)) is TabSpecificSettings tabSpecificSettings)
-                {
-                    //customRichEditBox.tabSettings.Setting1 = tabSpecificSettings.Setting1;
-                    //customRichEditBox.tabSettings.Setting2 = tabSpecificSettings.Setting2;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }*/
-
         }
 
         private static void HandlePossibleAmpersand(string name, MenuFlyoutItemBase mfib)
@@ -658,7 +784,7 @@ namespace PelotonIDE.Presentation
             //        Debug.WriteLine("{0} => {1}", setting.Key, setting.Value);
             //}
 
-            pelotonARG = BuildTabCommandLine();
+            string pelotonARG = BuildTabCommandLine();
 
             // override with matching tab settings
             // generate arguments string
@@ -720,5 +846,28 @@ namespace PelotonIDE.Presentation
             return (StdOut: stdout.ToString(), StdErr: stderr.ToString());
         }
         #endregion
+
+        private void mnuIDEConfiguration_Click(object sender, RoutedEventArgs e)
+        {
+            //var g = new Grid();
+            //g.ColumnDefinitions.Add(new ColumnDefinition());
+            //g.ColumnDefinitions.Add(new ColumnDefinition());
+            //g.RowDefinitions.Add(new RowDefinition());
+            //g.RowDefinitions.Add(new RowDefinition());
+            //g.RowDefinitions.Add(new RowDefinition());
+
+            //var cd = new ContentDialog();
+            //var tb = new TextBlock();
+            //tb.Text = "Path to Interpreter";
+            //tb.HorizontalAlignment = HorizontalAlignment.Right;
+            //tb.VerticalAlignment = VerticalAlignment.Center;
+            //tb.FontWeight = FontWeights.Bold;
+            //tb.Margin = new Thickness(5);
+            
+            
+            //cd.
+
+
+        }
     }
 }

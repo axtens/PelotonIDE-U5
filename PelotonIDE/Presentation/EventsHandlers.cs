@@ -75,7 +75,7 @@ namespace PelotonIDE.Presentation
                 }
                 // FIXME the language id of the RTF, usually
                 // navigationViewItem.tabSettingJson["Language"]["Defined"] = true;
-                // navigationViewItem.tabSettingJson["Language"]["Value"] = currentLanguageId;
+                // navigationViewItem.tabSettingJson["Language"]["Value"] = InterfaceLanguageID;
                 UpdateLanguageName(navigationViewItem.TabSettingsDict);
                 UpdateTabCommandLine();
             }
@@ -371,7 +371,7 @@ namespace PelotonIDE.Presentation
         {
             if (panelPos == OutputPanelPosition.Left)
             {
-                outputPosition = OutputPanelPosition.Left;
+                outputPanelPosition = OutputPanelPosition.Left;
 
                 RelativePanel.SetAlignLeftWithPanel(outputPanel, true);
                 RelativePanel.SetAlignRightWithPanel(outputPanel, false);
@@ -402,7 +402,7 @@ namespace PelotonIDE.Presentation
             }
             else if (panelPos == OutputPanelPosition.Bottom)
             {
-                outputPosition = OutputPanelPosition.Bottom;
+                outputPanelPosition = OutputPanelPosition.Bottom;
 
                 RelativePanel.SetAlignLeftWithPanel(tabControl, true);
                 RelativePanel.SetAlignRightWithPanel(tabControl, true);
@@ -432,7 +432,7 @@ namespace PelotonIDE.Presentation
             }
             else if (panelPos == OutputPanelPosition.Right)
             {
-                outputPosition = OutputPanelPosition.Right;
+                outputPanelPosition = OutputPanelPosition.Right;
 
                 RelativePanel.SetAlignLeftWithPanel(outputPanel, false);
                 RelativePanel.SetAlignRightWithPanel(outputPanel, true);

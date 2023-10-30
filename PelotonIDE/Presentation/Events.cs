@@ -4,6 +4,8 @@ using Microsoft.UI.Text;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 
+using Newtonsoft.Json;
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,6 +16,7 @@ using System.Threading.Tasks;
 using System.Timers;
 
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Foundation.Collections;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.Storage.Provider;
@@ -24,12 +27,6 @@ namespace PelotonIDE.Presentation
 {
     public sealed partial class MainPage : Page
     {
-        public static FontIcon tick = new FontIcon()
-        {
-            FontFamily = new FontFamily("Segoe MDL2 Assets"),
-            Glyph = "\uF0B7"
-        };
-
         public void TimerTick(object? source, ElapsedEventArgs e)
         {
             TIME.Text = DateTime.Now.ToString("HH':'mm':'ss");
@@ -37,6 +34,12 @@ namespace PelotonIDE.Presentation
 
         private void InterpretBar_RunningMode_Click(object sender, RoutedEventArgs e)
         {
+            FontIcon tickIcon = new FontIcon()
+            {
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                Glyph = "\uF0B7"
+            };
+
             foreach (var item in from key in new string[] { "mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit" }
                                  let items = from item in mnuRunningMode.Items where item.Name == key select item
                                  from item in items
@@ -52,15 +55,15 @@ namespace PelotonIDE.Presentation
             switch (clicked)
             {
                 case "mnuQuiet":
-                    me.Icon = tick;
+                    me.Icon = tickIcon;
                     GlobalInterpreterParameters["Quietude"]["Value"] = 0;
                     break;
                 case "mnuVerbose":
-                    me.Icon = tick;
+                    me.Icon = tickIcon;
                     GlobalInterpreterParameters["Quietude"]["Value"] = 1;
                     break;
                 case "mnuVerbosePauseOnExit":
-                    me.Icon = tick;
+                    me.Icon = tickIcon;
                     GlobalInterpreterParameters["Quietude"]["Value"] = 2;
                     break;
             }
@@ -199,21 +202,21 @@ namespace PelotonIDE.Presentation
             var yadjust = outputPanel.Height - e.VerticalChange;
             var xRightAdjust = outputPanel.Width - e.HorizontalChange;
             var xLeftAdjust = outputPanel.Width + e.HorizontalChange;
-            if (outputPosition == OutputPanelPosition.Bottom)
+            if (outputPanelPosition == OutputPanelPosition.Bottom)
             {
                 if (yadjust >= 0)
                 {
                     outputPanel.Height = yadjust;
                 }
             }
-            else if (outputPosition == OutputPanelPosition.Left)
+            else if (outputPanelPosition == OutputPanelPosition.Left)
             {
                 if (xLeftAdjust >= 0)
                 {
                     outputPanel.Width = xLeftAdjust;
                 }
             }
-            else if (outputPosition == OutputPanelPosition.Right)
+            else if (outputPanelPosition == OutputPanelPosition.Right)
             {
                 if (xRightAdjust >= 0)
                 {
@@ -221,7 +224,7 @@ namespace PelotonIDE.Presentation
                 }
             }
 
-            if (outputPosition == OutputPanelPosition.Bottom)
+            if (outputPanelPosition == OutputPanelPosition.Bottom)
             {
                 this.ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.SizeNorthSouth, 0));
             }
@@ -233,21 +236,21 @@ namespace PelotonIDE.Presentation
 
         private void OutputPanel_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if (outputPosition == OutputPanelPosition.Bottom)
+            if (outputPanelPosition == OutputPanelPosition.Bottom)
             {
                 outputPanelTabView.Width = outputPanel.ActualWidth;
                 outputPanelTabView.Height = outputPanel.ActualHeight;
                 outputThumb.Width = outputPanel.ActualWidth;
                 outputThumb.Height = 5;
             }
-            else if (outputPosition == OutputPanelPosition.Right)
+            else if (outputPanelPosition == OutputPanelPosition.Right)
             {
                 outputPanelTabView.Width = outputPanel.ActualWidth;
                 outputPanelTabView.Height = outputPanel.ActualHeight;
                 outputThumb.Width = 5;
                 outputThumb.Height = outputPanel.ActualHeight;
             }
-            else if (outputPosition == OutputPanelPosition.Left)
+            else if (outputPanelPosition == OutputPanelPosition.Left)
             {
                 outputPanelTabView.Width = outputPanel.ActualWidth;
                 outputPanelTabView.Height = outputPanel.ActualHeight;
@@ -259,7 +262,7 @@ namespace PelotonIDE.Presentation
 
         private async void OutputThumb_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
-            if (outputPosition == OutputPanelPosition.Bottom)
+            if (outputPanelPosition == OutputPanelPosition.Bottom)
             {
                 this.ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.SizeNorthSouth, 0));
             }
@@ -289,17 +292,13 @@ namespace PelotonIDE.Presentation
         private async void HandleLanguageChange(string langName)
         {
             var selectedLanguage = LanguageSettings[langName];
-
             SetMenuText(selectedLanguage["frmMain"]);
             var selLang = selectedLanguage["GLOBAL"]["153"];
-            currentLanguageName = langName;
-            currentLanguageId = int.Parse(selectedLanguage["GLOBAL"]["ID"]);
+            InterfaceLanguageName = langName;
+            InterfaceLanguageID = long.Parse(selectedLanguage["GLOBAL"]["ID"]);
             languageName.Text = selectedLanguage["GLOBAL"]["101"];
             PerTabInterpreterParameters["Language"]["Defined"] = true;
-            PerTabInterpreterParameters["Language"]["Value"] = currentLanguageId;
-
-
-            // languageName.Document.Selection.SetText(TextSetOptions.None, "Language: " + selLang == langName ? $"{langName}" : $"{langName} - {selLang}");
+            PerTabInterpreterParameters["Language"]["Value"] = InterfaceLanguageID;
         }
 
         private void SetMenuText(Dictionary<string, string> selectedLanguage)
@@ -385,7 +384,7 @@ namespace PelotonIDE.Presentation
                 XamlRoot = this.XamlRoot,
                 Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
                 Title = "Translator - Currently not implemented",
-                PrimaryButtonText = "OK",                
+                PrimaryButtonText = "OK",
             };
             var result = await dialog.ShowAsync();
 
@@ -454,20 +453,28 @@ namespace PelotonIDE.Presentation
 
         private void VariableLength_Click(object sender, RoutedEventArgs e)
         {
+            FontIcon tickIcon = new FontIcon()
+            {
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                Glyph = "\uF0B7"
+            };
+
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
 
             if (mnuVariableLength.Icon == null)
             {
-                mnuVariableLength.Icon = tick;
+                mnuVariableLength.Icon = tickIcon;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = true;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = true;
+                LastSelectedVariableLength = 1;
             }
             else
             {
                 mnuVariableLength.Icon = null;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = false;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = false;
+                LastSelectedVariableLength = 0;
             }
 
             UpdateTabCommandLine();
@@ -475,20 +482,28 @@ namespace PelotonIDE.Presentation
 
         private void Spaced_Click(object sender, RoutedEventArgs e)
         {
+            FontIcon tickIcon = new FontIcon()
+            {
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                Glyph = "\uF0B7"
+            };
+
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
 
             if (mnuSpaced.Icon == null)
             {
-                mnuSpaced.Icon = tick;
+                mnuSpaced.Icon = tickIcon;
                 navigationViewItem.TabSettingsDict["Spaced"]["Defined"] = true;
                 navigationViewItem.TabSettingsDict["Spaced"]["Value"] = true;
+                LastSelectedSpaced = 1;
             }
             else
             {
                 mnuSpaced.Icon = null;
                 navigationViewItem.TabSettingsDict["Spaced"]["Defined"] = false;
                 navigationViewItem.TabSettingsDict["Spaced"]["Value"] = false;
+                LastSelectedSpaced = 0;
             }
 
             UpdateTabCommandLine();
@@ -507,31 +522,52 @@ namespace PelotonIDE.Presentation
             var id = LanguageSettings[lang]["GLOBAL"]["ID"];
 
             navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
-            navigationViewItem.TabSettingsDict["Language"]["Value"] = int.Parse(id);
+            navigationViewItem.TabSettingsDict["Language"]["Value"] = long.Parse(id);
+
+            LastSelectedInterpreterLanguageName = lang;
+            LastSelectedInterpreterLanguageID = long.Parse(id);
 
             UpdateLanguageName(navigationViewItem.TabSettingsDict);
-            //languageName.Text = LanguageSettings[currentLanguageName]["GLOBAL"][$"{101+int.Parse(id)}"]; // FIXME? the international language setting actually, not lang
-                
+            //languageName.Text = LanguageSettings[InterfaceLanguageName]["GLOBAL"][$"{101+int.Parse(id)}"]; // FIXME? the international language setting actually, not lang
+
             UpdateTabCommandLine();
         }
 
         private async void ResetToFactorySettings_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var setting in ApplicationData.Current.LocalSettings.Values)
-            {
-                Debug.WriteLine($"{setting.Key} => {setting.Value}");
-                ApplicationData.Current.LocalSettings.DeleteContainer(setting.Key);
-            }
-            await ApplicationData.Current.ClearAsync();
             ContentDialog dialog = new()
             {
                 XamlRoot = this.XamlRoot,
                 Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                Title = "Factory Reset completed",
-                Content = "The IDE will now shutdown.",
-                CloseButtonText = "OK"
+                Title = "Factory Reset",
+                Content = "Confirm reset. Application will shut down after reset.",
+                PrimaryButtonText = "OK",
+                SecondaryButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Secondary,
             };
-            _ = await dialog.ShowAsync();
+            var result = await dialog.ShowAsync();
+
+            if (result is ContentDialogResult.Secondary)
+            {
+                return;
+            }
+
+            Dictionary<string, object> dict = new();
+            var fac = await GetFactorySettings();
+            File.WriteAllText(Path.Combine(Path.GetTempPath(), "PelotonIDE_FactorySettings_log.json"), JsonConvert.SerializeObject(fac));
+            
+            foreach (var key in ApplicationData.Current.LocalSettings.Values)
+            {
+                dict.Add(key.Key, key.Value);
+            }
+            File.WriteAllText(Path.Combine(Path.GetTempPath(), "PelotonIDE_LocalSettings_log.json"), JsonConvert.SerializeObject(dict));
+
+            foreach (var setting in ApplicationData.Current.LocalSettings.Values)
+            {
+                ApplicationData.Current.LocalSettings.DeleteContainer(setting.Key);
+            }
+            await ApplicationData.Current.ClearAsync();
+            
             Environment.Exit(0);
 
         }
@@ -546,7 +582,7 @@ namespace PelotonIDE.Presentation
                 CloseButtonText = "OK"
             };
             _ = dialog.ShowAsync();
-            
+
         }
 
     }

@@ -172,7 +172,9 @@
                 </MenuFlyoutSubItem>
             </MenuBarItem>
             
-            <MenuBarItem Title="Settings" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuSettings" ></MenuBarItem>
+            <MenuBarItem Title="Settings" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuSettings" >
+                <MenuFlyoutItem x:Name="mnuIDEConfiguration" Text="Editor Configuration" Click="mnuIDEConfiguration_Click" />
+            </MenuBarItem>
 
             <MenuBarItem Title="Window" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuWindow" />
 
