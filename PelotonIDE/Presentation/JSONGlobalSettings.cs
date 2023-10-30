@@ -9,7 +9,7 @@ namespace PelotonIDE.Presentation
     public class JSONGlobalSettings
     {
         public string? Language { get; set; }
-        public int LanguageID { get; set; }
+        public long LanguageID { get; set; }
         public string? OutputPanelPosition { get; set; }
         public string? DefaultTabBackground { get; set; }
         public string? PelotonEXE { get; set; }

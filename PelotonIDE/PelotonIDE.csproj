@@ -74,19 +74,25 @@
         <UpToDateCheckInput Include="**\*.xaml" Exclude="bin\**\*.xaml;obj\**\*.xaml" />
     </ItemGroup>
     <ItemGroup>
-        <None Remove="Presentation\DialogContentPage.xaml" />
+      <Compile Remove="Presentation\Interpreter.cs" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Remove="Presentation\FactorySettings.json" />
         <None Remove="Presentation\GlobalInterpreterParameters.json" />
-        <None Remove="Presentation\GlobalSettings.json" />
+        <None Remove="presentation\InterpreterSelectionDialog.xaml" />
         <None Remove="Presentation\LanguageConfiguration.json" />
         <None Remove="Presentation\PerTabInterpreterParameters.json" />
     </ItemGroup>
     <ItemGroup>
-        <UpToDateCheckInput Remove="Presentation\DialogContentPage.xaml" />
+      <Page Remove="Presentation\InterpreterSelectionDialog.xaml" />
+    </ItemGroup>
+    <ItemGroup>
+        <UpToDateCheckInput Remove="presentation\InterpreterSelectionDialog.xaml" />
     </ItemGroup>
     <ItemGroup>
         <Content Include="Presentation\PerTabInterpreterParameters.json" />
         <Content Include="Presentation\GlobalInterpreterParameters.json" />
-        <Content Include="Presentation\GlobalSettings.json" />
+        <Content Include="Presentation\FactorySettings.json" />
         <Content Include="Presentation\LanguageConfiguration.json" />
     </ItemGroup>
 </Project>
