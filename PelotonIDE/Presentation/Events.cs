@@ -11,6 +11,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
@@ -28,6 +29,11 @@ namespace PelotonIDE.Presentation
             FontFamily = new FontFamily("Segoe MDL2 Assets"),
             Glyph = "\uF0B7"
         };
+
+        public void TimerTick(object? source, ElapsedEventArgs e)
+        {
+            TIME.Text = DateTime.Now.ToString("HH':'mm':'ss");
+        }
 
         private void InterpretBar_RunningMode_Click(object sender, RoutedEventArgs e)
         {
@@ -128,9 +134,9 @@ namespace PelotonIDE.Presentation
             {
                 CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
                 tabControl.Content = _richEditBoxes[navigationViewItem.Tag];
-                if (navigationViewItem.tabSettingJson != null)
+                if (navigationViewItem.TabSettingsDict != null)
                 {
-                    var currentLanguageName = GetTabsLanguageName(navigationViewItem.tabSettingJson);
+                    var currentLanguageName = GetTabsLanguageName(navigationViewItem.TabSettingsDict);
                     if (languageName.Text != currentLanguageName)
                     {
                         languageName.Text = currentLanguageName;
@@ -287,6 +293,60 @@ namespace PelotonIDE.Presentation
             HandleLanguageChange(name);
         }
 
+        private async void HandleLanguageChange(string langName)
+        {
+            var selectedLanguage = LanguageSettings[langName];
+
+            SetMenuText(selectedLanguage["frmMain"]);
+            var selLang = selectedLanguage["GLOBAL"]["153"];
+            currentLanguageName = langName;
+            currentLanguageId = int.Parse(selectedLanguage["GLOBAL"]["ID"]);
+            languageName.Text = selectedLanguage["GLOBAL"]["101"];
+            PerTabInterpreterParameters["Language"]["Defined"] = true;
+            PerTabInterpreterParameters["Language"]["Value"] = currentLanguageId;
+
+
+            // languageName.Document.Selection.SetText(TextSetOptions.None, "Language: " + selLang == langName ? $"{langName}" : $"{langName} - {selLang}");
+        }
+
+        private void SetMenuText(Dictionary<string, string> selectedLanguage)
+        {
+            foreach (var mi in menuBar.Items)
+            {
+                Debug.WriteLine($"mi {mi.Name}");
+                HandlePossibleAmpersand(selectedLanguage[mi.Name], mi);
+
+                foreach (var mii in mi.Items)
+                {
+                    Debug.WriteLine($"mii {mii.Name}");
+                    if (selectedLanguage.ContainsKey(mii.Name))
+                        HandlePossibleAmpersand(selectedLanguage[mii.Name], mii);
+                }
+            }
+
+            HandlePossibleAmpersand(selectedLanguage["mnuQuiet"], mnuQuiet);
+            HandlePossibleAmpersand(selectedLanguage["mnuVerbose"], mnuVerbose);
+            HandlePossibleAmpersand(selectedLanguage["mnuVerbosePauseOnExit"], mnuVerbosePauseOnExit);
+
+            HandlePossibleAmpersand(selectedLanguage["chkSpaceOut"], mnuSpaced);
+            HandlePossibleAmpersand(selectedLanguage["cmdClearAll"], mnuReset);
+
+            ToolTipService.SetToolTip(butNew, selectedLanguage["new.Tip"]);
+            ToolTipService.SetToolTip(butOpen, selectedLanguage["open.Tip"]);
+            ToolTipService.SetToolTip(butSave, selectedLanguage["save.Tip"]);
+            ToolTipService.SetToolTip(butSaveAs, selectedLanguage["save.Tip"]);
+            // ToolTipService.SetToolTip(butClose, selectedLanguage["close.Tip"]);
+            ToolTipService.SetToolTip(butCopy, selectedLanguage["copy.Tip"]);
+            ToolTipService.SetToolTip(butCut, selectedLanguage["cut.Tip"]);
+            ToolTipService.SetToolTip(butPaste, selectedLanguage["paste.Tip"]);
+            //ToolTipService.SetToolTip(butSelectAll, selectedLanguage["mnuDeselect"]);
+            ToolTipService.SetToolTip(butTransform, selectedLanguage["mnuTranslate"]);
+            // ToolTipService.SetToolTip(toggleOutputButton, selectedLanguage["mnuToggleOutput"]);
+            ToolTipService.SetToolTip(butGo, selectedLanguage["run.Tip"]);
+        }
+
+
+
         private void Cut()
         {
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
@@ -404,16 +464,38 @@ namespace PelotonIDE.Presentation
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
 
-            navigationViewItem.tabSettingJson["VariableLength"]["Defined"] = true;
             if (mnuVariableLength.Icon == null)
             {
                 mnuVariableLength.Icon = tick;
-                navigationViewItem.tabSettingJson["VariableLength"]["Value"] = true;
+                navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = true;
+                navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = true;
             }
             else
             {
-                mnuVariableLength = null;
-                navigationViewItem.tabSettingJson["VariableLength"]["Value"] = false;
+                mnuVariableLength.Icon = null;
+                navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = false;
+                navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = false;
+            }
+
+            UpdateTabCommandLine();
+        }
+
+        private void Spaced_Click(object sender, RoutedEventArgs e)
+        {
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+
+            if (mnuSpaced.Icon == null)
+            {
+                mnuSpaced.Icon = tick;
+                navigationViewItem.TabSettingsDict["Spaced"]["Defined"] = true;
+                navigationViewItem.TabSettingsDict["Spaced"]["Value"] = true;
+            }
+            else
+            {
+                mnuSpaced.Icon = null;
+                navigationViewItem.TabSettingsDict["Spaced"]["Defined"] = false;
+                navigationViewItem.TabSettingsDict["Spaced"]["Value"] = false;
             }
 
             UpdateTabCommandLine();
@@ -431,10 +513,10 @@ namespace PelotonIDE.Presentation
 
             var id = LanguageSettings[lang]["GLOBAL"]["ID"];
 
-            navigationViewItem.tabSettingJson["Language"]["Defined"] = true;
-            navigationViewItem.tabSettingJson["Language"]["Value"] = int.Parse(id);
+            navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
+            navigationViewItem.TabSettingsDict["Language"]["Value"] = int.Parse(id);
 
-            UpdateLanguageName(navigationViewItem.tabSettingJson);
+            UpdateLanguageName(navigationViewItem.TabSettingsDict);
             //languageName.Text = LanguageSettings[currentLanguageName]["GLOBAL"][$"{101+int.Parse(id)}"]; // FIXME? the international language setting actually, not lang
                 
             UpdateTabCommandLine();

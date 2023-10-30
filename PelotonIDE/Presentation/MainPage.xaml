@@ -145,15 +145,15 @@
                         <KeyboardAccelerator Modifiers="Control" Key="F5" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
-                <MenuFlyoutSubItem Text="Running Mode">
-                    <MenuFlyoutItem Text="Quiet"/>
-                    <MenuFlyoutItem Text="Verbose"/>
-                    <MenuFlyoutItem Text="Verbose, with pause"/>
-                </MenuFlyoutSubItem>
             </MenuBarItem>
             
             <MenuBarItem Title="Source" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuSource">
                 <MenuFlyoutItem Name="mnuVariableLength" Click="VariableLength_Click" Text="Variable Length">
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon  FontFamily="Segoe MDL2 Assets" Glyph="&#xF0B7;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Name="mnuSpaced" Click="Spaced_Click" Text="Space out code">
                     <MenuFlyoutItem.Icon>
                         <FontIcon  FontFamily="Segoe MDL2 Assets" Glyph="&#xF0B7;" />
                     </MenuFlyoutItem.Icon>

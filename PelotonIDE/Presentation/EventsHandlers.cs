@@ -47,6 +47,7 @@ namespace PelotonIDE.Presentation
                 navigationViewItem.SavedFilePath = pickedFile;
                 navigationViewItem.Content = pickedFile.Name;
                 navigationViewItem.Height = 30; // FIXME is this where to do it?
+                navigationViewItem.TabSettingsDict = Clone(PerTabInterpreterParameters);
                 // navigationViewItem.MaxHeight = 60; // FIXME is this where to do it?
                 // navigationViewItem.VerticalAlignment = VerticalAlignment.Bottom;
                 CustomRichEditBox newestRichEditBox = _richEditBoxes[navigationViewItem.Tag];
@@ -56,14 +57,14 @@ namespace PelotonIDE.Presentation
                     // Load the file into the Document property of the RichEditBox.
                     if (pickedFile.FileType == ".pr")
                     {
-                        newestRichEditBox.Document.LoadFromStream(Microsoft.UI.Text.TextSetOptions.FormatRtf, randAccStream);
+                        newestRichEditBox.Document.LoadFromStream(TextSetOptions.FormatRtf, randAccStream);
                         newestRichEditBox.isRTF = true;
                         newestRichEditBox.isDirty = false;
                     }
                     else if (pickedFile.FileType == ".p")
                     {
                         string text = File.ReadAllText(pickedFile.Path, Encoding.UTF8);
-                        newestRichEditBox.Document.SetText(Microsoft.UI.Text.TextSetOptions.UnicodeBidi, text);
+                        newestRichEditBox.Document.SetText(TextSetOptions.UnicodeBidi, text);
                         newestRichEditBox.isRTF = false;
                         newestRichEditBox.isDirty = false;
                     }
@@ -75,7 +76,8 @@ namespace PelotonIDE.Presentation
                 // FIXME the language id of the RTF, usually
                 // navigationViewItem.tabSettingJson["Language"]["Defined"] = true;
                 // navigationViewItem.tabSettingJson["Language"]["Value"] = currentLanguageId;
-
+                UpdateLanguageName(navigationViewItem.TabSettingsDict);
+                UpdateTabCommandLine();
             }
         }
 

@@ -21,6 +21,10 @@ using Windows.UI.Core;
 using LanguageConfigurationStructure = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, string>>>;
 using InterpreterParametersStructure = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, object>>;
 using System.Text.RegularExpressions;
+using Windows.Storage.Streams;
+using Windows.Foundation;
+using System.Timers;
+
 
 namespace PelotonIDE.Presentation
 {
@@ -49,6 +53,17 @@ namespace PelotonIDE.Presentation
 
             this.InitializeComponent();
 
+            System.Timers.Timer t = new(1000)
+            {
+                AutoReset = true,
+                Enabled = true,
+
+                //Elapsed += new ElapsedEventHandler(OnTimedEvent_Tick)
+            };
+            t.Elapsed += TimerTick;
+            t.Start();
+            
+
             // GetGlobals();
             CustomRichEditBox customREBox = new()
             {
@@ -63,7 +78,7 @@ namespace PelotonIDE.Presentation
             // richEditBox.Background = 
             tabControl.Content = customREBox;
             _richEditBoxes[customREBox.Tag] = customREBox;
-            tab1.tabSettingJson = null;
+            tab1.TabSettingsDict = null;
             tabControl.SelectedItem = tab1;
             App._window.Closed += MainWindow_Closed;
 
@@ -171,18 +186,30 @@ namespace PelotonIDE.Presentation
             GlobalInterpreterParameters = await MainPage.GetGlobalInterpreterParameters();
             PerTabInterpreterParameters = await MainPage.GetPerTabInterpreterParameters();
 
-            if (tab1.tabSettingJson == null)
-                tab1.tabSettingJson = Clone(PerTabInterpreterParameters);
+            if (tab1.TabSettingsDict == null)
+                tab1.TabSettingsDict = Clone(PerTabInterpreterParameters);
 
-            tab1.tabSettingJson["Language"]["Defined"] = true;
-            tab1.tabSettingJson["Language"]["Value"] = currentLanguageId; // FIXME?
+            tab1.TabSettingsDict["Language"]["Defined"] = true;
+            tab1.TabSettingsDict["Language"]["Value"] = currentLanguageId; // FIXME?
 
             UpdateMenuRunningMode(GlobalInterpreterParameters["Quietude"]);
             UpdateTabCommandLine();
 
-            if ((bool)tab1.tabSettingJson["VariableLength"]["Defined"])
+            if ((bool)tab1.TabSettingsDict["VariableLength"]["Defined"])
             {
-                mnuVariableLength.Icon = (bool)tab1.tabSettingJson["VariableLength"]["Value"] ? tick : null;
+                mnuVariableLength.Icon = (bool)tab1.TabSettingsDict["VariableLength"]["Value"] ? tick : null;
+            } else
+            {
+                mnuVariableLength.Icon = (bool)tab1.TabSettingsDict["VariableLength"]["Value"] ? tick : null;
+            }
+
+            if ((bool)tab1.TabSettingsDict["Spaced"]["Defined"])
+            {
+                mnuSpaced.Icon = (bool)tab1.TabSettingsDict["Spaced"]["Value"] ? tick : null;
+            }
+            else
+            {
+                mnuSpaced.Icon = (bool)tab1.TabSettingsDict["Spaced"]["Value"] ? tick : null;
             }
 
             CAPS.Text = Console.CapsLock ? "CAPS" : "caps";
@@ -287,9 +314,8 @@ namespace PelotonIDE.Presentation
             localSettings.Values["OutputPanelPosition"] = outputPosition.ToString();
             localSettings.Values["OutputHeight"] = outputPanel.Height;
             localSettings.Values["OutputWidth"] = outputPanel.Width;
-            localSettings.Values["Language"] = currentLanguageName; // currentLanguage.ToString();
+            localSettings.Values["Language"] = currentLanguageName; 
             localSettings.Values["PelotonEXE"] = pelotonEXE;
-            // localSettings.Values["PelotonARG"] = pelotonARG;
         }
 
         #region Event Handlers
@@ -312,7 +338,7 @@ namespace PelotonIDE.Presentation
                 Content = "Tab " + (tabControl.MenuItems.Count + 1),
                 Tag = "Tab" + (tabControl.MenuItems.Count + 1),
                 IsNewFile = true,
-                tabSettingJson = Clone(PerTabInterpreterParameters),
+                TabSettingsDict = Clone(PerTabInterpreterParameters),
                 Height = 30
             };
             richEditBox.Tag = navigationViewItem.Tag;
@@ -324,7 +350,7 @@ namespace PelotonIDE.Presentation
             //navigationViewItem.tabSettingJson["Language"]["Defined"] = true;
             //navigationViewItem.tabSettingJson["Language"]["Value"] = currentLanguageId;
             //languageName.Text = LanguageSettings[currentLanguageName]["GLOBAL"][$"{101 + currentLanguageId}"];
-            UpdateLanguageName(navigationViewItem.tabSettingJson);
+            UpdateLanguageName(navigationViewItem.TabSettingsDict);
             UpdateTabCommandLine();
         }
 
@@ -389,15 +415,16 @@ namespace PelotonIDE.Presentation
         }
 
         public static void HandleCustomPropertySaving(StorageFile file, CustomRichEditBox customRichEditBox, CustomTabItem navigationViewItem)
-        {
+        { 
 
             string rtfContent = File.ReadAllText(file.Path);
+            StringBuilder rtfBuilder = new(rtfContent);
 
             var ques = new Regex(Regex.Escape("?"));
-            string info = @"\info {\ilang ?} {\ilength ?} {\ipadout ?}}";
-            info = ques.Replace(info, (string)navigationViewItem.tabSettingJson["Language"]["Value"], 1);
-            info = ques.Replace(info, (string)navigationViewItem.tabSettingJson["VariableLength"]["Value"], 1);
-            info = ques.Replace(info, (string)navigationViewItem.tabSettingJson["Spaced"]["Value"], 1);
+            string info = @"\info {\*\ilang ?} {\*\ilength ?} {\*\ipadout ?}} ";
+            info = ques.Replace(info, $"{navigationViewItem.TabSettingsDict["Language"]["Value"]}", 1);
+            info = ques.Replace(info, (bool)navigationViewItem.TabSettingsDict["VariableLength"]["Value"] ? "1" : "0", 1);
+            info = ques.Replace(info, (bool)navigationViewItem.TabSettingsDict["Spaced"]["Value"] ? "1" : "0", 1);
 
             var regex = new Regex(@"\{\*?\\[^{}]+}|[{}]|\\\n?[A-Za-z]+\n?(?:-?\d+)?[ ]?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
@@ -413,6 +440,10 @@ namespace PelotonIDE.Presentation
             }
             else
             {
+                var start = @"{\rtf1";
+                var i = rtfContent.IndexOf(start);
+                var j = i + start.Length;
+                rtfBuilder.Insert(j, info);
             }
             // is there an \info section?
             // yes:
@@ -422,7 +453,6 @@ namespace PelotonIDE.Presentation
             // string settingsJson = System.Text.Json.JsonSerializer.Serialize(customRichEditBox.TabCodeRunCargo);
 
             // Manipulate the RTF content
-            StringBuilder rtfBuilder = new(rtfContent);
 
             // Add a \language section
             // rtfBuilder.Insert(rtfBuilder.Length, settingsJson);
@@ -438,7 +468,7 @@ namespace PelotonIDE.Presentation
 
             var matches = regex.Matches(rtfContent);
 
-            var infos = from match in matches where match.Value == @"\info" select match;
+            var infos = from match in matches where match.Value.StartsWith(@"\info") select match;
             if (infos.Any())
             {
                 var ilang = from match in matches where match.Value.Contains(@"\ilang") select match;
@@ -447,8 +477,8 @@ namespace PelotonIDE.Presentation
                     var items = ilang.First().Value.Split(' ');
                     if (items.Any())
                     {
-                        navigationViewItem.tabSettingJson["Language"]["Defined"] = true;
-                        navigationViewItem.tabSettingJson["Language"]["Value"] = int.Parse(items[1].Replace("}",""));
+                        navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
+                        navigationViewItem.TabSettingsDict["Language"]["Value"] = int.Parse(items[1].Replace("}", ""));
                     }
                 }
                 var ilength = from match in matches where match.Value.Contains(@"\ilength") select match;
@@ -457,8 +487,17 @@ namespace PelotonIDE.Presentation
                     var items = ilength.First().Value.Split(' ');
                     if (items.Any())
                     {
-                        navigationViewItem.tabSettingJson["VariableLength"]["Defined"] = true;
-                        navigationViewItem.tabSettingJson["VariableLength"]["Value"] = items[1].Replace("}", "") == "1" ? true : false;
+                        var flag = items[1].Replace("}", "");
+                        if (flag == "0")
+                        {
+                            navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = false;
+                            navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = flag == "1";
+                        }
+                        else
+                        {
+                            navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = true;
+                            navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = flag == "1";
+                        }
                     }
 
                 }
@@ -466,20 +505,29 @@ namespace PelotonIDE.Presentation
                 if (ipadout.Any())
                 {
                     var items = ipadout.First().Value.Split(' ');
-                    if (items.Any())
+                    var flag = items[1].Replace("}", "");
+                    if (flag == "0")
                     {
-                        navigationViewItem.tabSettingJson["Spaced"]["Defined"] = true;
-                        navigationViewItem.tabSettingJson["Spaced"]["Value"] = items[1].Replace("}", "") == "1" ? true : false;
+                        navigationViewItem.TabSettingsDict["Spaced"]["Defined"] = false;
+                        navigationViewItem.TabSettingsDict["Spaced"]["Value"] = flag == "1";
+                    }
+                    else
+                    {
+                        navigationViewItem.TabSettingsDict["Spaced"]["Defined"] = true;
+                        navigationViewItem.TabSettingsDict["Spaced"]["Value"] = flag == "1";
                     }
                 }
 
             }
             else
             {
-                navigationViewItem.tabSettingJson["Language"]["Defined"] = true;
-                navigationViewItem.tabSettingJson["Language"]["Value"] = 0;
-                navigationViewItem.tabSettingJson["VariableLength"]["Defined"] = true;
-                navigationViewItem.tabSettingJson["VariableLength"]["Value"] = rtfContent.Contains("<# ");
+                navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
+                navigationViewItem.TabSettingsDict["Language"]["Value"] = 0;
+                if (rtfContent.Contains("<# "))
+                {
+                    navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = true;
+                    navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = rtfContent.Contains("<# ");
+                }
             }
 
             //int startIndex = modifiedRtfContent.LastIndexOf('{');
@@ -500,56 +548,6 @@ namespace PelotonIDE.Presentation
                 Console.WriteLine(ex.ToString());
             }*/
 
-        }
-
-        private async void HandleLanguageChange(string langName)
-        {
-            var selectedLanguage = LanguageSettings[langName];
-
-            SetMenuText(selectedLanguage["frmMain"]);
-            var selLang = selectedLanguage["GLOBAL"]["153"];
-            currentLanguageName = langName;
-            currentLanguageId = int.Parse(selectedLanguage["GLOBAL"]["ID"]);
-            languageName.Text = selectedLanguage["GLOBAL"]["101"];
-            PerTabInterpreterParameters["Language"]["Defined"] = true;
-            PerTabInterpreterParameters["Language"]["Value"] = currentLanguageId;
-
-
-            // languageName.Document.Selection.SetText(TextSetOptions.None, "Language: " + selLang == langName ? $"{langName}" : $"{langName} - {selLang}");
-        }
-
-        private void SetMenuText(Dictionary<string, string> selectedLanguage)
-        {
-            foreach (var mi in menuBar.Items)
-            {
-                Debug.WriteLine($"mi {mi.Name}");
-                MainPage.HandlePossibleAmpersand(selectedLanguage[mi.Name], mi);
-
-                foreach (var mii in mi.Items)
-                {
-                    Debug.WriteLine($"mii {mii.Name}");
-                    if (selectedLanguage.ContainsKey(mii.Name))
-                        MainPage.HandlePossibleAmpersand(selectedLanguage[mii.Name], mii);
-                }
-            }
-
-            MainPage.HandlePossibleAmpersand(selectedLanguage["mnuQuiet"], mnuQuiet);
-            MainPage.HandlePossibleAmpersand(selectedLanguage["mnuVerbose"], mnuVerbose);
-            MainPage.HandlePossibleAmpersand(selectedLanguage["mnuVerbosePauseOnExit"], mnuVerbosePauseOnExit);
-
-
-            ToolTipService.SetToolTip(butNew, selectedLanguage["new.Tip"]);
-            ToolTipService.SetToolTip(butOpen, selectedLanguage["open.Tip"]);
-            ToolTipService.SetToolTip(butSave, selectedLanguage["save.Tip"]);
-            ToolTipService.SetToolTip(butSaveAs, selectedLanguage["save.Tip"]);
-            // ToolTipService.SetToolTip(butClose, selectedLanguage["close.Tip"]);
-            ToolTipService.SetToolTip(butCopy, selectedLanguage["copy.Tip"]);
-            ToolTipService.SetToolTip(butCut, selectedLanguage["cut.Tip"]);
-            ToolTipService.SetToolTip(butPaste, selectedLanguage["paste.Tip"]);
-            //ToolTipService.SetToolTip(butSelectAll, selectedLanguage["mnuDeselect"]);
-            ToolTipService.SetToolTip(butTransform, selectedLanguage["mnuTranslate"]);
-            // ToolTipService.SetToolTip(toggleOutputButton, selectedLanguage["mnuToggleOutput"]);
-            ToolTipService.SetToolTip(butGo, selectedLanguage["run.Tip"]);
         }
 
         private static void HandlePossibleAmpersand(string name, MenuFlyoutItemBase mfib)
@@ -621,7 +619,7 @@ namespace PelotonIDE.Presentation
                 }
             }
 
-            var inTab = navigationViewItem.tabSettingJson;
+            var inTab = navigationViewItem.TabSettingsDict;
 
             if (inTab != null)
             {
