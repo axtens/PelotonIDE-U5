@@ -43,7 +43,7 @@ namespace PelotonIDE.Presentation
             StorageFile pickedFile = await open.PickSingleFileAsync();
             if (pickedFile != null)
             {
-
+                interpreterTextBox.Text = pickedFile.Path;
             }
         }
 
@@ -62,7 +62,7 @@ namespace PelotonIDE.Presentation
             StorageFolder pickedFolder = await folderPicker.PickSingleFolderAsync();
             if (pickedFolder != null)
             {
-
+                sourceTextBox.Text = pickedFolder.Path;
             }
         }
     }

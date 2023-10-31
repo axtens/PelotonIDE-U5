@@ -21,16 +21,29 @@
                 <Setter Property="Foreground" Value="White"/>
                 <Setter Property="Padding" Value="5"/>
                 <Setter Property="CornerRadius" Value="10"/>
-                <Setter Property="Margin" Value="0,0,8,0" />
+                <Setter Property="Margin" Value="0,0,10,0" />
+            </Style>
+            <Style TargetType="TextBox">
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="BorderBrush" Value="Black"/>
+                <Setter Property="VerticalContentAlignment" Value="Bottom"/>
+                <Setter Property="Margin" Value="0,0,10,0" />
             </Style>
         </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-        <utu:NavigationBar Content="IDE Configuration">
+        <utu:NavigationBar Content="IDE Configuration" Grid.ColumnSpan="3">
             <utu:NavigationBar.MainCommand>
                 <AppBarButton>
                     <AppBarButton.Icon>
@@ -40,15 +53,37 @@
             </utu:NavigationBar.MainCommand>
         </utu:NavigationBar>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="10">
-            <TextBlock Text="Editor Configuration" VerticalAlignment="Center" Margin="0,0,10,0"/>
+        <!--<StackPanel x:Name="test" Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="10">
+            <TextBlock Text="Interpreter" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBox x:Name="interpreterTextBox" Text="HELLO WORLD" Width="300" MinHeight="0" FontSize="12"
+                     Margin="0,0,10,0" />
             <Button x:Name="interpreterLocationBtn" Content="Browse..." Click="interpreterLocationBtn_Click"/>
         </StackPanel>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="10">
             <TextBlock Text="Source Directory" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBox x:Name="sourceTextBox" Text="HELLO WORLD" Width="300" MinHeight="0" FontSize="12"
+                     Margin="0,0,10,0" />
             <Button x:Name="sourceDirectoryBtn" Content="Browse..." Click="sourceDirectoryBtn_Click"/>
+        </StackPanel>-->
+
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Interpreter Location" VerticalAlignment="Center" Margin="10,0,10,0"/>
+        <TextBox x:Name="interpreterTextBox" Grid.Row="1" Grid.Column="1" Width="400" MinHeight="0" FontSize="12"
+                     Margin="0,5,10,5" />
+        <Button x:Name="interpreterLocationBtn" Grid.Row="1" Grid.Column="2" Content="Browse..." Click="interpreterLocationBtn_Click"/>
+
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Script Location" VerticalAlignment="Center" Margin="10,0,10,0"/>
+        <TextBox x:Name="sourceTextBox" Grid.Row="2" Grid.Column="1" Width="400" MinHeight="0" FontSize="12"
+                     Margin="0,5,10,5" />
+        <Button x:Name="sourceDirectoryBtn" Grid.Row="2" Grid.Column="2" Content="Browse..." Click="sourceDirectoryBtn_Click"/>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+            <Button Content="Apply" Margin="0,0,10,10"/>
+            <Button Content="Cancel" Margin="0,0,10,10"/>
         </StackPanel>
+
 
     </Grid>
 </Page>
