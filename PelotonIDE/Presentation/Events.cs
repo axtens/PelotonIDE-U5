@@ -6,21 +6,11 @@ using Microsoft.UI.Xaml.Input;
 
 using Newtonsoft.Json;
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Timers;
 
 using Windows.ApplicationModel.DataTransfer;
-using Windows.Foundation.Collections;
 using Windows.Storage;
-using Windows.Storage.Pickers;
-using Windows.Storage.Provider;
 using Windows.System;
 using Windows.UI.Core;
 
@@ -299,8 +289,20 @@ namespace PelotonIDE.Presentation
 
         private void Internationalization_Click(object sender, RoutedEventArgs e)
         {
+            FontIcon tickIcon = new FontIcon()
+            {
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                Glyph = "\uF0B7"
+            };
+
             var me = (MenuFlyoutItem)sender;
             var name = me.Name;
+
+            foreach (var item in mnuSelectLanguage.Items)
+            {
+                ((MenuFlyoutItem)item).Icon = item.Name == name ? tickIcon : (IconElement?)null;
+            }
+
             HandleLanguageChange(name);
         }
 
@@ -312,8 +314,6 @@ namespace PelotonIDE.Presentation
             InterfaceLanguageName = langName;
             InterfaceLanguageID = long.Parse(selectedLanguage["GLOBAL"]["ID"]);
             languageName.Text = selectedLanguage["GLOBAL"]["101"];
-            // PerTabInterpreterParameters["Language"]["Defined"] = true;
-            // PerTabInterpreterParameters["Language"]["Value"] = InterfaceLanguageID;
         }
 
         private void SetMenuText(Dictionary<string, string> selectedLanguage)
@@ -335,8 +335,8 @@ namespace PelotonIDE.Presentation
             HandlePossibleAmpersand(selectedLanguage["mnuVerbose"], mnuVerbose);
             HandlePossibleAmpersand(selectedLanguage["mnuVerbosePauseOnExit"], mnuVerbosePauseOnExit);
 
-            HandlePossibleAmpersand(selectedLanguage["chkSpaceOut"], mnuSpaced);
-            HandlePossibleAmpersand(selectedLanguage["cmdClearAll"], mnuReset);
+            // HandlePossibleAmpersand(selectedLanguage["chkSpaceOut"], mnuSpaced);
+            // HandlePossibleAmpersand(selectedLanguage["cmdClearAll"], mnuReset);
 
             ToolTipService.SetToolTip(butNew, selectedLanguage["new.Tip"]);
             ToolTipService.SetToolTip(butOpen, selectedLanguage["open.Tip"]);
@@ -346,7 +346,7 @@ namespace PelotonIDE.Presentation
             ToolTipService.SetToolTip(butCopy, selectedLanguage["copy.Tip"]);
             ToolTipService.SetToolTip(butCut, selectedLanguage["cut.Tip"]);
             ToolTipService.SetToolTip(butPaste, selectedLanguage["paste.Tip"]);
-            //ToolTipService.SetToolTip(butSelectAll, selectedLanguage["mnuDeselect"]);
+            ToolTipService.SetToolTip(butSelectAll, selectedLanguage["mnuSelectOther(7)"]);
             ToolTipService.SetToolTip(butTransform, selectedLanguage["mnuTranslate"]);
             // ToolTipService.SetToolTip(toggleOutputButton, selectedLanguage["mnuToggleOutput"]);
             ToolTipService.SetToolTip(butGo, selectedLanguage["run.Tip"]);
@@ -495,34 +495,34 @@ namespace PelotonIDE.Presentation
             UpdateTabCommandLine();
         }
 
-        private void Spaced_Click(object sender, RoutedEventArgs e)
-        {
-            FontIcon tickIcon = new FontIcon()
-            {
-                FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                Glyph = "\uF0B7"
-            };
+        //private void Spaced_Click(object sender, RoutedEventArgs e)
+        //{
+        //    FontIcon tickIcon = new FontIcon()
+        //    {
+        //        FontFamily = new FontFamily("Segoe MDL2 Assets"),
+        //        Glyph = "\uF0B7"
+        //    };
 
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+        //    CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+        //    CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
 
-            if (mnuSpaced.Icon == null)
-            {
-                mnuSpaced.Icon = tickIcon;
-                navigationViewItem.TabSettingsDict["Spaced"]["Defined"] = true;
-                navigationViewItem.TabSettingsDict["Spaced"]["Value"] = true;
-                LastSelectedSpaced = true;
-            }
-            else
-            {
-                mnuSpaced.Icon = null;
-                navigationViewItem.TabSettingsDict["Spaced"]["Defined"] = false;
-                navigationViewItem.TabSettingsDict["Spaced"]["Value"] = false;
-                LastSelectedSpaced = false;
-            }
+        //    if (mnuSpaced.Icon == null)
+        //    {
+        //        mnuSpaced.Icon = tickIcon;
+        //        navigationViewItem.TabSettingsDict["Spaced"]["Defined"] = true;
+        //        navigationViewItem.TabSettingsDict["Spaced"]["Value"] = true;
+        //        LastSelectedSpaced = true;
+        //    }
+        //    else
+        //    {
+        //        mnuSpaced.Icon = null;
+        //        navigationViewItem.TabSettingsDict["Spaced"]["Defined"] = false;
+        //        navigationViewItem.TabSettingsDict["Spaced"]["Value"] = false;
+        //        LastSelectedSpaced = false;
+        //    }
 
-            UpdateTabCommandLine();
-        }
+        //    UpdateTabCommandLine();
+        //}
 
         private void MnuLanguage_Click(object sender, RoutedEventArgs e)
         {

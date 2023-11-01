@@ -198,11 +198,12 @@ namespace PelotonIDE.Presentation
                         CustomTabItem savedItem = (CustomTabItem)tabControl.SelectedItem;
                         savedItem.IsNewFile = false;
                         savedItem.Content = file.Name;
-
+                        
                         if (currentRichEditBox.isRTF)
                         {
                             HandleCustomPropertySaving(file, currentRichEditBox, navigationViewItem);
                         }
+                        currentRichEditBox.isDirty = false;
                     }
                 }
             }
@@ -362,7 +363,7 @@ namespace PelotonIDE.Presentation
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
             currentRichEditBox.Focus(FocusState.Pointer);
-            currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out var allText);
+            currentRichEditBox.Document.GetText(TextGetOptions.None, out var allText);
             var endPosition = allText.Length - 1;
             currentRichEditBox.Document.Selection.SetRange(0, endPosition);
         }
@@ -462,6 +463,17 @@ namespace PelotonIDE.Presentation
                 outputDockingFlyout.Hide();
             }
         }
-
+        private void ContentControl_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = "Interpreter language",
+                Content = "Selection of interpreter language\ncurrently only available from menu",
+                CloseButtonText = "OK"
+            };
+            _ = dialog.ShowAsync();
+        }
     }
 }

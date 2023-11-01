@@ -75,6 +75,7 @@
     </ItemGroup>
     <ItemGroup>
       <Compile Remove="Presentation\Interpreter.cs" />
+      <Compile Remove="Presentation\TabSpecificSettings.cs" />
     </ItemGroup>
     <ItemGroup>
         <None Remove="Presentation\FactorySettings.json" />
