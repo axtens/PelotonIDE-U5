@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -56,14 +57,17 @@ namespace PelotonIDE.Presentation
             {
                 case "mnuQuiet":
                     me.Icon = tickIcon;
+                    LastSelectedQuietude = 0;
                     GlobalInterpreterParameters["Quietude"]["Value"] = 0;
                     break;
                 case "mnuVerbose":
                     me.Icon = tickIcon;
+                    LastSelectedQuietude = 1;
                     GlobalInterpreterParameters["Quietude"]["Value"] = 1;
                     break;
                 case "mnuVerbosePauseOnExit":
                     me.Icon = tickIcon;
+                    LastSelectedQuietude = 2;
                     GlobalInterpreterParameters["Quietude"]["Value"] = 2;
                     break;
             }
@@ -151,18 +155,22 @@ namespace PelotonIDE.Presentation
 
         private void RichEditBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
+            var Black = new SolidColorBrush(Colors.Black);
+            var LightGrey = new SolidColorBrush(Colors.LightGray);
+
             Debug.WriteLine($"{e.Key}");
             if (e.Key == VirtualKey.CapitalLock)
             {
-                CAPS.Text = Console.CapsLock ? "CAPS" : "caps";
+                CAPS.Text = "CAPS";
+                CAPS.Foreground = Console.CapsLock ? Black : (Brush)LightGrey;
             }
             if (e.Key == VirtualKey.NumberKeyLock)
             {
-                NUM.Text = Console.NumberLock ? "NUM" : "num";
+                NUM.Text = "NUM";
+                NUM.Foreground = Console.NumberLock ? Black : (Brush)LightGrey;
             }
             if (e.Key == VirtualKey.Scroll)
             {
-                SCRL.Text = Console.NumberLock ? "SCRL" : "scrl";
             }
             if (e.Key == VirtualKey.Insert)
             {
@@ -304,8 +312,8 @@ namespace PelotonIDE.Presentation
             InterfaceLanguageName = langName;
             InterfaceLanguageID = long.Parse(selectedLanguage["GLOBAL"]["ID"]);
             languageName.Text = selectedLanguage["GLOBAL"]["101"];
-            PerTabInterpreterParameters["Language"]["Defined"] = true;
-            PerTabInterpreterParameters["Language"]["Value"] = InterfaceLanguageID;
+            // PerTabInterpreterParameters["Language"]["Defined"] = true;
+            // PerTabInterpreterParameters["Language"]["Value"] = InterfaceLanguageID;
         }
 
         private void SetMenuText(Dictionary<string, string> selectedLanguage)
@@ -474,14 +482,14 @@ namespace PelotonIDE.Presentation
                 mnuVariableLength.Icon = tickIcon;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = true;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = true;
-                LastSelectedVariableLength = 1;
+                LastSelectedVariableLength = true;
             }
             else
             {
                 mnuVariableLength.Icon = null;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = false;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = false;
-                LastSelectedVariableLength = 0;
+                LastSelectedVariableLength = false;
             }
 
             UpdateTabCommandLine();
@@ -503,14 +511,14 @@ namespace PelotonIDE.Presentation
                 mnuSpaced.Icon = tickIcon;
                 navigationViewItem.TabSettingsDict["Spaced"]["Defined"] = true;
                 navigationViewItem.TabSettingsDict["Spaced"]["Value"] = true;
-                LastSelectedSpaced = 1;
+                LastSelectedSpaced = true;
             }
             else
             {
                 mnuSpaced.Icon = null;
                 navigationViewItem.TabSettingsDict["Spaced"]["Defined"] = false;
                 navigationViewItem.TabSettingsDict["Spaced"]["Value"] = false;
-                LastSelectedSpaced = 0;
+                LastSelectedSpaced = false;
             }
 
             UpdateTabCommandLine();
@@ -528,11 +536,16 @@ namespace PelotonIDE.Presentation
 
             var id = LanguageSettings[lang]["GLOBAL"]["ID"];
 
-            navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
-            navigationViewItem.TabSettingsDict["Language"]["Value"] = long.Parse(id);
+            var currentTabSettings = navigationViewItem.TabSettingsDict;
+            currentTabSettings["Language"]["Defined"] = true;
+            currentTabSettings["Language"]["Value"] = long.Parse(id);
 
             LastSelectedInterpreterLanguageName = lang;
             LastSelectedInterpreterLanguageID = long.Parse(id);
+
+            PerTabInterpreterParameters["Language"]["Defined"] = true;
+            PerTabInterpreterParameters["Language"]["Value"] = long.Parse(id);
+
 
             UpdateLanguageName(navigationViewItem.TabSettingsDict);
             //languageName.Text = LanguageSettings[InterfaceLanguageName]["GLOBAL"][$"{101+int.Parse(id)}"]; // FIXME? the international language setting actually, not lang
@@ -584,7 +597,7 @@ namespace PelotonIDE.Presentation
             {
                 XamlRoot = this.XamlRoot,
                 Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                Title = "PelotonIDE v20230614",
+                Title = "PelotonIDE v1.0",
                 Content = "Based on original code by\r\nHakob Chalikyan <hchalikyan3@gmail.com>",
                 CloseButtonText = "OK"
             };

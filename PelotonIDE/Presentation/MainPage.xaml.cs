@@ -28,6 +28,8 @@ using Windows.Storage.Streams;
 using Windows.Foundation;
 using System.Timers;
 using Newtonsoft.Json.Linq;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml;
 
 
 namespace PelotonIDE.Presentation
@@ -44,13 +46,13 @@ namespace PelotonIDE.Presentation
         }
         string? InterfaceLanguageName = "English";
         long InterfaceLanguageID = 0;
-        
+
         string? LastSelectedInterpreterLanguageName;
         long LastSelectedInterpreterLanguageID;
 
-        long LastSelectedVariableLength = 0;
-        long LastSelectedSpaced = 0;
-
+        bool LastSelectedVariableLength;
+        bool LastSelectedSpaced;
+        long LastSelectedQuietude = 2;
 
         OutputPanelPosition outputPanelPosition = OutputPanelPosition.Bottom;
         string pelotonEXE = string.Empty;
@@ -74,7 +76,7 @@ namespace PelotonIDE.Presentation
             //};
             //t.Elapsed += TimerTick;
             //t.Start();
-            
+
 
             // GetGlobals();
             CustomRichEditBox customREBox = new()
@@ -84,7 +86,6 @@ namespace PelotonIDE.Presentation
                 //Foreground = new SolidColorBrush(new Color() { A = 0xFF, R = 0xf9, G = 0xf8, B = 0xbd })
             };
             customREBox.KeyDown += RichEditBox_KeyDown;
-            customREBox.SelectionChanged += CustomREBox_SelectionChanged;
             customREBox.AcceptsReturn = true;
 
             // richEditBox.Background = 
@@ -96,8 +97,13 @@ namespace PelotonIDE.Presentation
 
             FillLanguagesIntoMenu(mnuSettings, "mnuSelectLanguage", Internationalization_Click);
             FillLanguagesIntoMenu(mnuRun, "mnuLanguage", MnuLanguage_Click);
-
+            // FillLanguagesIntoMenu(contextualLanguagesFlyout, "mnuLanguage", some_click);
             UpdateTabCommandLine();
+        }
+
+        private void some_click(object sender, RoutedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private InterpreterParametersStructure CopyFromGlobalCodeRunCargo()
@@ -150,6 +156,48 @@ namespace PelotonIDE.Presentation
             string languageConfigString = File.ReadAllText(languageConfig.Path);
             return JsonConvert.DeserializeObject<LanguageConfigurationStructure>(languageConfigString);
         }
+
+        //private async void FillLanguagesIntoMenu(MenuFlyout flyout, string menuLabel, RoutedEventHandler handler)
+        //{
+        //    LanguageSettings = await GetLanguageConfiguration();
+
+        //    if (InterfaceLanguageName == null || !LanguageSettings.ContainsKey(InterfaceLanguageName))
+        //    {
+        //        return;
+        //    }
+
+        //    var sub = new MenuFlyoutSubItem
+        //    {
+        //        // <!--<MenuFlyoutSubItem Text="Choose interface language" BorderBrush="LightGray" BorderThickness="1" names:Name="SettingsBar_InterfaceLanguage" />-->
+        //        Text = LanguageSettings[InterfaceLanguageName]["frmMain"][menuLabel],
+        //        BorderThickness = new Thickness(1, 1, 1, 1),
+        //        BorderBrush = new SolidColorBrush() { Color = Colors.LightGray },
+        //        Name = menuLabel
+        //    };
+
+        //    var globals = LanguageSettings[InterfaceLanguageName]["GLOBAL"];
+        //    var count = LanguageSettings.Keys.Count;
+        //    for (var i = 0; i < count; i++)
+        //    {
+        //        var names = from lang in LanguageSettings.Keys
+        //                    where LanguageSettings.ContainsKey(lang) && LanguageSettings[lang]["GLOBAL"]["ID"] == i.ToString()
+        //                    let name = LanguageSettings[lang]["GLOBAL"]["Name"]
+        //                    select name;
+        //        if (names.Any())
+        //        {
+        //            MenuFlyoutItem menuFlyoutItem = new()
+        //            {
+        //                Text = globals[$"{100 + i + 1}"],
+        //                Name = names.First()  //languageJson[key]["GLOBAL"]["ID"]
+        //            };
+        //            menuFlyoutItem.Click += handler; //  Internationalization_Click;
+        //            sub.Items.Add(menuFlyoutItem);
+        //        }
+        //    }
+        //    flyout.Items.Add(sub);
+        //}
+
+
         private async void FillLanguagesIntoMenu(MenuBarItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
         {
             var tabset = await GetGlobalInterpreterParameters();
@@ -179,9 +227,9 @@ namespace PelotonIDE.Presentation
             for (var i = 0; i < count; i++)
             {
                 var names = from lang in LanguageSettings.Keys
-                        where LanguageSettings.ContainsKey(lang) && LanguageSettings[lang]["GLOBAL"]["ID"] == i.ToString()
-                        let name = LanguageSettings[lang]["GLOBAL"]["Name"]
-                        select name;
+                            where LanguageSettings.ContainsKey(lang) && LanguageSettings[lang]["GLOBAL"]["ID"] == i.ToString()
+                            let name = LanguageSettings[lang]["GLOBAL"]["Name"]
+                            select name;
                 if (names.Any())
                 {
                     MenuFlyoutItem menuFlyoutItem = new()
@@ -201,12 +249,23 @@ namespace PelotonIDE.Presentation
         /// </summary>
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            bool clear = false;
+            if (clear)
+            {
+                foreach (var setting in ApplicationData.Current.LocalSettings.Values)
+                {
+                    ApplicationData.Current.LocalSettings.DeleteContainer(setting.Key);
+                }
+                await ApplicationData.Current.ClearAsync();
+            }
+
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+
+            CAPS.Foreground = Console.CapsLock ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.LightGray);
+            NUM.Foreground = Console.NumberLock ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.LightGray);
 
             GlobalInterpreterParameters = await MainPage.GetGlobalInterpreterParameters();
             PerTabInterpreterParameters = await MainPage.GetPerTabInterpreterParameters();
-            CAPS.Text = Console.CapsLock ? "CAPS" : "caps";
-            NUM.Text = Console.NumberLock ? "NUM" : "num";
 
             var FactorySettings = await GetFactorySettings();
 
@@ -215,18 +274,31 @@ namespace PelotonIDE.Presentation
             var outputPanelPosition = GetFactorySettingsWithLocalSettingsOverrideOrDefault("OutputPanelPosition", (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), "Bottom"), FactorySettings, localSettings);
 
             HandleOutputPanelChange(outputPanelPosition);
-            
-            outputPanel.Height = GetFactorySettingsWithLocalSettingsOverrideOrDefault<double>("OutputPanelHeight",200, FactorySettings, localSettings);
+
+            outputPanel.Height = GetFactorySettingsWithLocalSettingsOverrideOrDefault<double>("OutputPanelHeight", 200, FactorySettings, localSettings);
             InterfaceLanguageName = GetFactorySettingsWithLocalSettingsOverrideOrDefault<string>("InterfaceLanguageName", "English", FactorySettings, localSettings);
-            InterfaceLanguageID = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("InterfaceLanguageID",0, FactorySettings, localSettings);
+            InterfaceLanguageID = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("InterfaceLanguageID", 0, FactorySettings, localSettings);
+            if (InterfaceLanguageName != null)
+                HandleLanguageChange(InterfaceLanguageName);
 
             pelotonEXE = GetFactorySettingsWithLocalSettingsOverrideOrDefault("PelotonEXE", @"C:\protium\bin\pdb.exe", FactorySettings, localSettings) ?? @"C:\protium\bin\pdb.exe";
 
             LastSelectedInterpreterLanguageName = GetFactorySettingsWithLocalSettingsOverrideOrDefault<string>("LastSelectedInterpreterLanguageName", "English", FactorySettings, localSettings);
             LastSelectedInterpreterLanguageID = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("LastSelectedInterpreterLanguageID", 0, FactorySettings, localSettings);
+            PerTabInterpreterParameters["Language"]["Defined"] = true;
+            PerTabInterpreterParameters["Language"]["Value"] = LastSelectedInterpreterLanguageID;
 
-            LastSelectedVariableLength = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("LastSelectedVariableLength", 0, FactorySettings, localSettings);
-            LastSelectedSpaced = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("LastSelectedSpaced", 0, FactorySettings, localSettings);
+            LastSelectedVariableLength = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("LastSelectedVariableLength", false, FactorySettings, localSettings);
+            PerTabInterpreterParameters["VariableLength"]["Defined"] = LastSelectedVariableLength;
+            PerTabInterpreterParameters["VariableLength"]["Value"] = LastSelectedVariableLength;
+
+            LastSelectedSpaced = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("LastSelectedSpaced", false, FactorySettings, localSettings);
+            PerTabInterpreterParameters["Spaced"]["Defined"] = LastSelectedSpaced;
+            PerTabInterpreterParameters["Spaced"]["Value"] = LastSelectedSpaced;
+
+            LastSelectedQuietude = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("Quietude", 2, FactorySettings, localSettings);
+            GlobalInterpreterParameters["Quietude"]["Defined"] = true;
+            GlobalInterpreterParameters["Quietude"]["Value"] = LastSelectedQuietude;
 
             if (tab1.TabSettingsDict == null)
                 tab1.TabSettingsDict = Clone(PerTabInterpreterParameters);
@@ -278,14 +350,16 @@ namespace PelotonIDE.Presentation
             if (factory.ContainsKey(name))
             {
                 result = (int)factory[name];
-            } else
+            }
+            else
             {
                 noFactory = true;
             }
             if (container.Values.ContainsKey(name))
             {
                 result = (int)container.Values[name];
-            } else
+            }
+            else
             {
                 noContainer = true;
             }
@@ -434,7 +508,7 @@ namespace PelotonIDE.Presentation
                 Glyph = "\uF0B7"
             };
 
-            if ((bool)quietude["Defined"] == true)
+            if ((bool)quietude["Defined"])
             {
                 foreach (var item in from key in new string[] { "mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit" }
                                      let items = from item in mnuRunningMode.Items where item.Name == key select item
@@ -475,6 +549,7 @@ namespace PelotonIDE.Presentation
             localSettings.Values["LastSelectedVariableLength"] = LastSelectedVariableLength;
             localSettings.Values["LastSelectedSpaced"] = LastSelectedSpaced;
             localSettings.Values["PelotonEXE"] = pelotonEXE;
+            localSettings.Values["Quietude"] = LastSelectedQuietude;
         }
 
         #region Event Handlers
@@ -489,7 +564,6 @@ namespace PelotonIDE.Presentation
                 isDirty = false,
             };
             richEditBox.KeyDown += RichEditBox_KeyDown;
-            richEditBox.SelectionChanged += CustomREBox_SelectionChanged;
             richEditBox.AcceptsReturn = true;
 
             CustomTabItem navigationViewItem = new()
@@ -547,7 +621,7 @@ namespace PelotonIDE.Presentation
                     i = (int)value;
                 }
 
-                if (type =="Int64")
+                if (type == "Int64")
                 {
                     i = (long)value;
                 }
@@ -573,7 +647,7 @@ namespace PelotonIDE.Presentation
         }
 
         public static void HandleCustomPropertySaving(StorageFile file, CustomRichEditBox customRichEditBox, CustomTabItem navigationViewItem)
-        { 
+        {
 
             string rtfContent = File.ReadAllText(file.Path);
             StringBuilder rtfBuilder = new(rtfContent);
@@ -662,7 +736,6 @@ namespace PelotonIDE.Presentation
                         navigationViewItem.TabSettingsDict["Spaced"]["Value"] = flag == "1";
                     }
                 }
-
             }
             else
             {
@@ -865,10 +938,15 @@ namespace PelotonIDE.Presentation
             //tb.VerticalAlignment = VerticalAlignment.Center;
             //tb.FontWeight = FontWeights.Bold;
             //tb.Margin = new Thickness(5);
-            
-            
+
+
             //cd.
 
+
+        }
+
+        private void ContentControl_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
 
         }
     }

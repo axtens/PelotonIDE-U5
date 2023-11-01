@@ -44,6 +44,7 @@ namespace PelotonIDE.Presentation
             if (pickedFile != null)
             {
                 interpreterTextBox.Text = pickedFile.Path;
+                
             }
         }
 
@@ -63,6 +64,7 @@ namespace PelotonIDE.Presentation
             if (pickedFolder != null)
             {
                 sourceTextBox.Text = pickedFolder.Path;
+                
             }
         }
     }
