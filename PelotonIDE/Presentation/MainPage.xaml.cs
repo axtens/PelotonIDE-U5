@@ -163,9 +163,9 @@ namespace PelotonIDE.Presentation
                     {
                         Text = globals[$"{100 + i + 1}"],
                         Name = names.First(),  //languageJson[key]["GLOBAL"]["ID"]
-                        Padding = new Thickness(20, 1, 1, 1),
-                        BorderBrush = new SolidColorBrush() { Color = Colors.LightGray },
-                        HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                        // Padding = new Thickness(20, 1, 1, 1),
+                        // BorderBrush = new SolidColorBrush() { Color = Colors.LightGray },
+                        // HorizontalContentAlignment = HorizontalAlignment.Stretch,
 
                     };
                     menuFlyoutItem.Click += routedEventHandler; //  Internationalization_Click;
@@ -218,9 +218,9 @@ namespace PelotonIDE.Presentation
                     {
                         Text = globals[$"{100 + i + 1}"],
                         Name = names.First(),  //languageJson[key]["GLOBAL"]["ID"]
-                        Padding = new Thickness(20,1,1,1),
-                        BorderBrush= new SolidColorBrush() { Color = Colors.LightGray},
-                        HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                        //Padding = new Thickness(20,1,1,1),
+                        //BorderBrush= new SolidColorBrush() { Color = Colors.LightGray},
+                        //HorizontalContentAlignment = HorizontalAlignment.Stretch,
                         
                     };
                     menuFlyoutItem.Click += routedEventHandler; //  Internationalization_Click;
@@ -300,6 +300,19 @@ namespace PelotonIDE.Presentation
 
         }
 
+        private void ControlHighligter(MenuFlyoutItem? menuFlyoutItem, bool onish)
+        {
+            if (onish)
+            {
+                menuFlyoutItem.Background = new SolidColorBrush(Colors.Black);
+                menuFlyoutItem.Foreground = new SolidColorBrush(Colors.White);
+            } else
+            {
+                menuFlyoutItem.Foreground = new SolidColorBrush(Colors.Black);
+                menuFlyoutItem.Background = new SolidColorBrush(Colors.White);
+            }
+        }
+        
 
         private void UpdateVariableLengthMode(InterpreterParameterStructure variableLength)
         {
@@ -309,7 +322,8 @@ namespace PelotonIDE.Presentation
                 Glyph = "\uF0B7"
             };
 
-            mnuVariableLength.Icon = ((bool)variableLength["Defined"]) ? tickIcon : null;
+            ControlHighligter(mnuVariableLength, ((bool)variableLength["Defined"]));
+            //mnuVariableLength.Icon = ((bool)variableLength["Defined"]) ? tickIcon : null;
         }
         //private void UpdateSpacedMode(InterpreterParameterStructure spaced)
         //{
@@ -336,19 +350,25 @@ namespace PelotonIDE.Presentation
                                      from item in items
                                      select item)
                 {
-                    (item as MenuFlyoutItem).Icon = null;
+                    ControlHighligter((MenuFlyoutItem)item!, false);
+                    //(item as MenuFlyoutItem).Foreground = new SolidColorBrush(Colors.Black);
+                    //(item as MenuFlyoutItem).Background = new SolidColorBrush(Colors.White);
+                    // (item as MenuFlyoutItem).Icon = null;
                 }
 
                 switch ((long)quietude["Value"])
                 {
                     case 0:
-                        mnuQuiet.Icon = tickIcon;
+                        ControlHighligter(mnuQuiet, true);
+                        // mnuQuiet.Icon = tickIcon;
                         break;
                     case 1:
-                        mnuVerbose.Icon = tickIcon;
+                        ControlHighligter(mnuVerbose, true);
+                        //mnuVerbose.Icon = tickIcon;
                         break;
                     case 2:
-                        mnuVerbosePauseOnExit.Icon = tickIcon;
+                        ControlHighligter(mnuVerbosePauseOnExit, true);
+                        // mnuVerbosePauseOnExit.Icon = tickIcon;
                         break;
                 }
             }
@@ -357,15 +377,27 @@ namespace PelotonIDE.Presentation
         /// <summary>
         /// Save current editor settings
         /// </summary>
-        private void MainWindow_Closed(object sender, object e) //FIXME How do I save to JSON?
+        private void MainWindow_Closed(object sender, object e) 
         {
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-            foreach (var _reb in _richEditBoxes)
+            if (_richEditBoxes.Count > 0)
             {
-                if (_reb.Value.isDirty)
+                foreach (var _reb in _richEditBoxes)
                 {
-
+                    if (_reb.Value.isDirty)
+                    {
+                        var key = _reb.Key;
+                        var aRichEditBox = _richEditBoxes[key];
+                        foreach (var item in tabControl.MenuItems)
+                        {
+                            var cti = item as CustomTabItem;
+                            var content = cti.Content.ToString().Replace(" ", "");
+                            if (content == key as string) {
+                                Debug.WriteLine(cti.Content);
+                                cti.Focus(FocusState.Pointer);
+                            }
+                        }
+                    }
                 }
             }
 

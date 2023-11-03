@@ -36,7 +36,8 @@ namespace PelotonIDE.Presentation
                                  from item in items
                                  select item)
             {
-                (item as MenuFlyoutItem).Icon = null;
+                ControlHighligter((MenuFlyoutItem)item, false);
+                // (item as MenuFlyoutItem).Icon = null;
             }
             GlobalInterpreterParameters["Quietude"]["Defined"] = false;
 
@@ -46,17 +47,20 @@ namespace PelotonIDE.Presentation
             switch (clicked)
             {
                 case "mnuQuiet":
-                    me.Icon = tickIcon;
+                    ControlHighligter(me, true);
+                    // me.Icon = tickIcon;
                     LastSelectedQuietude = 0;
                     GlobalInterpreterParameters["Quietude"]["Value"] = 0;
                     break;
                 case "mnuVerbose":
-                    me.Icon = tickIcon;
+                    ControlHighligter(me, true);
+                    // me.Icon = tickIcon;
                     LastSelectedQuietude = 1;
                     GlobalInterpreterParameters["Quietude"]["Value"] = 1;
                     break;
                 case "mnuVerbosePauseOnExit":
-                    me.Icon = tickIcon;
+                    ControlHighligter(me, true);
+                    // me.Icon = tickIcon;
                     LastSelectedQuietude = 2;
                     GlobalInterpreterParameters["Quietude"]["Value"] = 2;
                     break;
@@ -165,7 +169,7 @@ namespace PelotonIDE.Presentation
             if (e.Key == VirtualKey.Insert)
             {
             }
-            if (tabControl.Content is CustomRichEditBox currentRichEditBox)
+            if (tabControl.Content is CustomRichEditBox currentRichEditBox && !e.KeyStatus.IsExtendedKey && e.Key != VirtualKey.Control)
             {
                 currentRichEditBox.isDirty = true;
             }
@@ -300,7 +304,8 @@ namespace PelotonIDE.Presentation
 
             foreach (var item in mnuSelectLanguage.Items)
             {
-                ((MenuFlyoutItem)item).Icon = item.Name == name ? tickIcon : (IconElement?)null;
+                ControlHighligter((MenuFlyoutItem)item, item.Name == name);
+                // ((MenuFlyoutItem)item).Icon = item.Name == name ? tickIcon : (IconElement?)null;
             }
 
             HandleLanguageChange(name);
@@ -477,16 +482,18 @@ namespace PelotonIDE.Presentation
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
 
-            if (mnuVariableLength.Icon == null)
+            if (LastSelectedVariableLength == false /*mnuVariableLength.Icon == null*/ )
             {
-                mnuVariableLength.Icon = tickIcon;
+                ControlHighligter(mnuVariableLength, true);
+                // mnuVariableLength.Icon = tickIcon;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = true;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = true;
                 LastSelectedVariableLength = true;
             }
             else
             {
-                mnuVariableLength.Icon = null;
+                ControlHighligter(mnuVariableLength, false);
+                // mnuVariableLength.Icon = null;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = false;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = false;
                 LastSelectedVariableLength = false;
@@ -528,6 +535,8 @@ namespace PelotonIDE.Presentation
         {
             var me = (MenuFlyoutItem)sender;
             var lang = me.Name;
+
+            // iterate the list, and turn off the highlight then assert highlight on chosen
 
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];

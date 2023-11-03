@@ -125,9 +125,9 @@
             <MenuBarItem Title="Interpreter" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuRun" >
                 <MenuFlyoutSubItem x:Name="mnuRunningMode" Text="Running Mode" >
                     <MenuFlyoutItem Text="Quiet"               x:Name="mnuQuiet"         Click="InterpretBar_RunningMode_Click">
-                        <MenuFlyoutItem.Icon>
+                        <!--<MenuFlyoutItem.Icon>
                             <FontIcon  FontFamily="Segoe MDL2 Assets" Glyph="&#xF0B7;" />
-                        </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem.Icon>-->
                     </MenuFlyoutItem>
                     <MenuFlyoutItem Text="Verbose"             x:Name="mnuVerbose"       Click="InterpretBar_RunningMode_Click" />
                     <MenuFlyoutItem Text="Verbose, with pause" x:Name="mnuVerbosePauseOnExit"  Click="InterpretBar_RunningMode_Click" />
@@ -149,9 +149,9 @@
             
             <MenuBarItem Title="Source" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuSource">
                 <MenuFlyoutItem Name="mnuVariableLength" Click="VariableLength_Click" Text="Variable Length">
-                    <MenuFlyoutItem.Icon>
+                    <!--<MenuFlyoutItem.Icon>
                         <FontIcon  FontFamily="Segoe MDL2 Assets" Glyph="&#xF0B7;" />
-                    </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem.Icon>-->
                 </MenuFlyoutItem>
                 <!--<MenuFlyoutItem Name="mnuSpaced" Click="Spaced_Click" Text="Space out code">
                     <MenuFlyoutItem.Icon>
