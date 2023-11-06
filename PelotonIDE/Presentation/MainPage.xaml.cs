@@ -12,9 +12,12 @@ using System.Text.RegularExpressions;
 using Windows.Storage;
 using Windows.System;
 
-using InterpreterParametersStructure = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, object>>;
+using InterpreterParametersStructure = System.Collections.Generic.Dictionary<string, 
+    System.Collections.Generic.Dictionary<string, object>>;
 using InterpreterParameterStructure = System.Collections.Generic.Dictionary<string, object>;
-using LanguageConfigurationStructure = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, string>>>;
+using LanguageConfigurationStructure = System.Collections.Generic.Dictionary<string, 
+    System.Collections.Generic.Dictionary<string, 
+        System.Collections.Generic.Dictionary<string, string>>>;
 
 
 namespace PelotonIDE.Presentation
@@ -66,9 +69,7 @@ namespace PelotonIDE.Presentation
             // GetGlobals();
             CustomRichEditBox customREBox = new()
             {
-                Tag = "Tab1",
-                //Background = new SolidColorBrush(new Color() { A = 0xFF, R = 0xf9, G = 0xf8, B = 0xbd }),
-                //Foreground = new SolidColorBrush(new Color() { A = 0xFF, R = 0xf9, G = 0xf8, B = 0xbd })
+                Tag = "Tab1"
             };
             customREBox.KeyDown += RichEditBox_KeyDown;
             customREBox.AcceptsReturn = true;
@@ -80,9 +81,7 @@ namespace PelotonIDE.Presentation
             tabControl.SelectedItem = tab1;
             App._window.Closed += MainWindow_Closed;
 
-            FillLanguagesIntoMenu2(mnuSelectLanguage, "mnuSelectLanguage", Internationalization_Click);
-            FillLanguagesIntoMenu(mnuRun, "mnuLanguage", MnuLanguage_Click);
-            // FillLanguagesIntoMenu(contextualLanguagesFlyout, "mnuLanguage", some_click);
+            // InterpreterLanguageSelectionBuilder(contextualLanguagesFlyout, "mnuLanguage", some_click);
             UpdateTabCommandLine();
         }
 
@@ -131,17 +130,9 @@ namespace PelotonIDE.Presentation
             return JsonConvert.DeserializeObject<LanguageConfigurationStructure>(languageConfigString);
         }
 
-        private async void FillLanguagesIntoMenu2(MenuFlyoutSubItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
+        private async void InterfaceLanguageSelectionBuilder(MenuFlyoutSubItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
         {
-            FontIcon tickIcon = new FontIcon()
-            {
-                FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                Glyph = "\uF0B7"
-            };
-
-            var tabset = await GetGlobalInterpreterParameters();
-
-            LanguageSettings = await GetLanguageConfiguration();
+            //var tabset = await GetGlobalInterpreterParameters();
 
             if (InterfaceLanguageName == null || !LanguageSettings.ContainsKey(InterfaceLanguageName))
             {
@@ -162,10 +153,9 @@ namespace PelotonIDE.Presentation
                     MenuFlyoutItem menuFlyoutItem = new()
                     {
                         Text = globals[$"{100 + i + 1}"],
-                        Name = names.First(),  //languageJson[key]["GLOBAL"]["ID"]
-                        // Padding = new Thickness(20, 1, 1, 1),
-                        // BorderBrush = new SolidColorBrush() { Color = Colors.LightGray },
-                        // HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                        Name = names.First(),
+                        Foreground = names.First() == InterfaceLanguageName ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
+                        Background = names.First() == InterfaceLanguageName ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
 
                     };
                     menuFlyoutItem.Click += routedEventHandler; //  Internationalization_Click;
@@ -174,14 +164,9 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        private async void FillLanguagesIntoMenu(MenuBarItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
+        private async void InterpreterLanguageSelectionBuilder(MenuBarItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
         {
-            FontIcon tickIcon = new FontIcon()
-            {
-                FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                Glyph = "\uF0B7"
-            };
-
+        
             var tabset = await GetGlobalInterpreterParameters();
 
             LanguageSettings = await GetLanguageConfiguration();
@@ -217,11 +202,9 @@ namespace PelotonIDE.Presentation
                     MenuFlyoutItem menuFlyoutItem = new()
                     {
                         Text = globals[$"{100 + i + 1}"],
-                        Name = names.First(),  //languageJson[key]["GLOBAL"]["ID"]
-                        //Padding = new Thickness(20,1,1,1),
-                        //BorderBrush= new SolidColorBrush() { Color = Colors.LightGray},
-                        //HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                        
+                        Name = names.First(),
+                        Foreground = names.First() == LastSelectedInterpreterLanguageName ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
+                        Background = names.First() == LastSelectedInterpreterLanguageName ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
                     };
                     menuFlyoutItem.Click += routedEventHandler; //  Internationalization_Click;
                     sub.Items.Add(menuFlyoutItem);
@@ -246,6 +229,7 @@ namespace PelotonIDE.Presentation
             }
 
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+            LanguageSettings = await GetLanguageConfiguration();
 
             CAPS.Foreground = Console.CapsLock ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.LightGray);
             NUM.Foreground = Console.NumberLock ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.LightGray);
@@ -291,6 +275,9 @@ namespace PelotonIDE.Presentation
 
             tab1.TabSettingsDict["Language"]["Defined"] = true;
             tab1.TabSettingsDict["Language"]["Value"] = LastSelectedInterpreterLanguageID;
+
+            InterfaceLanguageSelectionBuilder(mnuSelectLanguage, "mnuSelectLanguage", Internationalization_Click);
+            InterpreterLanguageSelectionBuilder(mnuRun, "mnuLanguage", MnuLanguage_Click);
 
             UpdateMenuRunningMode(GlobalInterpreterParameters["Quietude"]);
             UpdateVariableLengthMode(tab1.TabSettingsDict["VariableLength"]);
@@ -775,23 +762,6 @@ namespace PelotonIDE.Presentation
 
         private void mnuIDEConfiguration_Click(object sender, RoutedEventArgs e)
         {
-            //var g = new Grid();
-            //g.ColumnDefinitions.Add(new ColumnDefinition());
-            //g.ColumnDefinitions.Add(new ColumnDefinition());
-            //g.RowDefinitions.Add(new RowDefinition());
-            //g.RowDefinitions.Add(new RowDefinition());
-            //g.RowDefinitions.Add(new RowDefinition());
-
-            //var cd = new ContentDialog();
-            //var tb = new TextBlock();
-            //tb.Text = "Path to Interpreter";
-            //tb.HorizontalAlignment = HorizontalAlignment.Right;
-            //tb.VerticalAlignment = VerticalAlignment.Center;
-            //tb.FontWeight = FontWeights.Bold;
-            //tb.Margin = new Thickness(5);
-
-
-            //cd.
 
 
         }

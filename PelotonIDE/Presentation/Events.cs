@@ -555,11 +555,34 @@ namespace PelotonIDE.Presentation
             PerTabInterpreterParameters["Language"]["Defined"] = true;
             PerTabInterpreterParameters["Language"]["Value"] = long.Parse(id);
 
+            UpdateLanguageInInterpreterMenu(mnuRun, LastSelectedInterpreterLanguageName);
 
             UpdateLanguageName(navigationViewItem.TabSettingsDict);
             //languageName.Text = LanguageSettings[InterfaceLanguageName]["GLOBAL"][$"{101+int.Parse(id)}"]; // FIXME? the international language setting actually, not lang
 
             UpdateTabCommandLine();
+        }
+
+        private void UpdateLanguageInInterpreterMenu(MenuBarItem mnuRun, string lastSelectedInterpreterLanguageName)
+        {
+            var subMenus = from menu in mnuRun.Items where menu.Name == "mnuLanguage" select menu;
+            if (subMenus != null )
+            {
+                var first = subMenus.First();
+                foreach (var item in ((MenuFlyoutSubItem)first).Items)
+                {
+                    if (item.Name == lastSelectedInterpreterLanguageName)
+                    {
+                        item.Foreground = new SolidColorBrush(Colors.White);
+                        item.Background = new SolidColorBrush(Colors.Black);
+                    } else
+                    {
+                        item.Foreground = new SolidColorBrush(Colors.Black);
+                        item.Background = new SolidColorBrush(Colors.White);
+                    }
+                }
+            }
+            
         }
 
         private async void ResetToFactorySettings_Click(object sender, RoutedEventArgs e)

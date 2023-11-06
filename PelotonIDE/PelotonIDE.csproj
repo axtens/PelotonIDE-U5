@@ -82,7 +82,9 @@
         <None Remove="Presentation\GlobalInterpreterParameters.json" />
         <None Remove="presentation\InterpreterSelectionDialog.xaml" />
         <None Remove="Presentation\LanguageConfiguration.json" />
+        <None Remove="Presentation\LanguageConfiguration.json.bak" />
         <None Remove="Presentation\PerTabInterpreterParameters.json" />
+        <None Remove="Presentation\rulesetrunner_repl_script.rr" />
     </ItemGroup>
     <ItemGroup>
       <Page Remove="Presentation\InterpreterSelectionDialog.xaml" />
