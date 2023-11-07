@@ -25,12 +25,6 @@ namespace PelotonIDE.Presentation
 
         private void InterpretBar_RunningMode_Click(object sender, RoutedEventArgs e)
         {
-            FontIcon tickIcon = new FontIcon()
-            {
-                FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                Glyph = "\uF0B7"
-            };
-
             foreach (var item in from key in new string[] { "mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit" }
                                  let items = from item in mnuRunningMode.Items where item.Name == key select item
                                  from item in items
@@ -48,19 +42,16 @@ namespace PelotonIDE.Presentation
             {
                 case "mnuQuiet":
                     ControlHighligter(me, true);
-                    // me.Icon = tickIcon;
                     LastSelectedQuietude = 0;
                     GlobalInterpreterParameters["Quietude"]["Value"] = 0;
                     break;
                 case "mnuVerbose":
                     ControlHighligter(me, true);
-                    // me.Icon = tickIcon;
                     LastSelectedQuietude = 1;
                     GlobalInterpreterParameters["Quietude"]["Value"] = 1;
                     break;
                 case "mnuVerbosePauseOnExit":
                     ControlHighligter(me, true);
-                    // me.Icon = tickIcon;
                     LastSelectedQuietude = 2;
                     GlobalInterpreterParameters["Quietude"]["Value"] = 2;
                     break;
@@ -293,19 +284,12 @@ namespace PelotonIDE.Presentation
 
         private void Internationalization_Click(object sender, RoutedEventArgs e)
         {
-            FontIcon tickIcon = new FontIcon()
-            {
-                FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                Glyph = "\uF0B7"
-            };
-
             var me = (MenuFlyoutItem)sender;
             var name = me.Name;
 
             foreach (var item in mnuSelectLanguage.Items)
             {
                 ControlHighligter((MenuFlyoutItem)item, item.Name == name);
-                // ((MenuFlyoutItem)item).Icon = item.Name == name ? tickIcon : (IconElement?)null;
             }
 
             HandleLanguageChange(name);
@@ -473,19 +457,12 @@ namespace PelotonIDE.Presentation
 
         private void VariableLength_Click(object sender, RoutedEventArgs e)
         {
-            FontIcon tickIcon = new FontIcon()
-            {
-                FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                Glyph = "\uF0B7"
-            };
-
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
 
             if (LastSelectedVariableLength == false /*mnuVariableLength.Icon == null*/ )
             {
                 ControlHighligter(mnuVariableLength, true);
-                // mnuVariableLength.Icon = tickIcon;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = true;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = true;
                 LastSelectedVariableLength = true;
@@ -493,7 +470,6 @@ namespace PelotonIDE.Presentation
             else
             {
                 ControlHighligter(mnuVariableLength, false);
-                // mnuVariableLength.Icon = null;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = false;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = false;
                 LastSelectedVariableLength = false;
@@ -501,35 +477,6 @@ namespace PelotonIDE.Presentation
 
             UpdateTabCommandLine();
         }
-
-        //private void Spaced_Click(object sender, RoutedEventArgs e)
-        //{
-        //    FontIcon tickIcon = new FontIcon()
-        //    {
-        //        FontFamily = new FontFamily("Segoe MDL2 Assets"),
-        //        Glyph = "\uF0B7"
-        //    };
-
-        //    CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-        //    CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-
-        //    if (mnuSpaced.Icon == null)
-        //    {
-        //        mnuSpaced.Icon = tickIcon;
-        //        navigationViewItem.TabSettingsDict["Spaced"]["Defined"] = true;
-        //        navigationViewItem.TabSettingsDict["Spaced"]["Value"] = true;
-        //        LastSelectedSpaced = true;
-        //    }
-        //    else
-        //    {
-        //        mnuSpaced.Icon = null;
-        //        navigationViewItem.TabSettingsDict["Spaced"]["Defined"] = false;
-        //        navigationViewItem.TabSettingsDict["Spaced"]["Value"] = false;
-        //        LastSelectedSpaced = false;
-        //    }
-
-        //    UpdateTabCommandLine();
-        //}
 
         private void MnuLanguage_Click(object sender, RoutedEventArgs e)
         {

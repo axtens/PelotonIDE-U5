@@ -326,12 +326,12 @@
                         </Button>
                     </TabView.TabStripFooter>
                     <TabView.TabItems>
-                        <TabViewItem Header="Output" IsSelected="True" IsClosable="False" Background="DarkGray" Foreground="White">
+                        <TabViewItem Header="Output" IsSelected="True" IsClosable="False" Background="DarkGray" Foreground="White" DoubleTapped="OutputText_DoubleTapped" >
                             <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto"
                                               HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto"
                                               VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                                    <RichTextBlock x:Name="outputText" IsTextSelectionEnabled="True" >
+                                    <RichTextBlock x:Name="outputText" IsTextSelectionEnabled="True"   >
                                         <Paragraph>
 
                                         </Paragraph>
@@ -339,12 +339,12 @@
                                 </ScrollViewer>
                             </Border>
                         </TabViewItem>
-                        <TabViewItem Header="Error" IsClosable="False" Background="DarkGray" Foreground="White">
+                        <TabViewItem Header="Error" IsClosable="False" Background="DarkGray" Foreground="White" DoubleTapped="ErrorText_DoubleTapped" >
                             <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto"  VerticalScrollMode="Auto"
                                               HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto"
-                                              VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                                    <RichTextBlock x:Name="errorText" IsTextSelectionEnabled="True">
+                                              VerticalAlignment="Stretch" HorizontalAlignment="Stretch" >
+                                    <RichTextBlock x:Name="errorText" IsTextSelectionEnabled="True"  >
                                         <Paragraph>
 
                                         </Paragraph>
