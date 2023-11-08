@@ -61,7 +61,8 @@ namespace PelotonIDE
             views.Register(
                 new ViewMap(ViewModel: typeof(ShellViewModel)),
                 new ViewMap<MainPage, MainViewModel>(),
-                new DataViewMap<IDEConfigPage, IDEConfigViewModel, Entity>()
+                new DataViewMap<IDEConfigPage, IDEConfigViewModel, Entity>(),
+                new DataViewMap<TranslatePage, TranslateViewModel, Entity>()
             );
 
             routes.Register(
@@ -70,6 +71,7 @@ namespace PelotonIDE
                     {
                     new RouteMap("Main", View: views.FindByViewModel<MainViewModel>()),
                     new RouteMap("Second", View: views.FindByViewModel<IDEConfigViewModel>()),
+                    new RouteMap("Translate", View: views.FindByViewModel<TranslateViewModel>()),
                     }
                 )
             );

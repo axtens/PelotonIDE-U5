@@ -82,6 +82,7 @@
         <None Remove="presentation\InterpreterSelectionDialog.xaml" />
         <None Remove="Presentation\LanguageConfiguration.json" />
         <None Remove="Presentation\PerTabInterpreterParameters.json" />
+        <None Remove="Presentation\TranslatePage.xaml" />
     </ItemGroup>
     <ItemGroup>
       <Page Remove="Presentation\InterpreterSelectionDialog.xaml" />
@@ -89,11 +90,15 @@
     <ItemGroup>
         <UpToDateCheckInput Remove="Presentation\IDEConfigPage.xaml" />
         <UpToDateCheckInput Remove="presentation\InterpreterSelectionDialog.xaml" />
+        <UpToDateCheckInput Remove="Presentation\TranslatePage.xaml" />
     </ItemGroup>
     <ItemGroup>
         <Content Include="Presentation\PerTabInterpreterParameters.json" />
         <Content Include="Presentation\GlobalInterpreterParameters.json" />
         <Content Include="Presentation\FactorySettings.json" />
         <Content Include="Presentation\LanguageConfiguration.json" />
+    </ItemGroup>
+    <ItemGroup>
+      <AdditionalFiles Remove="Presentation\TranslatePage.xaml" />
     </ItemGroup>
 </Project>

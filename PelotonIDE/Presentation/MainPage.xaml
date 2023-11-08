@@ -148,6 +148,7 @@
             </MenuBarItem>
             
             <MenuBarItem Title="Source" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuSource">
+                <MenuFlyoutItem x:Name="mnuTranslate" Text="Translate" Command="{Binding GoToTranslate}"/>
                 <MenuFlyoutItem Name="mnuVariableLength" Click="VariableLength_Click" Text="Variable Length">
                     <MenuFlyoutItem.Icon>
                         <FontIcon  FontFamily="Segoe MDL2 Assets" Glyph="&#xF0B7;" />
