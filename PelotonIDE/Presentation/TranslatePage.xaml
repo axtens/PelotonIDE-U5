@@ -52,7 +52,7 @@
         <CheckBox x:Name="sourceVariableLength" Grid.Column="0" Grid.Row="2" Content="Variable Length"/>
 
         <ListBox x:Name="targetLanguageList" Grid.Column="0" Grid.Row="3" ScrollViewer.VerticalScrollMode="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
-         Margin="10" BorderBrush="LightGray" BorderThickness="3"/>
+         Margin="10" BorderBrush="LightGray" BorderThickness="3" SelectionChanged="targetLanguageList_SelectionChanged"/>
         <CheckBox x:Name="targetVariableLength" Grid.Column="0" Grid.Row="4" Content="Variable Length"/>
 
         <RichEditBox x:Name="sourceText" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Stretch"
@@ -62,8 +62,8 @@
         <CheckBox x:Name="padOutCode" Grid.Column="1" Grid.Row="4" Content="Pad Out Code"/>
 
         <StackPanel Orientation="Horizontal" Grid.Column="2" Grid.Row="4" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-            <Button Content="Apply" Margin="0,0,10,10"/>
-            <Button Content="Cancel" Margin="0,0,10,10"/>
+            <Button x:Name="ApplyButton" Content="Apply" Margin="0,0,10,10" Click="ApplyButton_Click"/>
+            <Button x:Name="CancelButton" Content="Cancel" Margin="0,0,10,10" Click="CancelButton_Click"/>
         </StackPanel>
 
     </Grid>

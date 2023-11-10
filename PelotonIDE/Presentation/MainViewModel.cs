@@ -31,8 +31,6 @@ namespace PelotonIDE.Presentation
         }
         private async Task GoToTranslateConfigView()
         {
-            var translateViewModel = new TranslateViewModel(new Entity(Name!));
-            //translateViewModel.SourceText = MainPage
             await _navigator.NavigateViewModelAsync<TranslateViewModel>(this, data: new Entity(Name!));
         }
 

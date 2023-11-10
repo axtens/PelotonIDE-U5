@@ -28,6 +28,7 @@ using Windows.Storage.Streams;
 using Windows.Foundation;
 using System.Timers;
 using Newtonsoft.Json.Linq;
+using Microsoft.UI.Xaml.Controls;
 
 
 namespace PelotonIDE.Presentation
@@ -74,12 +75,12 @@ namespace PelotonIDE.Presentation
             //};
             //t.Elapsed += TimerTick;
             //t.Start();
-            
+
 
             // GetGlobals();
             CustomRichEditBox customREBox = new()
             {
-                Tag = "Tab1",
+                Tag = tab1.Tag
                 //Background = new SolidColorBrush(new Color() { A = 0xFF, R = 0xf9, G = 0xf8, B = 0xbd }),
                 //Foreground = new SolidColorBrush(new Color() { A = 0xFF, R = 0xf9, G = 0xf8, B = 0xbd })
             };
@@ -92,12 +93,28 @@ namespace PelotonIDE.Presentation
             _richEditBoxes[customREBox.Tag] = customREBox;
             tab1.TabSettingsDict = null;
             tabControl.SelectedItem = tab1;
+            customREBox.Focus(FocusState.Keyboard);
             App._window.Closed += MainWindow_Closed;
 
             FillLanguagesIntoMenu(mnuSettings, "mnuSelectLanguage", Internationalization_Click);
             FillLanguagesIntoMenu(mnuRun, "mnuLanguage", MnuLanguage_Click);
 
             UpdateTabCommandLine();
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+
+            if (e.Parameter == null)
+            {
+                return;
+            }
+
+            var parameters = (TranslateToMainParams)e.Parameter;
+
+            var selectedLanguage = parameters.selectedLangauge;
+            var translatedREB = parameters.translatedREB;
         }
 
         private InterpreterParametersStructure CopyFromGlobalCodeRunCargo()
@@ -848,28 +865,5 @@ namespace PelotonIDE.Presentation
             return (StdOut: stdout.ToString(), StdErr: stderr.ToString());
         }
         #endregion
-
-        private void mnuIDEConfiguration_Click(object sender, RoutedEventArgs e)
-        {
-            //var g = new Grid();
-            //g.ColumnDefinitions.Add(new ColumnDefinition());
-            //g.ColumnDefinitions.Add(new ColumnDefinition());
-            //g.RowDefinitions.Add(new RowDefinition());
-            //g.RowDefinitions.Add(new RowDefinition());
-            //g.RowDefinitions.Add(new RowDefinition());
-
-            //var cd = new ContentDialog();
-            //var tb = new TextBlock();
-            //tb.Text = "Path to Interpreter";
-            //tb.HorizontalAlignment = HorizontalAlignment.Right;
-            //tb.VerticalAlignment = VerticalAlignment.Center;
-            //tb.FontWeight = FontWeights.Bold;
-            //tb.Margin = new Thickness(5);
-            
-            
-            //cd.
-
-
-        }
     }
 }
