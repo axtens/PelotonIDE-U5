@@ -97,4 +97,9 @@
         <Content Include="Presentation\FactorySettings.json" />
         <Content Include="Presentation\LanguageConfiguration.json" />
     </ItemGroup>
+    <ItemGroup>
+      <Reference Include="EncodingChecker">
+        <HintPath>..\..\..\Present\Ptarmigan\EncodingChecker\bin\Debug\net7.0\EncodingChecker.dll</HintPath>
+      </Reference>
+    </ItemGroup>
 </Project>

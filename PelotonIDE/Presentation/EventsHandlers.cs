@@ -10,7 +10,7 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.Storage.Provider;
-
+using EncodingChecker;
 
 namespace PelotonIDE.Presentation
 {
@@ -48,7 +48,7 @@ namespace PelotonIDE.Presentation
                 {
                     // var encoding = EncChecker.EncCheck.DetectFileAsEncoding(pickedFile.Path);
                     bool hasBOM = false;
-                    Encoding? encoding = EncodingChecker.TextEncoding.GetFileEncoding(pickedFile.Path, 1000, ref hasBOM);
+                    Encoding? encoding = TextEncoding.GetFileEncoding(pickedFile.Path, 1000, ref hasBOM);
                     // Load the file into the Document property of the RichEditBox.
                     if (pickedFile.FileType == ".pr")
                     {
