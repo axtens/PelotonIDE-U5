@@ -2,6 +2,7 @@
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 
 using System.Text;
@@ -10,6 +11,7 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.Storage.Provider;
+using EncodingChecker;
 
 namespace PelotonIDE.Presentation
 {
@@ -45,6 +47,9 @@ namespace PelotonIDE.Presentation
                 using (Windows.Storage.Streams.IRandomAccessStream randAccStream =
                     await pickedFile.OpenAsync(FileAccessMode.Read))
                 {
+                    // var encoding = EncChecker.EncCheck.DetectFileAsEncoding(pickedFile.Path);
+                    bool hasBOM = false;
+                    Encoding? encoding = TextEncoding.GetFileEncoding(pickedFile.Path, 1000, ref hasBOM);
                     // Load the file into the Document property of the RichEditBox.
                     if (pickedFile.FileType == ".pr")
                     {
@@ -54,7 +59,7 @@ namespace PelotonIDE.Presentation
                     }
                     else if (pickedFile.FileType == ".p")
                     {
-                        string text = File.ReadAllText(pickedFile.Path, Encoding.UTF8);
+                        string text = File.ReadAllText(pickedFile.Path, encoding!);
                         newestRichEditBox.Document.SetText(TextSetOptions.UnicodeBidi, text);
                         newestRichEditBox.isRTF = false;
                         newestRichEditBox.isDirty = false;
@@ -459,7 +464,7 @@ namespace PelotonIDE.Presentation
             var me = (ContentControl)sender;
             
             var sub = new MenuFlyoutSubItem()
-            {
+        {
                 Text = LanguageSettings[LastSelectedInterpreterLanguageName!]["frmMain"]["mnuLanguage"],
                 BorderThickness = new Thickness(1, 1, 1, 1),
                 BorderBrush = new SolidColorBrush() { Color = Colors.LightGray },

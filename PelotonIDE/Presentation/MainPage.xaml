@@ -27,6 +27,8 @@
         <SolidColorBrush Color="DarkGray" x:Key="TopNavigationViewItemBackgroundPressed"/>
         <SolidColorBrush Color="DarkSlateGray" x:Key="TopNavigationViewItemBackgroundSelectedPressed"/>
         
+        <SolidColorBrush Color="#F9F8BD" x:Key="ProtiumYellow" />
+        
     </Page.Resources>
     <RelativePanel x:Name="relativePanel" Margin="0,0,0,0" HorizontalAlignment="Stretch">
         <RelativePanel.Resources>
@@ -124,11 +126,7 @@
             
             <MenuBarItem Title="Interpreter" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuRun" >
                 <MenuFlyoutSubItem x:Name="mnuRunningMode" Text="Running Mode" >
-                    <MenuFlyoutItem Text="Quiet"               x:Name="mnuQuiet"         Click="InterpretBar_RunningMode_Click">
-                        <!--<MenuFlyoutItem.Icon>
-                            <FontIcon  FontFamily="Segoe MDL2 Assets" Glyph="&#xF0B7;" />
-                        </MenuFlyoutItem.Icon>-->
-                    </MenuFlyoutItem>
+                    <MenuFlyoutItem Text="Quiet"               x:Name="mnuQuiet"         Click="InterpretBar_RunningMode_Click" />
                     <MenuFlyoutItem Text="Verbose"             x:Name="mnuVerbose"       Click="InterpretBar_RunningMode_Click" />
                     <MenuFlyoutItem Text="Verbose, with pause" x:Name="mnuVerbosePauseOnExit"  Click="InterpretBar_RunningMode_Click" />
                 </MenuFlyoutSubItem>
@@ -145,6 +143,10 @@
                         <KeyboardAccelerator Modifiers="Control" Key="F5" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
+                <MenuFlyoutSubItem x:Name="mnuChooseEngine" Text="Choose runtime engine">
+                    <MenuFlyoutItem Text="P2 Protium" x:Name="mnuOldEngine"  Click="ChooseOldEngine_Click" />
+                    <MenuFlyoutItem Text="P3 Peloton" x:Name="mnuNewEngine"  Click="ChooseNewEngine_Click" />
+                </MenuFlyoutSubItem>
             </MenuBarItem>
             
             <MenuBarItem Title="Source" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuSource">

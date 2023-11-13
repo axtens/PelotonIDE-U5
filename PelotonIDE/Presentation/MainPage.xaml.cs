@@ -18,6 +18,7 @@ using InterpreterParameterStructure = System.Collections.Generic.Dictionary<stri
 using LanguageConfigurationStructure = System.Collections.Generic.Dictionary<string,
     System.Collections.Generic.Dictionary<string,
         System.Collections.Generic.Dictionary<string, string>>>;
+using FactorySettingsStructure = System.Collections.Generic.Dictionary<string, object>;
 
 
 namespace PelotonIDE.Presentation
@@ -49,6 +50,7 @@ namespace PelotonIDE.Presentation
         InterpreterParametersStructure? GlobalInterpreterParameters = new();
         InterpreterParametersStructure? PerTabInterpreterParameters = new();
         LanguageConfigurationStructure? LanguageSettings = new();
+        FactorySettingsStructure? FactorySettings = new();
 
         public MainPage()
         {
@@ -70,6 +72,7 @@ namespace PelotonIDE.Presentation
             CustomRichEditBox customREBox = new()
             {
                 Tag = "Tab1"
+               
             };
             customREBox.KeyDown += RichEditBox_KeyDown;
             customREBox.AcceptsReturn = true;
@@ -107,7 +110,7 @@ namespace PelotonIDE.Presentation
         }
 
         private async void InterfaceLanguageSelectionBuilder(MenuFlyoutSubItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
-        {
+            {
             //var tabset = await GetGlobalInterpreterParameters();
 
             if (InterfaceLanguageName == null || !LanguageSettings.ContainsKey(InterfaceLanguageName))
@@ -141,7 +144,7 @@ namespace PelotonIDE.Presentation
         }
 
         private async void InterpreterLanguageSelectionBuilder(MenuBarItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
-        {
+            {
 
             var tabset = await GetGlobalInterpreterParameters();
 
@@ -189,80 +192,19 @@ namespace PelotonIDE.Presentation
             menuBarItem.Items.Add(sub);
         }
 
-        /// <summary>
-        /// Load previous editor settings
-        /// </summary>
-        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+
+        private void ControlHighligter(MenuFlyoutItem? menuFlyoutItem, bool onish)
         {
-            bool clear = false;
-            if (clear)
-            {
-                foreach (var setting in ApplicationData.Current.LocalSettings.Values)
+            if (onish)
                 {
-                    ApplicationData.Current.LocalSettings.DeleteContainer(setting.Key);
+                menuFlyoutItem.Background = new SolidColorBrush(Colors.Black);
+                menuFlyoutItem.Foreground = new SolidColorBrush(Colors.White);
                 }
-                await ApplicationData.Current.ClearAsync();
+            else
+            {
+                menuFlyoutItem.Foreground = new SolidColorBrush(Colors.Black);
+                menuFlyoutItem.Background = new SolidColorBrush(Colors.White);
             }
-
-            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-            LanguageSettings = await GetLanguageConfiguration();
-
-            CAPS.Foreground = Console.CapsLock ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.LightGray);
-            NUM.Foreground = Console.NumberLock ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.LightGray);
-
-            GlobalInterpreterParameters = await MainPage.GetGlobalInterpreterParameters();
-            PerTabInterpreterParameters = await MainPage.GetPerTabInterpreterParameters();
-
-            var FactorySettings = await GetFactorySettings();
-
-            outputPanelShowing = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("OutputPanelShowing", true, FactorySettings, localSettings);
-
-            var outputPanelPosition = GetFactorySettingsWithLocalSettingsOverrideOrDefault("OutputPanelPosition", (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), "Bottom"), FactorySettings, localSettings);
-
-            HandleOutputPanelChange(outputPanelPosition);
-
-            outputPanel.Height = GetFactorySettingsWithLocalSettingsOverrideOrDefault<double>("OutputPanelHeight", 200, FactorySettings, localSettings);
-            InterfaceLanguageName = GetFactorySettingsWithLocalSettingsOverrideOrDefault<string>("InterfaceLanguageName", "English", FactorySettings, localSettings);
-            InterfaceLanguageID = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("InterfaceLanguageID", 0, FactorySettings, localSettings);
-            if (InterfaceLanguageName != null)
-                HandleLanguageChange(InterfaceLanguageName);
-
-            pelotonEXE = GetFactorySettingsWithLocalSettingsOverrideOrDefault("PelotonEXE", "Interpreter.Old", FactorySettings, localSettings) ?? "Interpreter.Old";
-            pelotonEXE = pelotonEXE == "Interpreter.Old" ? FactorySettings["Interpreter.Old"].ToString() : FactorySettings["Interpreter.New"].ToString();
-            if (pelotonEXE.Length == 0) pelotonEXE = FactorySettings["Interpreter.Old"].ToString();
-
-            LastSelectedInterpreterLanguageName = GetFactorySettingsWithLocalSettingsOverrideOrDefault<string>("LastSelectedInterpreterLanguageName", "English", FactorySettings, localSettings);
-            LastSelectedInterpreterLanguageID = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("LastSelectedInterpreterLanguageID", 0, FactorySettings, localSettings);
-            PerTabInterpreterParameters["Language"]["Defined"] = true;
-            PerTabInterpreterParameters["Language"]["Value"] = LastSelectedInterpreterLanguageID;
-
-            LastSelectedVariableLength = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("LastSelectedVariableLength", false, FactorySettings, localSettings);
-            PerTabInterpreterParameters["VariableLength"]["Defined"] = LastSelectedVariableLength;
-            PerTabInterpreterParameters["VariableLength"]["Value"] = LastSelectedVariableLength;
-
-            //LastSelectedSpaced = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("LastSelectedSpaced", false, FactorySettings, localSettings);
-            //PerTabInterpreterParameters["Spaced"]["Defined"] = LastSelectedSpaced;
-            //PerTabInterpreterParameters["Spaced"]["Value"] = LastSelectedSpaced;
-
-            LastSelectedQuietude = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("Quietude", 2, FactorySettings, localSettings);
-            GlobalInterpreterParameters["Quietude"]["Defined"] = true;
-            GlobalInterpreterParameters["Quietude"]["Value"] = LastSelectedQuietude;
-
-            if (tab1.TabSettingsDict == null)
-                tab1.TabSettingsDict = Clone(PerTabInterpreterParameters);
-
-            tab1.TabSettingsDict["Language"]["Defined"] = true;
-            tab1.TabSettingsDict["Language"]["Value"] = LastSelectedInterpreterLanguageID;
-
-            InterfaceLanguageSelectionBuilder(mnuSelectLanguage, "mnuSelectLanguage", Internationalization_Click);
-            InterpreterLanguageSelectionBuilder(mnuRun, "mnuLanguage", MnuLanguage_Click);
-
-            UpdateMenuRunningMode(GlobalInterpreterParameters["Quietude"]);
-            UpdateVariableLengthMode(tab1.TabSettingsDict["VariableLength"]);
-            // UpdateSpacedMode(tab1.TabSettingsDict["Spaced"]);
-            UpdateLanguageName(tab1.TabSettingsDict);
-            UpdateTabCommandLine();
-
         }
 
         private void ControlHighligter(MenuFlyoutItem? menuFlyoutItem, bool onish)
@@ -320,10 +262,10 @@ namespace PelotonIDE.Presentation
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             if (_richEditBoxes.Count > 0)
             {
-                foreach (var _reb in _richEditBoxes)
+            foreach (var _reb in _richEditBoxes)
+            {
+                if (_reb.Value.isDirty)
                 {
-                    if (_reb.Value.isDirty)
-                    {
                         var key = _reb.Key;
                         var aRichEditBox = _richEditBoxes[key];
                         foreach (var item in tabControl.MenuItems)
@@ -639,6 +581,9 @@ namespace PelotonIDE.Presentation
             // generate arguments string
             (string stdOut, string stdErr) = RunPeloton(pelotonEXE!, pelotonARG, selectedText);
 
+            var stamp = ">\r\n"; // System.DateTime.Now.ToString("O") + "\r\n";
+            stdErr = stdErr.Insert(0, stamp);
+            stdOut = stdOut.Insert(0, stamp);
             Run run = new();
             Paragraph paragraph = new();
             if (!string.IsNullOrEmpty(stdOut))
@@ -686,8 +631,8 @@ namespace PelotonIDE.Presentation
             // stream.Write(buff);
             // stream.Close();
 
-            proc.OutputDataReceived += (object sender, DataReceivedEventArgs e) => stdout.Append(e.Data);
-            proc.ErrorDataReceived += (object sender, DataReceivedEventArgs e) => stderr.Append(e.Data);
+            proc.OutputDataReceived += (object sender, DataReceivedEventArgs e) => stdout.AppendLine(e.Data);
+            proc.ErrorDataReceived += (object sender, DataReceivedEventArgs e) => stderr.AppendLine(e.Data);
 
             proc.BeginErrorReadLine();
             proc.BeginOutputReadLine();
@@ -695,7 +640,7 @@ namespace PelotonIDE.Presentation
             proc.WaitForExit();
             proc.Dispose();
 
-            return (StdOut: stdout.ToString(), StdErr: stderr.ToString());
+            return (StdOut: stdout.ToString().Trim(), StdErr: stderr.ToString().Trim());
         }
         #endregion
 
