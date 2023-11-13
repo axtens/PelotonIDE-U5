@@ -604,7 +604,11 @@ namespace PelotonIDE.Presentation
         private void UpdateLanguageInInterpreterMenu(MenuBarItem mnuRun, string lastSelectedInterpreterLanguageName)
         {
             var subMenus = from menu in mnuRun.Items where menu.Name == "mnuLanguage" select menu;
+<<<<<<< HEAD
             if (subMenus != null)
+=======
+            if (subMenus != null )
+>>>>>>> master
             {
                 var first = subMenus.First();
                 foreach (var item in ((MenuFlyoutSubItem)first).Items)
@@ -613,15 +617,23 @@ namespace PelotonIDE.Presentation
                     {
                         item.Foreground = new SolidColorBrush(Colors.White);
                         item.Background = new SolidColorBrush(Colors.Black);
+<<<<<<< HEAD
                     }
                     else
+=======
+                    } else
+>>>>>>> master
                     {
                         item.Foreground = new SolidColorBrush(Colors.Black);
                         item.Background = new SolidColorBrush(Colors.White);
                     }
                 }
             }
+<<<<<<< HEAD
 
+=======
+            
+>>>>>>> master
         }
 
         private async void ResetToFactorySettings_Click(object sender, RoutedEventArgs e)

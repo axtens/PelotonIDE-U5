@@ -333,7 +333,7 @@
                                 <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto"
                                               HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto"
                                               VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                                    <RichTextBlock x:Name="outputText" IsTextSelectionEnabled="True" >
+                                    <RichTextBlock x:Name="outputText" IsTextSelectionEnabled="True"   >
                                         <Paragraph>
 
                                         </Paragraph>
@@ -345,8 +345,8 @@
                             <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto"  VerticalScrollMode="Auto"
                                               HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto"
-                                              VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                                    <RichTextBlock x:Name="errorText" IsTextSelectionEnabled="True">
+                                              VerticalAlignment="Stretch" HorizontalAlignment="Stretch" >
+                                    <RichTextBlock x:Name="errorText" IsTextSelectionEnabled="True"  >
                                         <Paragraph>
 
                                         </Paragraph>
