@@ -2505,6 +2505,7 @@
       "82145": "Simple",
       "82146": "Code",
       "ID": 15,
+            "Enabled": true,
       "Name": "Amharic"
     }
   },
@@ -5014,6 +5015,7 @@
       "82145": "بسيط",
       "82146": "الناتج الثابتة",
       "ID": 18,
+            "Enabled": true,
       "Name": "Arabic"
     }
   },
@@ -7523,6 +7525,7 @@
       "82145": "简单",
       "82146": "代码",
       "ID": 11,
+            "Enabled": true,
       "Name": "Hanzi Simplified"
     }
   },
@@ -10032,6 +10035,7 @@
       "82145": "簡易",
       "82146": "固定",
       "ID": 12,
+            "Enabled": true,
       "Name": "Hanzi Traditional"
     }
   },
@@ -12541,6 +12545,7 @@
       "82145": "Simpel",
       "82146": "Kode",
       "ID": 6,
+            "Enabled": true,
       "Name": "Danish"
     }
   },
@@ -15050,6 +15055,7 @@
       "82145": "Simple",
       "82146": "fixed markup",
       "ID": 0,
+            "Enabled": true,
       "Name": "English"
     }
   },
@@ -17559,6 +17565,7 @@
       "82145": "Simple",
       "82146": "Code",
       "ID": 16,
+            "Enabled": true,
       "Name": "Farsi"
     }
   },
@@ -20068,6 +20075,7 @@
       "82145": "Simple",
       "82146": "Fixe",
       "ID": 1,
+            "Enabled": true,
       "Name": "French"
     }
   },
@@ -22577,6 +22585,7 @@
       "82145": "Einfach",
       "82146": "Listenpreisaufschlag",
       "ID": 5,
+            "Enabled": true,
       "Name": "German"
     }
   },
@@ -25086,6 +25095,7 @@
       "82145": "Απλή",
       "82146": "Κώδικας",
       "ID": 21,
+            "Enabled": true,
       "Name": "Greek"
     }
   },
@@ -27595,6 +27605,7 @@
       "82145": "간단히",
       "82146": "고정폭 글꼴",
       "ID": 13,
+            "Enabled": true,
       "Name": "Hangul"
     }
   },
@@ -30104,6 +30115,7 @@
       "82145": "קוד",
       "82146": "תוספת מחיר קבועה",
       "ID": 17,
+            "Enabled": true,
       "Name": "Hebrew"
     }
   },
@@ -32613,6 +32625,7 @@
       "82145": "Simple",
       "82146": "Code",
       "ID": 20,
+            "Enabled": true,
       "Name": "Hindi"
     }
   },
@@ -35122,6 +35135,7 @@
       "82145": "Simple",
       "82146": "Code",
       "ID": 8,
+            "Enabled": true,
       "Name": "Indonesian"
     }
   },
@@ -37631,6 +37645,7 @@
       "82145": "Simplice",
       "82146": "Codice",
       "ID": 4,
+            "Enabled": true,
       "Name": "Italian"
     }
   },
@@ -40140,6 +40155,7 @@
       "82145": "簡易",
       "82146": "等幅",
       "ID": 14,
+            "Enabled": true,
       "Name": "Kanji"
     }
   },
@@ -41233,6 +41249,7 @@
       "087": "",
       "088": "",
       "ID": 9,
+            "Enabled": true,
       "Name": "Malaysian",
       "101": "*English",
       "102": "*French - Français",
@@ -45316,6 +45333,7 @@
       "82145": "Simple",
       "82146": "Monospazjat",
       "ID": 22,
+            "Enabled": true,
       "Name": "Maltese"
     }
   },
@@ -47825,6 +47843,7 @@
       "82145": "Simples",
       "82146": "Fixa",
       "ID": 2,
+            "Enabled": true,
       "Name": "Portuguese"
     }
   },
@@ -50334,6 +50353,7 @@
       "82145": "простой",
       "82146": "Точно",
       "ID": 10,
+            "Enabled": true,
       "Name": "Russian"
     }
   },
@@ -52843,6 +52863,7 @@
       "82145": "Básico",
       "82146": "Fijo",
       "ID": 3,
+            "Enabled": true,
       "Name": "Spanish"
     }
   },
@@ -55352,6 +55373,7 @@
       "82145": "Basit",
       "82146": "Eşaralıklı",
       "ID": 7,
+            "Enabled": true,
       "Name": "Turkish"
     }
   },
@@ -57861,6 +57883,7 @@
       "82145": "Simple",
       "82146": "طے شدہ اخراج",
       "ID": 19,
+            "Enabled": true,
       "Name": "Urdu"
     }
   },
@@ -58953,6 +58976,7 @@
       "086": "",
       "ID": 23,
       "Name": "Viet",
+            "Enabled": false,
       "101": "*English",
       "102": "*French - Français",
       "103": "*Portuguese - Português",

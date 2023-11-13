@@ -23,20 +23,106 @@ namespace PelotonIDE.Presentation
             TIME.Text = DateTime.Now.ToString("HH':'mm':'ss");
         }
 
+        /// <summary>
+        /// Load previous editor settings
+        /// </summary>
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            bool clear = false;
+            if (clear)
+            {
+                foreach (var setting in ApplicationData.Current.LocalSettings.Values)
+                {
+                    ApplicationData.Current.LocalSettings.DeleteContainer(setting.Key);
+                }
+                await ApplicationData.Current.ClearAsync();
+            }
+
+            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+            LanguageSettings = await GetLanguageConfiguration();
+
+            CAPS.Foreground = Console.CapsLock ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.LightGray);
+            NUM.Foreground = Console.NumberLock ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.LightGray);
+
+            GlobalInterpreterParameters = await MainPage.GetGlobalInterpreterParameters();
+            PerTabInterpreterParameters = await MainPage.GetPerTabInterpreterParameters();
+
+            FactorySettings = await GetFactorySettings();
+
+            outputPanelShowing = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("OutputPanelShowing", true, FactorySettings, localSettings);
+
+            var outputPanelPosition = GetFactorySettingsWithLocalSettingsOverrideOrDefault("OutputPanelPosition", (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), "Bottom"), FactorySettings, localSettings);
+
+            HandleOutputPanelChange(outputPanelPosition);
+
+            outputPanel.Height = GetFactorySettingsWithLocalSettingsOverrideOrDefault<double>("OutputPanelHeight", 200, FactorySettings, localSettings);
+            InterfaceLanguageName = GetFactorySettingsWithLocalSettingsOverrideOrDefault<string>("InterfaceLanguageName", "English", FactorySettings, localSettings);
+            InterfaceLanguageID = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("InterfaceLanguageID", 0, FactorySettings, localSettings);
+            if (InterfaceLanguageName != null)
+                HandleLanguageChange(InterfaceLanguageName);
+
+            pelotonEXE = GetFactorySettingsWithLocalSettingsOverrideOrDefault("PelotonEXE", "Interpreter.Old", FactorySettings, localSettings) ?? "Interpreter.Old";
+            pelotonEXE = pelotonEXE == "Interpreter.Old" ? FactorySettings["Interpreter.Old"].ToString() : FactorySettings["Interpreter.New"].ToString();
+            if (pelotonEXE.Length == 0) pelotonEXE = FactorySettings["Interpreter.Old"].ToString();
+
+            LastSelectedInterpreterLanguageName = GetFactorySettingsWithLocalSettingsOverrideOrDefault<string>("LastSelectedInterpreterLanguageName", "English", FactorySettings, localSettings);
+            LastSelectedInterpreterLanguageID = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("LastSelectedInterpreterLanguageID", 0, FactorySettings, localSettings);
+            PerTabInterpreterParameters["Language"]["Defined"] = true;
+            PerTabInterpreterParameters["Language"]["Value"] = LastSelectedInterpreterLanguageID;
+
+            LastSelectedVariableLength = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("LastSelectedVariableLength", false, FactorySettings, localSettings);
+            PerTabInterpreterParameters["VariableLength"]["Defined"] = LastSelectedVariableLength;
+            PerTabInterpreterParameters["VariableLength"]["Value"] = LastSelectedVariableLength;
+
+            //LastSelectedSpaced = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("LastSelectedSpaced", false, FactorySettings, localSettings);
+            //PerTabInterpreterParameters["Spaced"]["Defined"] = LastSelectedSpaced;
+            //PerTabInterpreterParameters["Spaced"]["Value"] = LastSelectedSpaced;
+
+            LastSelectedQuietude = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("Quietude", 2, FactorySettings, localSettings);
+            GlobalInterpreterParameters["Quietude"]["Defined"] = true;
+            GlobalInterpreterParameters["Quietude"]["Value"] = LastSelectedQuietude;
+
+            if (tab1.TabSettingsDict == null)
+                tab1.TabSettingsDict = Clone(PerTabInterpreterParameters);
+
+            tab1.TabSettingsDict["Language"]["Defined"] = true;
+            tab1.TabSettingsDict["Language"]["Value"] = LastSelectedInterpreterLanguageID;
+
+            InterfaceLanguageSelectionBuilder(mnuSelectLanguage, "mnuSelectLanguage", Internationalization_Click);
+            InterpreterLanguageSelectionBuilder(mnuRun, "mnuLanguage", MnuLanguage_Click);
+            UpdateEngineSelectionFromFactorySettings();
+
+            UpdateMenuRunningMode(GlobalInterpreterParameters["Quietude"]);
+            UpdateVariableLengthMode(tab1.TabSettingsDict["VariableLength"]);
+            // UpdateSpacedMode(tab1.TabSettingsDict["Spaced"]);
+            UpdateLanguageName(tab1.TabSettingsDict);
+            UpdateTabCommandLine();
+
+        }
+
+        private void UpdateEngineSelectionFromFactorySettings()
+        {
+            if (FactorySettings["PelotonEXE"].ToString() == "Interpreter.Old")
+            {
+                ControlHighligter(mnuNewEngine, false);
+                ControlHighligter(mnuOldEngine, true);
+            }
+            else
+            {
+                ControlHighligter(mnuNewEngine, true);
+                ControlHighligter(mnuOldEngine, false);
+            }
+        }
+
         private void InterpretBar_RunningMode_Click(object sender, RoutedEventArgs e)
         {
-            FontIcon tickIcon = new FontIcon()
-            {
-                FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                Glyph = "\uF0B7"
-            };
-
             foreach (var item in from key in new string[] { "mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit" }
                                  let items = from item in mnuRunningMode.Items where item.Name == key select item
                                  from item in items
                                  select item)
             {
-                (item as MenuFlyoutItem).Icon = null;
+                ControlHighligter((MenuFlyoutItem)item, false);
+                // (item as MenuFlyoutItem).Icon = null;
             }
             GlobalInterpreterParameters["Quietude"]["Defined"] = false;
 
@@ -46,17 +132,17 @@ namespace PelotonIDE.Presentation
             switch (clicked)
             {
                 case "mnuQuiet":
-                    me.Icon = tickIcon;
+                    ControlHighligter(me, true);
                     LastSelectedQuietude = 0;
                     GlobalInterpreterParameters["Quietude"]["Value"] = 0;
                     break;
                 case "mnuVerbose":
-                    me.Icon = tickIcon;
+                    ControlHighligter(me, true);
                     LastSelectedQuietude = 1;
                     GlobalInterpreterParameters["Quietude"]["Value"] = 1;
                     break;
                 case "mnuVerbosePauseOnExit":
-                    me.Icon = tickIcon;
+                    ControlHighligter(me, true);
                     LastSelectedQuietude = 2;
                     GlobalInterpreterParameters["Quietude"]["Value"] = 2;
                     break;
@@ -165,7 +251,7 @@ namespace PelotonIDE.Presentation
             if (e.Key == VirtualKey.Insert)
             {
             }
-            if (tabControl.Content is CustomRichEditBox currentRichEditBox)
+            if (tabControl.Content is CustomRichEditBox currentRichEditBox && !e.KeyStatus.IsExtendedKey && e.Key != VirtualKey.Control)
             {
                 currentRichEditBox.isDirty = true;
             }
@@ -289,18 +375,12 @@ namespace PelotonIDE.Presentation
 
         private void Internationalization_Click(object sender, RoutedEventArgs e)
         {
-            FontIcon tickIcon = new FontIcon()
-            {
-                FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                Glyph = "\uF0B7"
-            };
-
             var me = (MenuFlyoutItem)sender;
             var name = me.Name;
 
             foreach (var item in mnuSelectLanguage.Items)
             {
-                ((MenuFlyoutItem)item).Icon = item.Name == name ? tickIcon : (IconElement?)null;
+                ControlHighligter((MenuFlyoutItem)item, item.Name == name);
             }
 
             HandleLanguageChange(name);
@@ -448,7 +528,7 @@ namespace PelotonIDE.Presentation
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
             currentRichEditBox.Document.GetText(TextGetOptions.None, out string selectedText);
-            ExecuteInterpreter(selectedText.TrimEnd('\r'));  // FIXME pass in some kind of identifier to connect to the tab
+            ExecuteInterpreter(selectedText.TrimEnd('\r').Replace("\r", "\r\n"));  // FIXME pass in some kind of identifier to connect to the tab
         }
 
         private void RunSelectedCodeButton_Click(object sender, RoutedEventArgs e)
@@ -462,31 +542,25 @@ namespace PelotonIDE.Presentation
             selectedText.TrimEnd('\r');
             if (selectedText.Length > 0)
             {
-                ExecuteInterpreter(selectedText); // FIXME pass in some kind of identifier to connect to the tab
+                ExecuteInterpreter(selectedText.Replace("\r", "\r\n")); // FIXME pass in some kind of identifier to connect to the tab
             }
         }
 
         private void VariableLength_Click(object sender, RoutedEventArgs e)
         {
-            FontIcon tickIcon = new FontIcon()
-            {
-                FontFamily = new FontFamily("Segoe MDL2 Assets"),
-                Glyph = "\uF0B7"
-            };
-
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
 
-            if (mnuVariableLength.Icon == null)
+            if (LastSelectedVariableLength == false /*mnuVariableLength.Icon == null*/ )
             {
-                mnuVariableLength.Icon = tickIcon;
+                ControlHighligter(mnuVariableLength, true);
                 navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = true;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = true;
                 LastSelectedVariableLength = true;
             }
             else
             {
-                mnuVariableLength.Icon = null;
+                ControlHighligter(mnuVariableLength, false);
                 navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = false;
                 navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = false;
                 LastSelectedVariableLength = false;
@@ -495,39 +569,12 @@ namespace PelotonIDE.Presentation
             UpdateTabCommandLine();
         }
 
-        //private void Spaced_Click(object sender, RoutedEventArgs e)
-        //{
-        //    FontIcon tickIcon = new FontIcon()
-        //    {
-        //        FontFamily = new FontFamily("Segoe MDL2 Assets"),
-        //        Glyph = "\uF0B7"
-        //    };
-
-        //    CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-        //    CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-
-        //    if (mnuSpaced.Icon == null)
-        //    {
-        //        mnuSpaced.Icon = tickIcon;
-        //        navigationViewItem.TabSettingsDict["Spaced"]["Defined"] = true;
-        //        navigationViewItem.TabSettingsDict["Spaced"]["Value"] = true;
-        //        LastSelectedSpaced = true;
-        //    }
-        //    else
-        //    {
-        //        mnuSpaced.Icon = null;
-        //        navigationViewItem.TabSettingsDict["Spaced"]["Defined"] = false;
-        //        navigationViewItem.TabSettingsDict["Spaced"]["Value"] = false;
-        //        LastSelectedSpaced = false;
-        //    }
-
-        //    UpdateTabCommandLine();
-        //}
-
         private void MnuLanguage_Click(object sender, RoutedEventArgs e)
         {
             var me = (MenuFlyoutItem)sender;
             var lang = me.Name;
+
+            // iterate the list, and turn off the highlight then assert highlight on chosen
 
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
@@ -546,11 +593,35 @@ namespace PelotonIDE.Presentation
             PerTabInterpreterParameters["Language"]["Defined"] = true;
             PerTabInterpreterParameters["Language"]["Value"] = long.Parse(id);
 
+            UpdateLanguageInInterpreterMenu(mnuRun, LastSelectedInterpreterLanguageName);
 
             UpdateLanguageName(navigationViewItem.TabSettingsDict);
             //languageName.Text = LanguageSettings[InterfaceLanguageName]["GLOBAL"][$"{101+int.Parse(id)}"]; // FIXME? the international language setting actually, not lang
 
             UpdateTabCommandLine();
+        }
+
+        private void UpdateLanguageInInterpreterMenu(MenuBarItem mnuRun, string lastSelectedInterpreterLanguageName)
+        {
+            var subMenus = from menu in mnuRun.Items where menu.Name == "mnuLanguage" select menu;
+            if (subMenus != null)
+            {
+                var first = subMenus.First();
+                foreach (var item in ((MenuFlyoutSubItem)first).Items)
+                {
+                    if (item.Name == lastSelectedInterpreterLanguageName)
+                    {
+                        item.Foreground = new SolidColorBrush(Colors.White);
+                        item.Background = new SolidColorBrush(Colors.Black);
+                    }
+                    else
+                    {
+                        item.Foreground = new SolidColorBrush(Colors.Black);
+                        item.Background = new SolidColorBrush(Colors.White);
+                    }
+                }
+            }
+
         }
 
         private async void ResetToFactorySettings_Click(object sender, RoutedEventArgs e)
@@ -598,11 +669,25 @@ namespace PelotonIDE.Presentation
                 XamlRoot = this.XamlRoot,
                 Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
                 Title = "PelotonIDE v1.0",
-                Content = "Based on original code by\r\nHakob Chalikyan <hchalikyan3@gmail.com>",
+                Content = "", // Based on original code by\r\nHakob Chalikyan <hchalikyan3@gmail.com>",
                 CloseButtonText = "OK"
             };
             _ = dialog.ShowAsync();
 
+        }
+
+        private void ChooseNewEngine_Click(object sender, RoutedEventArgs e)
+        {
+            ControlHighligter(mnuNewEngine, true);
+            ControlHighligter(mnuOldEngine, false);
+            pelotonEXE = FactorySettings["Interpreter.New"].ToString();
+        }
+
+        private void ChooseOldEngine_Click(object sender, RoutedEventArgs e)
+        {
+            ControlHighligter(mnuNewEngine, false);
+            ControlHighligter(mnuOldEngine, true);
+            pelotonEXE = FactorySettings["Interpreter.Old"].ToString();
         }
 
     }
