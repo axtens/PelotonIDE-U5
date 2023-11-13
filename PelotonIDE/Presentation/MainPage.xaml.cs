@@ -207,20 +207,6 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        private void ControlHighligter(MenuFlyoutItem? menuFlyoutItem, bool onish)
-        {
-            if (onish)
-            {
-                menuFlyoutItem.Background = new SolidColorBrush(Colors.Black);
-                menuFlyoutItem.Foreground = new SolidColorBrush(Colors.White);
-            }
-            else
-            {
-                menuFlyoutItem.Foreground = new SolidColorBrush(Colors.Black);
-                menuFlyoutItem.Background = new SolidColorBrush(Colors.White);
-            }
-        }
-
 
         private void UpdateVariableLengthMode(InterpreterParameterStructure variableLength)
         {
