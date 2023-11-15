@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows.Input;
+using PelotonIDE.Presentation;
 
 namespace PelotonIDE.Presentation
 {
@@ -12,6 +13,7 @@ namespace PelotonIDE.Presentation
         private string? name;
 
         public ICommand GoToIDEConfig { get; }
+        public ICommand GoToTranslate { get; }
 
         public MainViewModel(
             INavigator navigator,
@@ -20,11 +22,16 @@ namespace PelotonIDE.Presentation
             _navigator = navigator;
             Title = $"Main - {localizer["ApplicationName"]}";
             GoToIDEConfig = new AsyncRelayCommand(GoToIDEConfigView);
+            GoToTranslate = new AsyncRelayCommand(GoToTranslateConfigView);
         }
 
         private async Task GoToIDEConfigView()
         {
             await _navigator.NavigateViewModelAsync<IDEConfigViewModel>(this, data: new Entity(Name!));
+        }
+        private async Task GoToTranslateConfigView()
+        {
+            await _navigator.NavigateViewModelAsync<TranslateViewModel>(this, data: new Entity(Name!));
         }
 
         private INavigator _navigator;

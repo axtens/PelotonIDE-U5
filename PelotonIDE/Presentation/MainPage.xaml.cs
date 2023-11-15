@@ -21,6 +21,15 @@ using LanguageConfigurationStructure = System.Collections.Generic.Dictionary<str
 using FactorySettingsStructure = System.Collections.Generic.Dictionary<string, object>;
 
 
+using System.Text.RegularExpressions;
+using Windows.Storage.Streams;
+using Windows.Foundation;
+using System.Timers;
+using Newtonsoft.Json.Linq;
+using Microsoft.UI.Xaml.Controls;
+
+
+
 namespace PelotonIDE.Presentation
 {
     public sealed partial class MainPage : Page
@@ -71,8 +80,7 @@ namespace PelotonIDE.Presentation
             // GetGlobals();
             CustomRichEditBox customREBox = new()
             {
-                Tag = "Tab1"
-               
+                Tag = tab1.Tag
             };
             customREBox.KeyDown += RichEditBox_KeyDown;
             customREBox.AcceptsReturn = true;
@@ -82,11 +90,52 @@ namespace PelotonIDE.Presentation
             _richEditBoxes[customREBox.Tag] = customREBox;
             tab1.TabSettingsDict = null;
             tabControl.SelectedItem = tab1;
+            customREBox.Focus(FocusState.Keyboard);
             App._window.Closed += MainWindow_Closed;
 
             // InterpreterLanguageSelectionBuilder(contextualLanguagesFlyout, "mnuLanguage", some_click);
             UpdateTabCommandLine();
         }
+
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+
+            if (e.Parameter == null)
+            {
+                return;
+            }
+
+            var parameters = (TranslateToMainParams)e.Parameter;
+
+            var selectedLanguage = parameters.selectedLangauge;
+            var translatedREB = parameters.translatedREB;
+        }
+
+        private InterpreterParametersStructure CopyFromGlobalCodeRunCargo()
+        {
+            InterpreterParametersStructure tsj = new();
+            foreach (var key in GlobalInterpreterParameters.Keys)
+            {
+                var kvp = GlobalInterpreterParameters[key];
+                tsj.Add(key, kvp);
+            }
+            return tsj;
+        }
+
+        private Dictionary<string, object> GetTabSettingsFromRegistry()
+        {
+            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+            Dictionary<string, object> dict = new();
+            foreach (var value in localSettings.Values)
+            {
+                if (value.Key.StartsWith("tab_"))
+                    dict.Add(value.Key, value.Value);
+            }
+            return dict;
+        }
+
 
         public static async Task<InterpreterParametersStructure?> GetGlobalInterpreterParameters()
         {
@@ -629,6 +678,7 @@ namespace PelotonIDE.Presentation
             return (StdOut: stdout.ToString().Trim(), StdErr: stderr.ToString().Trim());
         }
         #endregion
+
 
         private void mnuIDEConfiguration_Click(object sender, RoutedEventArgs e)
         {

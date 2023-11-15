@@ -53,21 +53,6 @@
             </utu:NavigationBar.MainCommand>
         </utu:NavigationBar>
 
-        <!--<StackPanel x:Name="test" Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="10">
-            <TextBlock Text="Interpreter" VerticalAlignment="Center" Margin="0,0,10,0"/>
-            <TextBox x:Name="interpreterTextBox" Text="HELLO WORLD" Width="300" MinHeight="0" FontSize="12"
-                     Margin="0,0,10,0" />
-            <Button x:Name="interpreterLocationBtn" Content="Browse..." Click="interpreterLocationBtn_Click"/>
-        </StackPanel>
-
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="10">
-            <TextBlock Text="Source Directory" VerticalAlignment="Center" Margin="0,0,10,0"/>
-            <TextBox x:Name="sourceTextBox" Text="HELLO WORLD" Width="300" MinHeight="0" FontSize="12"
-                     Margin="0,0,10,0" />
-            <Button x:Name="sourceDirectoryBtn" Content="Browse..." Click="sourceDirectoryBtn_Click"/>
-        </StackPanel>-->
-
-
         <TextBlock Grid.Row="1" Grid.Column="0" Text="Interpreter Location" VerticalAlignment="Center" Margin="10,0,10,0"/>
         <TextBox x:Name="interpreterTextBox" Grid.Row="1" Grid.Column="1" Width="400" MinHeight="0" FontSize="12"
                      Margin="0,5,10,5" />

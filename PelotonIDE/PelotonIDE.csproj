@@ -84,7 +84,8 @@
         <None Remove="Presentation\LanguageConfiguration.json" />
         <None Remove="Presentation\LanguageConfiguration.json.bak" />
         <None Remove="Presentation\PerTabInterpreterParameters.json" />
-        <None Remove="Presentation\rulesetrunner_repl_script.rr" />
+        <None Remove="Presentation\TranslatePage.xaml" />
+
     </ItemGroup>
     <ItemGroup>
       <Page Remove="Presentation\InterpreterSelectionDialog.xaml" />
@@ -92,6 +93,7 @@
     <ItemGroup>
         <UpToDateCheckInput Remove="Presentation\IDEConfigPage.xaml" />
         <UpToDateCheckInput Remove="presentation\InterpreterSelectionDialog.xaml" />
+        <UpToDateCheckInput Remove="Presentation\TranslatePage.xaml" />
     </ItemGroup>
     <ItemGroup>
         <Content Include="Presentation\PerTabInterpreterParameters.json" />
@@ -100,6 +102,7 @@
         <Content Include="Presentation\LanguageConfiguration.json" />
     </ItemGroup>
     <ItemGroup>
+      <AdditionalFiles Remove="Presentation\TranslatePage.xaml" />
       <Reference Include="EncodingChecker">
         <HintPath>..\..\..\Present\Ptarmigan\EncodingChecker\bin\Debug\net7.0\EncodingChecker.dll</HintPath>
       </Reference>

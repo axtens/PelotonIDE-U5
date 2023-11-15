@@ -676,6 +676,24 @@ namespace PelotonIDE.Presentation
 
         }
 
+
+        private void mnuIDEConfiguration_Click(object sender, RoutedEventArgs e)
+        {
+            Frame.Navigate(typeof(IDEConfigPage), null);
+
+
+        }
+
+        private void mnuTranslate_Click(object sender, RoutedEventArgs e)
+        {
+            MainToTranslateParams parameters = new MainToTranslateParams()
+            {
+                CustomREB = tabControl.Content as CustomRichEditBox,
+                LanguageID = InterfaceLanguageID
+
+            };
+            Frame.Navigate(typeof(TranslatePage), parameters);
+
         private void ChooseNewEngine_Click(object sender, RoutedEventArgs e)
         {
             ControlHighligter(mnuNewEngine, true);
