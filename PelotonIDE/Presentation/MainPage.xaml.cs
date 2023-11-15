@@ -4,7 +4,6 @@ using Microsoft.UI.Xaml.Input;
 
 using Newtonsoft.Json;
 
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -12,21 +11,13 @@ using System.Text.RegularExpressions;
 using Windows.Storage;
 using Windows.System;
 
+using FactorySettingsStructure = System.Collections.Generic.Dictionary<string, object>;
 using InterpreterParametersStructure = System.Collections.Generic.Dictionary<string,
     System.Collections.Generic.Dictionary<string, object>>;
 using InterpreterParameterStructure = System.Collections.Generic.Dictionary<string, object>;
 using LanguageConfigurationStructure = System.Collections.Generic.Dictionary<string,
     System.Collections.Generic.Dictionary<string,
         System.Collections.Generic.Dictionary<string, string>>>;
-using FactorySettingsStructure = System.Collections.Generic.Dictionary<string, object>;
-
-
-using System.Text.RegularExpressions;
-using Windows.Storage.Streams;
-using Windows.Foundation;
-using System.Timers;
-using Newtonsoft.Json.Linq;
-using Microsoft.UI.Xaml.Controls;
 
 
 
@@ -678,14 +669,6 @@ namespace PelotonIDE.Presentation
             return (StdOut: stdout.ToString().Trim(), StdErr: stderr.ToString().Trim());
         }
         #endregion
-
-
-        private void mnuIDEConfiguration_Click(object sender, RoutedEventArgs e)
-        {
-            var me = (MenuFlyoutItem)sender;
-            var lang = me.Name;
-
-        }
 
     }
 }

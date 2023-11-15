@@ -646,7 +646,7 @@ namespace PelotonIDE.Presentation
             Dictionary<string, object> dict = new();
             var fac = await GetFactorySettings();
             File.WriteAllText(Path.Combine(Path.GetTempPath(), "PelotonIDE_FactorySettings_log.json"), JsonConvert.SerializeObject(fac));
-            
+
             foreach (var key in ApplicationData.Current.LocalSettings.Values)
             {
                 dict.Add(key.Key, key.Value);
@@ -658,7 +658,7 @@ namespace PelotonIDE.Presentation
                 ApplicationData.Current.LocalSettings.DeleteContainer(setting.Key);
             }
             await ApplicationData.Current.ClearAsync();
-            
+
             Environment.Exit(0);
 
         }
@@ -693,7 +693,7 @@ namespace PelotonIDE.Presentation
 
             };
             Frame.Navigate(typeof(TranslatePage), parameters);
-
+        }
         private void ChooseNewEngine_Click(object sender, RoutedEventArgs e)
         {
             ControlHighligter(mnuNewEngine, true);
@@ -710,3 +710,4 @@ namespace PelotonIDE.Presentation
 
     }
 }
+

@@ -103,8 +103,10 @@
     </ItemGroup>
     <ItemGroup>
       <AdditionalFiles Remove="Presentation\TranslatePage.xaml" />
+    </ItemGroup>
+    <ItemGroup>
       <Reference Include="EncodingChecker">
-        <HintPath>..\..\..\Present\Ptarmigan\EncodingChecker\bin\Debug\net7.0\EncodingChecker.dll</HintPath>
+        <HintPath>..\..\EncodingChecker\bin\Debug\net7.0\EncodingChecker.dll</HintPath>
       </Reference>
     </ItemGroup>
 </Project>
