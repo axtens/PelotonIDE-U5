@@ -1,16 +1,9 @@
 ﻿using Microsoft.UI.Input;
 using Microsoft.UI.Xaml.Input;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using Windows.ApplicationModel.DataTransfer;
 using Windows.System;
 using Windows.UI.Core;
-
-using TabSettingJson = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, object>>;
 
 namespace PelotonIDE.Presentation
 {
@@ -25,6 +18,14 @@ namespace PelotonIDE.Presentation
             isRTF = true;
             SelectionFlyout = null;
             ContextFlyout = null;
+            //Style = new Style()
+            //{
+            //    TargetType = CustomRichEditBox,
+            //    Setters = {}
+            //}
+            //Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0xF9, 0xF8, 0xBD));
+            //Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0xF9, 0xF8, 0xBD));
+
         }
 
         protected override void OnKeyDown(KeyRoutedEventArgs e)

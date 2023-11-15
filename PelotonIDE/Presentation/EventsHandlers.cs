@@ -1,24 +1,17 @@
 ﻿using Microsoft.UI;
-using Microsoft.UI.Input;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading.Tasks;
 
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.Storage.Provider;
-using Windows.System;
-using Windows.UI.Core;
+using EncodingChecker;
 
 namespace PelotonIDE.Presentation
 {
@@ -54,6 +47,9 @@ namespace PelotonIDE.Presentation
                 using (Windows.Storage.Streams.IRandomAccessStream randAccStream =
                     await pickedFile.OpenAsync(FileAccessMode.Read))
                 {
+                    // var encoding = EncChecker.EncCheck.DetectFileAsEncoding(pickedFile.Path);
+                    bool hasBOM = false;
+                    Encoding? encoding = TextEncoding.GetFileEncoding(pickedFile.Path, 1000, ref hasBOM);
                     // Load the file into the Document property of the RichEditBox.
                     if (pickedFile.FileType == ".pr")
                     {
@@ -63,7 +59,7 @@ namespace PelotonIDE.Presentation
                     }
                     else if (pickedFile.FileType == ".p")
                     {
-                        string text = File.ReadAllText(pickedFile.Path, Encoding.UTF8);
+                        string text = File.ReadAllText(pickedFile.Path, encoding!);
                         newestRichEditBox.Document.SetText(TextSetOptions.UnicodeBidi, text);
                         newestRichEditBox.isRTF = false;
                         newestRichEditBox.isDirty = false;
@@ -198,11 +194,12 @@ namespace PelotonIDE.Presentation
                         CustomTabItem savedItem = (CustomTabItem)tabControl.SelectedItem;
                         savedItem.IsNewFile = false;
                         savedItem.Content = file.Name;
-
+                        
                         if (currentRichEditBox.isRTF)
                         {
                             HandleCustomPropertySaving(file, currentRichEditBox, navigationViewItem);
                         }
+                        currentRichEditBox.isDirty = false;
                     }
                 }
             }
@@ -307,7 +304,7 @@ namespace PelotonIDE.Presentation
             {
                 CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
                 CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-                var t1 = tab1;
+                // var t1 = tab1;
                 if (currentRichEditBox.isDirty) {
                     if (!await AreYouSureToClose()) return;
                 }
@@ -362,7 +359,7 @@ namespace PelotonIDE.Presentation
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
             currentRichEditBox.Focus(FocusState.Pointer);
-            currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out var allText);
+            currentRichEditBox.Document.GetText(TextGetOptions.None, out var allText);
             var endPosition = allText.Length - 1;
             currentRichEditBox.Document.Selection.SetRange(0, endPosition);
         }
@@ -461,6 +458,83 @@ namespace PelotonIDE.Presentation
 
                 outputDockingFlyout.Hide();
             }
+        }
+        private void ContentControl_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        { /*
+            var me = (ContentControl)sender;
+            
+            var sub = new MenuFlyoutSubItem()
+        {
+                Text = LanguageSettings[LastSelectedInterpreterLanguageName!]["frmMain"]["mnuLanguage"],
+                BorderThickness = new Thickness(1, 1, 1, 1),
+                BorderBrush = new SolidColorBrush() { Color = Colors.LightGray },
+                Name = "mnuLanguage"
+            };
+
+            var globals = LanguageSettings[LastSelectedInterpreterLanguageName!]["GLOBAL"];
+            var count = LanguageSettings.Keys.Count;
+            for (var i = 0; i < count; i++)
+            {
+                var names = from lang in LanguageSettings.Keys
+                            where LanguageSettings.ContainsKey(lang) && LanguageSettings[lang]["GLOBAL"]["ID"] == i.ToString()
+                            let name = LanguageSettings[lang]["GLOBAL"]["Name"]
+                            select name;
+                if (names.Any())
+                {
+                    MenuFlyoutItem menuFlyoutItem = new()
+                    {
+                        Text = globals[$"{100 + i + 1}"],
+                        Name = names.First(),
+                        Foreground = names.First() == LastSelectedInterpreterLanguageName ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
+                        Background = names.First() == LastSelectedInterpreterLanguageName ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
+                    };
+                    menuFlyoutItem.Click += ContentControl_Click;
+                    sub.Items.Add(menuFlyoutItem);
+                }
+            }
+            me.Content = sub;
+
+            */
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = "Interpreter language",
+                Content = "Selection of interpreter language\ncurrently only available from menu",
+                CloseButtonText = "OK"
+            };
+            _ = dialog.ShowAsync();
+        }
+
+        private void ContentControl_Click(object sender, RoutedEventArgs e)
+        {
+            var me = (MenuFlyoutItem)sender;
+            
+        }
+
+        private void ErrorText_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = "Error Text selection",
+                Content = "Double-click selection not available",
+                CloseButtonText = "OK"
+            };
+            _ = dialog.ShowAsync();
+        }
+        private void OutputText_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = "Output Text selection",
+                Content = "Double-click selection not available",
+                CloseButtonText = "OK"
+            };
+            _ = dialog.ShowAsync();
         }
 
     }

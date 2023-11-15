@@ -1,8 +1,10 @@
 {
   "InterfaceLanguageName": "English",
   "InterfaceLanguageID": 0,
-  "PelotonEXE": "c:\\bin\\stud\\stud.exe",
+  "PelotonEXE": "Interpreter.New",
   "OutputPanelHeight": 200.0,
   "OutputPanelShowing": true,
-  "OutputPanelPosition": "Bottom"
+  "OutputPanelPosition": "Bottom",
+  "Interpreter.Old": "c:\\protium\\bin\\pdb.exe",
+  "Interpreter.New": "c:\\peloton\\bin\\P3.exe"
 }
