@@ -61,9 +61,37 @@ namespace PelotonIDE.Presentation
             if (InterfaceLanguageName != null)
                 HandleLanguageChange(InterfaceLanguageName);
 
-            pelotonEXE = GetFactorySettingsWithLocalSettingsOverrideOrDefault("PelotonEXE", "Interpreter.Old", FactorySettings, localSettings) ?? "Interpreter.Old";
-            pelotonEXE = pelotonEXE == "Interpreter.Old" ? FactorySettings["Interpreter.Old"].ToString() : FactorySettings["Interpreter.New"].ToString();
-            if (pelotonEXE.Length == 0) pelotonEXE = FactorySettings["Interpreter.Old"].ToString();
+            // Engine selection:
+            //  Engine will contain either "Interpreter.Old" or "Interpreter.New"
+            //  if Engine is present in LocalSettings, use that value, otherwise retrieve it from FactorySettings and update local settings
+            //  if Engine is null (for some reason FactorySettings is broken), use "Interpreter.New"
+            if (LocalSettings.Values.ContainsKey("Engine"))
+            {
+                Engine = LocalSettings.Values["Engine"].ToString();
+            }
+            else
+            {
+                Engine = FactorySettings["Engine"].ToString();
+                LocalSettings.Values["Engine"] = Engine;
+            }
+            if (Engine == null)
+            {
+                Engine = "Interpreter.New";
+            }
+
+            if (localSettings.Values.ContainsKey("Scripts"))
+            {
+                Scripts = LocalSettings.Values["Scripts"].ToString();
+            }
+            else
+            {
+                Scripts = FactorySettings["Scripts"].ToString();
+                LocalSettings.Values["Scripts"] = Scripts;
+            }
+            if (Scripts == null)
+            {
+                Scripts = @"C:\peloton\code";
+            }
 
             LastSelectedInterpreterLanguageName = GetFactorySettingsWithLocalSettingsOverrideOrDefault<string>("LastSelectedInterpreterLanguageName", "English", FactorySettings, localSettings);
             LastSelectedInterpreterLanguageID = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("LastSelectedInterpreterLanguageID", 0, FactorySettings, localSettings);
@@ -102,7 +130,7 @@ namespace PelotonIDE.Presentation
 
         private void UpdateEngineSelectionFromFactorySettings()
         {
-            if (FactorySettings["PelotonEXE"].ToString() == "Interpreter.Old")
+            if (LocalSettings.Values["Engine"].ToString() == "Interpreter.Old")
             {
                 ControlHighligter(mnuNewEngine, false);
                 ControlHighligter(mnuOldEngine, true);
@@ -680,8 +708,6 @@ namespace PelotonIDE.Presentation
         private void mnuIDEConfiguration_Click(object sender, RoutedEventArgs e)
         {
             Frame.Navigate(typeof(IDEConfigPage), null);
-
-
         }
 
         private void mnuTranslate_Click(object sender, RoutedEventArgs e)
@@ -694,18 +720,19 @@ namespace PelotonIDE.Presentation
             };
             Frame.Navigate(typeof(TranslatePage), parameters);
         }
+
         private void ChooseNewEngine_Click(object sender, RoutedEventArgs e)
         {
             ControlHighligter(mnuNewEngine, true);
             ControlHighligter(mnuOldEngine, false);
-            pelotonEXE = FactorySettings["Interpreter.New"].ToString();
+            Engine = LocalSettings.Values["Interpreter.New"].ToString();
         }
 
         private void ChooseOldEngine_Click(object sender, RoutedEventArgs e)
         {
             ControlHighligter(mnuNewEngine, false);
             ControlHighligter(mnuOldEngine, true);
-            pelotonEXE = FactorySettings["Interpreter.Old"].ToString();
+            Engine = LocalSettings.Values["Interpreter.Old"].ToString();
         }
 
     }

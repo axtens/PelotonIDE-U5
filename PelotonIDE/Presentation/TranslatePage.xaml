@@ -37,7 +37,7 @@
             <ColumnDefinition Width="3*"/>
         </Grid.ColumnDefinitions>
 
-        <utu:NavigationBar Content="Translate Source" Grid.Row="0" Grid.ColumnSpan="3">
+        <!--<utu:NavigationBar Content="Translate Source" Grid.Row="0" Grid.ColumnSpan="3">
             <utu:NavigationBar.MainCommand>
                 <AppBarButton>
                     <AppBarButton.Icon>
@@ -45,7 +45,7 @@
                     </AppBarButton.Icon>
                 </AppBarButton>
             </utu:NavigationBar.MainCommand>
-        </utu:NavigationBar>
+        </utu:NavigationBar>-->
 
         <ListBox x:Name="sourceLanguageList" Grid.Column="0" Grid.Row="1" ScrollViewer.VerticalScrollMode="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
                  Margin="10" BorderBrush="LightGray" BorderThickness="3"/>

@@ -1,9 +1,11 @@
 ﻿using Newtonsoft.Json;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
@@ -105,13 +107,21 @@ namespace PelotonIDE.Presentation
             }
             else
             {
-                TranslateToMainParams parameters = new TranslateToMainParams()
+                /*TranslateToMainParams parameters = new TranslateToMainParams()
                 {
                     selectedLangauge = targetLanguageList.SelectedIndex,
                     translatedREB = targetText
 
+                };*/
+                NavigationData nd = new()
+                {
+                    Source = "TranslatePage",
+                    KVPs = new() {
+                        { "TargetLanguage" , targetLanguageList.SelectedIndex },
+                        { "TargetText" ,  targetText}
+                    }
                 };
-                Frame.Navigate(typeof(MainPage), parameters);
+                Frame.Navigate(typeof(MainPage), nd);
             }
         }
 

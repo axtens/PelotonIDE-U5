@@ -44,13 +44,16 @@ namespace PelotonIDE.Presentation
         long LastSelectedQuietude = 2;
 
         OutputPanelPosition outputPanelPosition = OutputPanelPosition.Bottom;
-        string? pelotonEXE = string.Empty;
-        //string pelotonARG = string.Empty;
+        string? Engine = string.Empty;
+        string? Scripts = string.Empty;
+
+        //string engineArguments = string.Empty;
 
         InterpreterParametersStructure? GlobalInterpreterParameters = new();
         InterpreterParametersStructure? PerTabInterpreterParameters = new();
         LanguageConfigurationStructure? LanguageSettings = new();
         FactorySettingsStructure? FactorySettings = new();
+        ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
 
         public MainPage()
         {
@@ -98,10 +101,21 @@ namespace PelotonIDE.Presentation
                 return;
             }
 
-            var parameters = (TranslateToMainParams)e.Parameter;
+            var parameters = (NavigationData)e.Parameter;
 
-            var selectedLanguage = parameters.selectedLangauge;
-            var translatedREB = parameters.translatedREB;
+            //var selectedLanguage = parameters.selectedLangauge;
+            //var translatedREB = parameters.translatedREB;
+            switch (parameters.Source)
+            {
+                case "IDEConfig":
+                    LocalSettings.Values[LocalSettings.Values["Engine"].ToString()] = parameters.KVPs["Interpreter"].ToString();
+                    LocalSettings.Values["Scripts"] = parameters.KVPs["Scripts"].ToString();
+                    break;
+                case "TranslatePage":
+                    // TargetLanguage
+                    // TargetText
+                    break;
+            }
         }
 
         private InterpreterParametersStructure CopyFromGlobalCodeRunCargo()
@@ -150,7 +164,7 @@ namespace PelotonIDE.Presentation
         }
 
         private async void InterfaceLanguageSelectionBuilder(MenuFlyoutSubItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
-            {
+        {
             //var tabset = await GetGlobalInterpreterParameters();
 
             if (InterfaceLanguageName == null || !LanguageSettings.ContainsKey(InterfaceLanguageName))
@@ -184,13 +198,19 @@ namespace PelotonIDE.Presentation
         }
 
         private async void InterpreterLanguageSelectionBuilder(MenuBarItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
-            {
+        {
 
             var tabset = await GetGlobalInterpreterParameters();
 
             LanguageSettings = await GetLanguageConfiguration();
 
             if (InterfaceLanguageName == null || !LanguageSettings.ContainsKey(InterfaceLanguageName))
+            {
+                return;
+            }
+
+            var foo = from item in menuBarItem.Items where item.GetType().Name == "MenuFlyoutSubItem" && item.Name == menuLabel select item;
+            if (foo.Any())
             {
                 return;
             }
@@ -236,10 +256,10 @@ namespace PelotonIDE.Presentation
         private void ControlHighligter(MenuFlyoutItem? menuFlyoutItem, bool onish)
         {
             if (onish)
-                {
+            {
                 menuFlyoutItem.Background = new SolidColorBrush(Colors.Black);
                 menuFlyoutItem.Foreground = new SolidColorBrush(Colors.White);
-                }
+            }
             else
             {
                 menuFlyoutItem.Foreground = new SolidColorBrush(Colors.Black);
@@ -288,10 +308,10 @@ namespace PelotonIDE.Presentation
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             if (_richEditBoxes.Count > 0)
             {
-            foreach (var _reb in _richEditBoxes)
-            {
-                if (_reb.Value.isDirty)
+                foreach (var _reb in _richEditBoxes)
                 {
+                    if (_reb.Value.isDirty)
+                    {
                         var key = _reb.Key;
                         var aRichEditBox = _richEditBoxes[key];
                         foreach (var item in tabControl.MenuItems)
@@ -318,14 +338,15 @@ namespace PelotonIDE.Presentation
             localSettings.Values["LastSelectedInterpreterLanguageID"] = LastSelectedInterpreterLanguageID;
             localSettings.Values["LastSelectedVariableLength"] = LastSelectedVariableLength;
             // localSettings.Values["LastSelectedSpaced"] = LastSelectedSpaced;
-            localSettings.Values["PelotonEXE"] = pelotonEXE;
+            localSettings.Values["Engine"] = Engine;
             localSettings.Values["Quietude"] = LastSelectedQuietude;
+            localSettings.Values["Scripts"] = Scripts;
         }
 
         #region Event Handlers
 
 
-        #region Script Runner
+
 
         private void CreateNewRichEditBox()
         {
@@ -590,85 +611,6 @@ namespace PelotonIDE.Presentation
         {
             tabCommandLine.Text = BuildTabCommandLine();
         }
-
-        private void ExecuteInterpreter(string selectedText)
-        {
-            // load tab settings
-            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-            //foreach (var setting in localSettings.Values)
-            //{
-            //    if (setting.Key.StartsWith("tab_"))
-            //        Debug.WriteLine("{0} => {1}", setting.Key, setting.Value);
-            //}
-
-            string pelotonARG = BuildTabCommandLine();
-
-            // override with matching tab settings
-            // generate arguments string
-            (string stdOut, string stdErr) = RunPeloton(pelotonEXE!, pelotonARG, selectedText);
-
-            var stamp = ">\r\n"; // System.DateTime.Now.ToString("O") + "\r\n";
-            stdErr = stdErr.Insert(0, stamp);
-            stdOut = stdOut.Insert(0, stamp);
-            Run run = new();
-            Paragraph paragraph = new();
-            if (!string.IsNullOrEmpty(stdOut))
-            {
-                run.Text = stdOut;
-                paragraph.Inlines.Add(run);
-                outputText.Blocks.Add(paragraph);
-            }
-
-            run = new();
-            paragraph = new();
-            if (!string.IsNullOrEmpty(stdErr))
-            {
-                run.Text = stdErr;
-                paragraph.Inlines.Add(run);
-                errorText.Blocks.Add(paragraph);
-            }
-        }
-
-
-        public static (string StdOut, string StdErr) RunPeloton(string exe, string args, string buff)
-        {
-            var temp = Path.GetTempFileName();
-            File.WriteAllText(temp, buff);
-
-            args += $" /F:\"{temp}\"";
-
-            ProcessStartInfo info = new()
-            {
-                Arguments = $"{args}",
-                FileName = exe,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                // RedirectStandardInput = true,
-                // CreateNoWindow = true,
-                //WindowStyle = ProcessWindowStyle.Hidden
-            };
-
-            var proc = Process.Start(info);
-            StringBuilder stdout = new();
-            StringBuilder stderr = new();
-
-            // StreamWriter stream = proc.StandardInput;
-            // stream.Write(buff);
-            // stream.Close();
-
-            proc.OutputDataReceived += (object sender, DataReceivedEventArgs e) => stdout.AppendLine(e.Data);
-            proc.ErrorDataReceived += (object sender, DataReceivedEventArgs e) => stderr.AppendLine(e.Data);
-
-            proc.BeginErrorReadLine();
-            proc.BeginOutputReadLine();
-
-            proc.WaitForExit();
-            proc.Dispose();
-
-            return (StdOut: stdout.ToString().Trim(), StdErr: stderr.ToString().Trim());
-        }
-        #endregion
 
     }
 }

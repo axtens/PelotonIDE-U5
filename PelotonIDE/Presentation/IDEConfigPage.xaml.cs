@@ -26,6 +26,8 @@ namespace PelotonIDE.Presentation
         public IDEConfigPage()
         {
             this.InitializeComponent();
+            interpreterTextBox.Text = ApplicationData.Current.LocalSettings.Values[ApplicationData.Current.LocalSettings.Values["Engine"].ToString()].ToString();
+            sourceTextBox.Text = ApplicationData.Current.LocalSettings.Values["Scripts"].ToString();
         }
 
         private async void interpreterLocationBtn_Click(object sender, RoutedEventArgs e)
@@ -44,7 +46,6 @@ namespace PelotonIDE.Presentation
             if (pickedFile != null)
             {
                 interpreterTextBox.Text = pickedFile.Path;
-                
             }
         }
 
@@ -66,6 +67,25 @@ namespace PelotonIDE.Presentation
                 sourceTextBox.Text = pickedFolder.Path;
                 
             }
+        }
+
+        private void IDEConfig_Apply_Button_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationData nd = new()
+            {
+                Source = "IDEConfig",
+                KVPs = new()
+                {
+                    { "Interpreter" , interpreterTextBox.Text },
+                    { "Scripts" ,  sourceTextBox.Text}
+                }
+            };
+            Frame.Navigate(typeof(MainPage), nd);
+
+        }
+        private void IDEConfig_Cancel_Button_Click(object sender, RoutedEventArgs e)
+        {
+            Frame.Navigate(typeof(MainPage), null);
         }
     }
 }

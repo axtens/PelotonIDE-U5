@@ -43,7 +43,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <utu:NavigationBar Content="IDE Configuration" Grid.ColumnSpan="3">
+        <!--<utu:NavigationBar Content="IDE Configuration" Grid.ColumnSpan="3">
             <utu:NavigationBar.MainCommand>
                 <AppBarButton>
                     <AppBarButton.Icon>
@@ -51,7 +51,7 @@
                     </AppBarButton.Icon>
                 </AppBarButton>
             </utu:NavigationBar.MainCommand>
-        </utu:NavigationBar>
+        </utu:NavigationBar>-->
 
         <TextBlock Grid.Row="1" Grid.Column="0" Text="Interpreter Location" VerticalAlignment="Center" Margin="10,0,10,0"/>
         <TextBox x:Name="interpreterTextBox" Grid.Row="1" Grid.Column="1" Width="400" MinHeight="0" FontSize="12"
@@ -64,9 +64,9 @@
                      Margin="0,5,10,5" />
         <Button x:Name="sourceDirectoryBtn" Grid.Row="2" Grid.Column="2" Content="Browse..." Click="sourceDirectoryBtn_Click"/>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-            <Button Content="Apply" Margin="0,0,10,10"/>
-            <Button Content="Cancel" Margin="0,0,10,10"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="3" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+            <Button Content="Apply" Margin="0,0,10,10" Click="IDEConfig_Apply_Button_Click"/>
+            <Button Content="Cancel" Margin="0,0,10,10" Click="IDEConfig_Cancel_Button_Click"/>
         </StackPanel>
 
 
