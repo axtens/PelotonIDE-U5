@@ -11,6 +11,7 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
         <PackageReference Include="Uno.Dsp.Tasks" Version="1.2.7" />
         <PackageReference Include="Uno.WinUI" Version="5.0.19" />
         <PackageReference Include="Uno.Resizetizer" Version="1.2.0" />
@@ -75,7 +76,9 @@
     </ItemGroup>
     <ItemGroup>
       <Compile Remove="Presentation\Interpreter.cs" />
+      <Compile Remove="Presentation\MainToTranslateParams.cs" />
       <Compile Remove="Presentation\TabSpecificSettings.cs" />
+      <Compile Remove="Presentation\TranslateToMainParams.cs" />
     </ItemGroup>
     <ItemGroup>
         <None Remove="Presentation\FactorySettings.json" />

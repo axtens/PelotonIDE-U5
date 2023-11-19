@@ -21,22 +21,24 @@ namespace PelotonIDE.Presentation
             return JsonConvert.DeserializeObject<FactorySettingsStructure>(globalSettingsString);
         }
 
-        private T? GetFactorySettingsWithLocalSettingsOverrideOrDefault<T>(string name, T value, FactorySettingsStructure? factory, ApplicationDataContainer? container)
+        private T? GetFactorySettingsWithLocalSettingsOverrideOrDefault<T>(string name, T otherwise,
+                                                                           FactorySettingsStructure? factory,
+                                                                           ApplicationDataContainer? container)
         {
             T? result = default;
             bool noFactory = false;
             bool noContainer = false;
-            if (factory.ContainsKey(name))
+            if (factory.TryGetValue(name, out object? valu))
             {
-                result = (T)factory[name];
+                result = (T)valu;
             }
             else
             {
                 noFactory = true;
             }
-            if (container.Values.ContainsKey(name))
+            if (container.Values.TryGetValue(name, out object? val))
             {
-                result = (T)container.Values[name];
+                result = (T)val;
             }
             else
             {
@@ -44,27 +46,28 @@ namespace PelotonIDE.Presentation
             }
             if (noFactory && noContainer)
             {
-                result = value;
+                result = otherwise;
             }
+            container.Values[name] = result;
             return result;
         }
 
-        private int GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, int value, FactorySettingsStructure? factory, ApplicationDataContainer? container)
+        private int GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, int otherwise, FactorySettingsStructure? factory, ApplicationDataContainer? container)
         {
             int result = default;
             bool noFactory = false;
             bool noContainer = false;
-            if (factory.ContainsKey(name))
+            if (factory.TryGetValue(name, out object? valu))
             {
-                result = (int)factory[name];
+                result = (int)valu;
             }
             else
             {
                 noFactory = true;
             }
-            if (container.Values.ContainsKey(name))
+            if (container.Values.TryGetValue(name, out object? val))
             {
-                result = (int)container.Values[name];
+                result = (int)val;
             }
             else
             {
@@ -72,26 +75,27 @@ namespace PelotonIDE.Presentation
             }
             if (noFactory && noContainer)
             {
-                result = value;
+                result = otherwise;
             }
+            container.Values[name] = result;
             return result;
         }
-        private long GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, long value, FactorySettingsStructure? factory, ApplicationDataContainer? container)
+        private long GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, long otherwise, FactorySettingsStructure? factory, ApplicationDataContainer? container)
         {
             long result = default;
             bool noFactory = false;
             bool noContainer = false;
-            if (factory.ContainsKey(name))
+            if (factory.TryGetValue(name, out object? valu))
             {
-                result = (long)factory[name];
+                result = (long)valu;
             }
             else
             {
                 noFactory = true;
             }
-            if (container.Values.ContainsKey(name))
+            if (container.Values.TryGetValue(name, out object? val))
             {
-                result = (long)container.Values[name];
+                result = (long)val;
             }
             else
             {
@@ -99,26 +103,27 @@ namespace PelotonIDE.Presentation
             }
             if (noFactory && noContainer)
             {
-                result = value;
+                result = otherwise;
             }
+            container.Values[name] = result;
             return result;
         }
-        private bool GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, bool value, FactorySettingsStructure? factory, ApplicationDataContainer? container)
+        private bool GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, bool otherwise, FactorySettingsStructure? factory, ApplicationDataContainer? container)
         {
             bool result = default;
             bool noFactory = false;
             bool noContainer = false;
-            if (factory.ContainsKey(name))
+            if (factory.TryGetValue(name, out object? valu))
             {
-                result = (bool)factory[name];
+                result = (bool)valu;
             }
             else
             {
                 noFactory = true;
             }
-            if (container.Values.ContainsKey(name))
+            if (container.Values.TryGetValue(name, out object? val))
             {
-                result = (bool)container.Values[name];
+                result = (bool)val;
             }
             else
             {
@@ -126,27 +131,28 @@ namespace PelotonIDE.Presentation
             }
             if (noFactory && noContainer)
             {
-                result = value;
+                result = otherwise;
             }
+            container.Values[name] = result;
             return result;
         }
 
-        private OutputPanelPosition GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, OutputPanelPosition value, FactorySettingsStructure? factory, ApplicationDataContainer? container)
+        private OutputPanelPosition GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, OutputPanelPosition otherwise, FactorySettingsStructure? factory, ApplicationDataContainer? container)
         {
             OutputPanelPosition result = default;
             bool noFactory = false;
             bool noContainer = false;
-            if (factory.ContainsKey(name))
+            if (factory.TryGetValue(name, out object? valu))
             {
-                result = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), (string)factory[name]);
+                result = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), (string)valu);
             }
             else
             {
                 noFactory = true;
             }
-            if (container.Values.ContainsKey(name))
+            if (container.Values.TryGetValue(name, out object? val))
             {
-                result = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), (string)container.Values[name]);
+                result = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), (string)val);
             }
             else
             {
@@ -154,27 +160,28 @@ namespace PelotonIDE.Presentation
             }
             if (noFactory && noContainer)
             {
-                result = value;
+                result = otherwise;
             }
+            container.Values[name] = result.ToString();
             return result;
         }
 
-        private string? GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, string value, FactorySettingsStructure? factory, ApplicationDataContainer? container)
+        private string? GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, string otherwise, FactorySettingsStructure? factory, ApplicationDataContainer? container)
         {
             string? result = default;
             bool noFactory = false;
             bool noContainer = false;
-            if (factory.ContainsKey(name))
+            if (factory.TryGetValue(name, out object? valu))
             {
-                result = (string)factory[name];
+                result = (string)valu;
             }
             else
             {
                 noFactory = true;
             }
-            if (container.Values.ContainsKey(name))
+            if (container.Values.TryGetValue(name, out object? val))
             {
-                result = (string)container.Values[name];
+                result = (string)val;
             }
             else
             {
@@ -182,10 +189,10 @@ namespace PelotonIDE.Presentation
             }
             if (noFactory && noContainer)
             {
-                result = value;
+                result = otherwise;
             }
+            container.Values[name] = result;
             return result;
         }
-
     }
 }

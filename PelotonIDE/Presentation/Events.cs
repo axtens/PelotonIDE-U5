@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
 
 using System.Diagnostics;
 using System.Timers;
@@ -28,15 +29,13 @@ namespace PelotonIDE.Presentation
         /// </summary>
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            bool clear = false;
-            if (clear)
-            {
-                foreach (var setting in ApplicationData.Current.LocalSettings.Values)
-                {
-                    ApplicationData.Current.LocalSettings.DeleteContainer(setting.Key);
-                }
-                await ApplicationData.Current.ClearAsync();
-            }
+            //{
+            //    foreach (var setting in ApplicationData.Current.LocalSettings.Values)
+            //    {
+            //        ApplicationData.Current.LocalSettings.DeleteContainer(setting.Key);
+            //    }
+            //    await ApplicationData.Current.ClearAsync();
+            //}
 
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
             LanguageSettings = await GetLanguageConfiguration();
@@ -62,36 +61,13 @@ namespace PelotonIDE.Presentation
                 HandleLanguageChange(InterfaceLanguageName);
 
             // Engine selection:
-            //  Engine will contain either "Interpreter.Old" or "Interpreter.New"
+            //  Engine will contain either "Interpreter.P2" or "Interpreter.P3"
             //  if Engine is present in LocalSettings, use that value, otherwise retrieve it from FactorySettings and update local settings
-            //  if Engine is null (for some reason FactorySettings is broken), use "Interpreter.New"
-            if (LocalSettings.Values.ContainsKey("Engine"))
-            {
-                Engine = LocalSettings.Values["Engine"].ToString();
-            }
-            else
-            {
-                Engine = FactorySettings["Engine"].ToString();
-                LocalSettings.Values["Engine"] = Engine;
-            }
-            if (Engine == null)
-            {
-                Engine = "Interpreter.New";
-            }
-
-            if (localSettings.Values.ContainsKey("Scripts"))
-            {
-                Scripts = LocalSettings.Values["Scripts"].ToString();
-            }
-            else
-            {
-                Scripts = FactorySettings["Scripts"].ToString();
-                LocalSettings.Values["Scripts"] = Scripts;
-            }
-            if (Scripts == null)
-            {
-                Scripts = @"C:\peloton\code";
-            }
+            //  if Engine is null (for some reason FactorySettings is broken), use "Interpreter.P3"
+            SetEngine();
+            SetScripts();
+            SetInterpreterNew();
+            SetInterpreterOld();
 
             LastSelectedInterpreterLanguageName = GetFactorySettingsWithLocalSettingsOverrideOrDefault<string>("LastSelectedInterpreterLanguageName", "English", FactorySettings, localSettings);
             LastSelectedInterpreterLanguageID = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("LastSelectedInterpreterLanguageID", 0, FactorySettings, localSettings);
@@ -126,11 +102,63 @@ namespace PelotonIDE.Presentation
             UpdateLanguageName(tab1.TabSettingsDict);
             UpdateTabCommandLine();
 
+            void SetEngine()
+            {
+                if (LocalSettings.Values.TryGetValue("Engine", out object? value))
+                {
+                    Engine = value.ToString();
+                }
+                else
+                {
+                    Engine = FactorySettings["Engine"].ToString();
+                    LocalSettings.Values["Engine"] = Engine;
+                }
+                Engine ??= "Interpreter.P3";
+            }
+            void SetScripts()
+            {
+                if (localSettings.Values.TryGetValue("Scripts", out object? value))
+                {
+                    Scripts = value.ToString();
+                }
+                else
+                {
+                    Scripts = FactorySettings["Scripts"].ToString();
+                    LocalSettings.Values["Scripts"] = Scripts;
+                }
+                Scripts ??= @"C:\peloton\code";
+            }
+            void SetInterpreterOld()
+            {
+                if (localSettings.Values.TryGetValue("Interpreter.P2", out object? value))
+                {
+                    InterpreterOld = value.ToString();
+                }
+                else
+                {
+                    InterpreterOld = FactorySettings["Interpreter.P2"].ToString();
+                    LocalSettings.Values["Interpreter.P2"] = InterpreterOld;
+                }
+                InterpreterOld ??= "Interpreter.P2";
+            }
+            void SetInterpreterNew()
+            {
+                if (localSettings.Values.TryGetValue("Interpreter.P3", out object? value))
+                {
+                    InterpreterNew = value.ToString();
+                }
+                else
+                {
+                    InterpreterNew = FactorySettings["Interpreter.P3"].ToString();
+                    LocalSettings.Values["Interpreter.P3"] = InterpreterNew;
+                }
+                InterpreterNew ??= "Interpreter.P3";
+            }
         }
 
         private void UpdateEngineSelectionFromFactorySettings()
         {
-            if (LocalSettings.Values["Engine"].ToString() == "Interpreter.Old")
+            if (LocalSettings.Values["Engine"].ToString() == "Interpreter.P2")
             {
                 ControlHighligter(mnuNewEngine, false);
                 ControlHighligter(mnuOldEngine, true);
@@ -281,7 +309,7 @@ namespace PelotonIDE.Presentation
             }
             if (tabControl.Content is CustomRichEditBox currentRichEditBox && !e.KeyStatus.IsExtendedKey && e.Key != VirtualKey.Control)
             {
-                currentRichEditBox.isDirty = true;
+                currentRichEditBox.IsDirty = true;
             }
         }
 
@@ -421,6 +449,8 @@ namespace PelotonIDE.Presentation
             var selLang = selectedLanguage["GLOBAL"]["153"];
             InterfaceLanguageName = langName;
             InterfaceLanguageID = long.Parse(selectedLanguage["GLOBAL"]["ID"]);
+            LocalSettings.Values["InterfaceLanguageName"] = InterfaceLanguageName;
+            LocalSettings.Values["InterfaceLanguageID"] = InterfaceLanguageID;
             languageName.Text = selectedLanguage["GLOBAL"]["101"];
         }
 
@@ -434,8 +464,8 @@ namespace PelotonIDE.Presentation
                 foreach (var mii in mi.Items)
                 {
                     Debug.WriteLine($"mii {mii.Name}");
-                    if (selectedLanguage.ContainsKey(mii.Name))
-                        HandlePossibleAmpersand(selectedLanguage[mii.Name], mii);
+                    if (selectedLanguage.TryGetValue(mii.Name, out string? value))
+                        HandlePossibleAmpersand(value, mii);
                 }
             }
 
@@ -460,8 +490,6 @@ namespace PelotonIDE.Presentation
             ToolTipService.SetToolTip(butGo, selectedLanguage["run.Tip"]);
         }
 
-
-
         private void Cut()
         {
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
@@ -475,42 +503,18 @@ namespace PelotonIDE.Presentation
 
         private async void TransformButton_Click(object sender, RoutedEventArgs e)
         {
-            /*ContentDialog dialog = new()
+            Frame.Navigate(typeof(TranslatePage), new NavigationData()
             {
-                XamlRoot = this.XamlRoot,
-                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                Title = "Reverse?",
-                PrimaryButtonText = "Yes",
-                SecondaryButtonText = "No"
-            };
-            DialogContentPage dialogContentPage = new();
-
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-            currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string selectedText);
-            selectedText = selectedText.TrimEnd('\r');
-            dialogContentPage.SetText(selectedText);
-            dialog.Content = dialogContentPage;
-
-            var result = await dialog.ShowAsync();
-
-            if (result == ContentDialogResult.Primary)
-            {
-                string reversedString = Reverse(selectedText);
-                CreateNewRichEditBox();
-                navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-                currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-                currentRichEditBox.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, reversedString);
-            }*/
-            ContentDialog dialog = new()
-            {
-                XamlRoot = this.XamlRoot,
-                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                Title = "Translator - Currently not implemented",
-                PrimaryButtonText = "OK",
-            };
-            var result = await dialog.ShowAsync();
-
+                Source = "MainPage",
+                KVPs = new()
+                {
+                    { "RichEditBox", (CustomRichEditBox)tabControl!.Content },
+                    { "InterpreterLanguage",  LastSelectedInterpreterLanguageID},
+                    { "InterfaceLanguageID", InterfaceLanguageID},
+                    { "InterfaceLanguageName",InterfaceLanguageName! },
+                    { "Languages", LanguageSettings! }
+                }
+            });
         }
 
         private void ToggleOutputButton_Click(object sender, RoutedEventArgs e)
@@ -533,7 +537,6 @@ namespace PelotonIDE.Presentation
                 selection.EndPosition = selection.StartPosition;
                 currentRichEditBox.Document.Selection.Move(TextRangeUnit.Character, 3);
             }
-
         }
 
         private void InsertVariableLengthCodeTemplate_Click(object sender, RoutedEventArgs e)
@@ -548,7 +551,6 @@ namespace PelotonIDE.Presentation
                 selection.EndPosition = selection.StartPosition;
                 currentRichEditBox.Document.Selection.Move(TextRangeUnit.Character, 3);
             }
-
         }
 
         private void RunCodeButton_Click(object sender, RoutedEventArgs e)
@@ -567,7 +569,7 @@ namespace PelotonIDE.Presentation
             var selection = currentRichEditBox.Document.Selection;
 
             string selectedText = selection.Text;
-            selectedText.TrimEnd('\r');
+            selectedText = selectedText.TrimEnd('\r');
             if (selectedText.Length > 0)
             {
                 ExecuteInterpreter(selectedText.Replace("\r", "\r\n")); // FIXME pass in some kind of identifier to connect to the tab
@@ -579,7 +581,7 @@ namespace PelotonIDE.Presentation
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
 
-            if (LastSelectedVariableLength == false /*mnuVariableLength.Icon == null*/ )
+            if (!LastSelectedVariableLength /*mnuVariableLength.Icon == null*/ )
             {
                 ControlHighligter(mnuVariableLength, true);
                 navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = true;
@@ -618,6 +620,10 @@ namespace PelotonIDE.Presentation
             LastSelectedInterpreterLanguageName = lang;
             LastSelectedInterpreterLanguageID = long.Parse(id);
 
+            LocalSettings.Values["LastSelectedInterpreterLanguageName"] = LastSelectedInterpreterLanguageName;
+            LocalSettings.Values["LastSelectedInterpreterLanguageID"] = LastSelectedInterpreterLanguageID;
+            LocalSettings.Values["LastSelectedVariableLength"] = LastSelectedVariableLength;
+
             PerTabInterpreterParameters["Language"]["Defined"] = true;
             PerTabInterpreterParameters["Language"]["Value"] = long.Parse(id);
 
@@ -649,7 +655,6 @@ namespace PelotonIDE.Presentation
                     }
                 }
             }
-
         }
 
         private async void ResetToFactorySettings_Click(object sender, RoutedEventArgs e)
@@ -671,7 +676,7 @@ namespace PelotonIDE.Presentation
                 return;
             }
 
-            Dictionary<string, object> dict = new();
+            Dictionary<string, object> dict = [];
             var fac = await GetFactorySettings();
             File.WriteAllText(Path.Combine(Path.GetTempPath(), "PelotonIDE_FactorySettings_log.json"), JsonConvert.SerializeObject(fac));
 
@@ -688,7 +693,6 @@ namespace PelotonIDE.Presentation
             await ApplicationData.Current.ClearAsync();
 
             Environment.Exit(0);
-
         }
         private void HelpAbout_Click(object sender, RoutedEventArgs e)
         {
@@ -701,40 +705,52 @@ namespace PelotonIDE.Presentation
                 CloseButtonText = "OK"
             };
             _ = dialog.ShowAsync();
-
         }
 
-
-        private void mnuIDEConfiguration_Click(object sender, RoutedEventArgs e)
+        private void MnuIDEConfiguration_Click(object sender, RoutedEventArgs e)
         {
-            Frame.Navigate(typeof(IDEConfigPage), null);
-        }
+            var interp = LocalSettings.Values["Interpreter.P3"].ToString();
 
-        private void mnuTranslate_Click(object sender, RoutedEventArgs e)
-        {
-            MainToTranslateParams parameters = new MainToTranslateParams()
+            Frame.Navigate(typeof(IDEConfigPage), new NavigationData()
             {
-                CustomREB = tabControl.Content as CustomRichEditBox,
-                LanguageID = InterfaceLanguageID
+                Source = "MainPage",
+                KVPs = new()
+                {
+                    { "Interpreter", interp!},
+                    { "Scripts",  Scripts!},
+                    { "Language", LanguageSettings[InterfaceLanguageName!] }
+                }
+            });
+        }
 
-            };
-            Frame.Navigate(typeof(TranslatePage), parameters);
+        private void MnuTranslate_Click(object sender, RoutedEventArgs e)
+        {
+            Frame.Navigate(typeof(TranslatePage), new NavigationData()
+            {
+                Source = "MainPage",
+                KVPs = new()
+                {
+                    { "RichEditBox", (CustomRichEditBox)tabControl!.Content },
+                    { "InterpreterLanguage",  LastSelectedInterpreterLanguageID},
+                    { "InterfaceLanguageID", InterfaceLanguageID},
+                    { "InterfaceLanguageName",InterfaceLanguageName! },
+                    { "Languages", LanguageSettings! }
+                }
+            });
         }
 
         private void ChooseNewEngine_Click(object sender, RoutedEventArgs e)
         {
             ControlHighligter(mnuNewEngine, true);
             ControlHighligter(mnuOldEngine, false);
-            Engine = LocalSettings.Values["Interpreter.New"].ToString();
+            Engine = LocalSettings.Values["Interpreter.P3"].ToString();
         }
 
         private void ChooseOldEngine_Click(object sender, RoutedEventArgs e)
         {
             ControlHighligter(mnuNewEngine, false);
             ControlHighligter(mnuOldEngine, true);
-            Engine = LocalSettings.Values["Interpreter.Old"].ToString();
+            Engine = LocalSettings.Values["Interpreter.P2"].ToString();
         }
-
     }
 }
-

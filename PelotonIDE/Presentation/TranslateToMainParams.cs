@@ -10,9 +10,9 @@ namespace PelotonIDE.Presentation
     {
         public TranslateToMainParams()
         {
-            selectedLangauge = 0;
+            SelectedLangauge = 0;
         }
-        public RichEditBox? translatedREB { get; set; }
-        public int selectedLangauge { get; set; }
+        public RichEditBox? TranslatedREB { get; set; }
+        public int SelectedLangauge { get; set; }
     }
 }

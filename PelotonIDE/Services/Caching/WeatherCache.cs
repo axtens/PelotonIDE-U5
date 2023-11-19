@@ -17,17 +17,17 @@ namespace PelotonIDE.Services.Caching
             _logger = logger;
         }
 
-        private bool IsConnected => NetworkInformation.GetInternetConnectionProfile().GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess;
+        private static bool IsConnected => NetworkInformation.GetInternetConnectionProfile().GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess;
 
         public async ValueTask<IImmutableList<WeatherForecast>> GetForecast(CancellationToken token)
         {
-            var weatherText = await GetCachedWeather();
+            var weatherText = await WeatherCache.GetCachedWeather();
             if (!string.IsNullOrWhiteSpace(weatherText))
             {
                 return _serializer.FromString<ImmutableArray<WeatherForecast>>(weatherText);
             }
 
-            if (!IsConnected)
+            if (!WeatherCache.IsConnected)
             {
                 _logger.LogWarning("App is offline and cannot connect to the API.");
                 throw new Exception("No internet connection");
@@ -52,17 +52,17 @@ namespace PelotonIDE.Services.Caching
             }
         }
 
-        private async ValueTask<StorageFile> GetFile(CreationCollisionOption option) =>
+        private static async ValueTask<StorageFile> GetFile(CreationCollisionOption option) =>
             await ApplicationData.Current.TemporaryFolder.CreateFileAsync("weather.json", option);
 
-        private async ValueTask<string?> GetCachedWeather()
+        private static async ValueTask<string?> GetCachedWeather()
         {
             var file = await GetFile(CreationCollisionOption.OpenIfExists);
             var properties = await file.GetBasicPropertiesAsync();
 
             // Reuse latest cache file if offline
             // or if the file is less than 5 minutes old
-            if (IsConnected || DateTimeOffset.Now.AddMinutes(-5) > properties.DateModified)
+            if (WeatherCache.IsConnected || DateTimeOffset.Now.AddMinutes(-5) > properties.DateModified)
             {
                 return null;
             }

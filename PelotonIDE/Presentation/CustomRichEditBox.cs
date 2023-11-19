@@ -9,13 +9,13 @@ namespace PelotonIDE.Presentation
 {
     public partial class CustomRichEditBox : RichEditBox
     {
-        public bool isRTF { get; set; }
-        public bool isDirty { get; set; }
+        public bool IsRTF { get; set; }
+        public bool IsDirty { get; set; }
 
         public CustomRichEditBox()
         {
             IsSpellCheckEnabled = false;
-            isRTF = true;
+            IsRTF = true;
             SelectionFlyout = null;
             ContextFlyout = null;
             //Style = new Style()
@@ -65,7 +65,7 @@ namespace PelotonIDE.Presentation
         private void Cut()
         {
             string selectedText = Document.Selection.Text;
-            var dataPackage = new DataPackage();
+            DataPackage dataPackage = new();
             dataPackage.SetText(selectedText);
             Clipboard.SetContent(dataPackage);
             Document.Selection.Delete(Microsoft.UI.Text.TextRangeUnit.Character, 1);
@@ -74,7 +74,7 @@ namespace PelotonIDE.Presentation
         private void CopyText()
         {
             string selectedText = Document.Selection.Text;
-            DataPackage dataPackage = new DataPackage();
+            DataPackage dataPackage = new();
             dataPackage.SetText(selectedText);
             Clipboard.SetContent(dataPackage);
         }

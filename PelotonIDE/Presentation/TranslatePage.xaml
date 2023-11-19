@@ -47,23 +47,19 @@
             </utu:NavigationBar.MainCommand>
         </utu:NavigationBar>-->
 
-        <ListBox x:Name="sourceLanguageList" Grid.Column="0" Grid.Row="1" ScrollViewer.VerticalScrollMode="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
-                 Margin="10" BorderBrush="LightGray" BorderThickness="3"/>
-        <CheckBox x:Name="sourceVariableLength" Grid.Column="0" Grid.Row="2" Content="Variable Length"/>
+        <ListBox x:Name="sourceLanguageList" Grid.Column="0" Grid.Row="1" ScrollViewer.VerticalScrollMode="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="10" BorderBrush="LightGray" BorderThickness="3" SelectionChanged="SourceLanguageList_SelectionChanged"/>
+        <CheckBox x:Name="chkVarLengthFrom" Grid.Column="0" Grid.Row="2" Content="Variable Length"  IsEnabled="False"/>
 
-        <ListBox x:Name="targetLanguageList" Grid.Column="0" Grid.Row="3" ScrollViewer.VerticalScrollMode="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
-         Margin="10" BorderBrush="LightGray" BorderThickness="3" SelectionChanged="targetLanguageList_SelectionChanged"/>
-        <CheckBox x:Name="targetVariableLength" Grid.Column="0" Grid.Row="4" Content="Variable Length"/>
+        <ListBox x:Name="targetLanguageList" Grid.Column="0" Grid.Row="3" ScrollViewer.VerticalScrollMode="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="10" BorderBrush="LightGray" BorderThickness="3" SelectionChanged="TargetLanguageList_SelectionChanged"/>
+        <CheckBox x:Name="chkVarLengthTo" Grid.Column="0" Grid.Row="4" Content="Variable Length" IsEnabled="False"/>
 
-        <RichEditBox x:Name="sourceText" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Stretch"
-                     HorizontalAlignment="Stretch" Margin="10" BorderBrush="LightGray" BorderThickness="3"/>
-        <RichEditBox x:Name="targetText" Grid.Column="2" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Stretch"
-                     HorizontalAlignment="Stretch" Margin="10" BorderBrush="LightGray" BorderThickness="3"/>
-        <CheckBox x:Name="padOutCode" Grid.Column="1" Grid.Row="4" Content="Pad Out Code"/>
+        <RichEditBox x:Name="sourceText" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="10" BorderBrush="LightGray" BorderThickness="3"/>
+        <RichEditBox x:Name="targetText" Grid.Column="2" Grid.Row="1" Grid.RowSpan="3" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="10" BorderBrush="LightGray" BorderThickness="3"/>
+        <CheckBox x:Name="chkSpaceOut" Grid.Column="1" Grid.Row="4" Content="Pad Out Code"  IsEnabled="False"/>
 
         <StackPanel Orientation="Horizontal" Grid.Column="2" Grid.Row="4" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-            <Button x:Name="ApplyButton" Content="Apply" Margin="0,0,10,10" Click="ApplyButton_Click"/>
-            <Button x:Name="CancelButton" Content="Cancel" Margin="0,0,10,10" Click="CancelButton_Click"/>
+            <Button x:Name="cmdSaveMemory" Content="Apply" Margin="0,0,10,10" Click="ApplyButton_Click"/>
+            <Button x:Name="cmdCancel" Content="Cancel" Margin="0,0,10,10" Click="CancelButton_Click"/>
         </StackPanel>
 
     </Grid>

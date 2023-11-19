@@ -17,7 +17,6 @@ namespace PelotonIDE.Presentation
 {
     public sealed partial class MainPage : Page
     {
- 
         private async void Open()
         {
             FileOpenPicker open = new()
@@ -54,18 +53,18 @@ namespace PelotonIDE.Presentation
                     if (pickedFile.FileType == ".pr")
                     {
                         newestRichEditBox.Document.LoadFromStream(TextSetOptions.FormatRtf, randAccStream);
-                        newestRichEditBox.isRTF = true;
-                        newestRichEditBox.isDirty = false;
+                        newestRichEditBox.IsRTF = true;
+                        newestRichEditBox.IsDirty = false;
                     }
                     else if (pickedFile.FileType == ".p")
                     {
                         string text = File.ReadAllText(pickedFile.Path, encoding!);
                         newestRichEditBox.Document.SetText(TextSetOptions.UnicodeBidi, text);
-                        newestRichEditBox.isRTF = false;
-                        newestRichEditBox.isDirty = false;
+                        newestRichEditBox.IsRTF = false;
+                        newestRichEditBox.IsDirty = false;
                     }
                 }
-                if (newestRichEditBox.isRTF)
+                if (newestRichEditBox.IsRTF)
                 {
                     HandleCustomPropertyLoading(pickedFile, newestRichEditBox, navigationViewItem);
                 }
@@ -115,19 +114,19 @@ namespace PelotonIDE.Presentation
                             randAccStream.Size = 0;
                             if (file.FileType == ".pr")
                             {
-                                currentRichEditBox.Document.SaveToStream(Microsoft.UI.Text.TextGetOptions.FormatRtf, randAccStream);
-                                currentRichEditBox.isRTF = true;
+                                currentRichEditBox.Document.SaveToStream(TextGetOptions.FormatRtf, randAccStream);
+                                currentRichEditBox.IsRTF = true;
                             }
                             else if (file.FileType == ".p")
                             {
-                                currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string plainText);
+                                currentRichEditBox.Document.GetText(TextGetOptions.None, out string plainText);
                                 using (var dataWriter = new Windows.Storage.Streams.DataWriter(randAccStream))
                                 {
                                     dataWriter.WriteString(plainText);
                                     await dataWriter.StoreAsync();
                                     await randAccStream.FlushAsync();
                                 }
-                                currentRichEditBox.isRTF = false;
+                                currentRichEditBox.IsRTF = false;
                             }
                         }
 
@@ -145,7 +144,7 @@ namespace PelotonIDE.Presentation
                         savedItem.IsNewFile = false;
                         savedItem.Content = file.Name;
                         savedItem.SavedFilePath = file;
-                        if (currentRichEditBox.isRTF)
+                        if (currentRichEditBox.IsRTF)
                         {
                             HandleCustomPropertySaving(file, currentRichEditBox, navigationViewItem);
                         }
@@ -167,7 +166,7 @@ namespace PelotonIDE.Presentation
                             if (file.FileType == ".pr")
                             {
                                 currentRichEditBox.Document.SaveToStream(Microsoft.UI.Text.TextGetOptions.FormatRtf, randAccStream);
-                                currentRichEditBox.isRTF = true;
+                                currentRichEditBox.IsRTF = true;
                             }
                             else if (file.FileType == ".p")
                             {
@@ -178,7 +177,7 @@ namespace PelotonIDE.Presentation
                                     await dataWriter.StoreAsync();
                                     await randAccStream.FlushAsync();
                                 }
-                                currentRichEditBox.isRTF = false;
+                                currentRichEditBox.IsRTF = false;
                             }
                         }
 
@@ -194,12 +193,12 @@ namespace PelotonIDE.Presentation
                         CustomTabItem savedItem = (CustomTabItem)tabControl.SelectedItem;
                         savedItem.IsNewFile = false;
                         savedItem.Content = file.Name;
-                        
-                        if (currentRichEditBox.isRTF)
+
+                        if (currentRichEditBox.IsRTF)
                         {
                             HandleCustomPropertySaving(file, currentRichEditBox, navigationViewItem);
                         }
-                        currentRichEditBox.isDirty = false;
+                        currentRichEditBox.IsDirty = false;
                     }
                 }
             }
@@ -251,7 +250,7 @@ namespace PelotonIDE.Presentation
                         if (file.FileType == ".pr")
                         {
                             currentRichEditBox.Document.SaveToStream(Microsoft.UI.Text.TextGetOptions.FormatRtf, randAccStream);
-                            currentRichEditBox.isRTF = true;
+                            currentRichEditBox.IsRTF = true;
                         }
                         else if (file.FileType == ".p")
                         {
@@ -262,7 +261,7 @@ namespace PelotonIDE.Presentation
                                 await dataWriter.StoreAsync();
                                 await randAccStream.FlushAsync();
                             }
-                            currentRichEditBox.isRTF = false;
+                            currentRichEditBox.IsRTF = false;
                         }
                     }
 
@@ -280,7 +279,7 @@ namespace PelotonIDE.Presentation
                     savedItem.Content = file.Name;
                     savedItem.SavedFilePath = file;
 
-                    if (currentRichEditBox.isRTF)
+                    if (currentRichEditBox.IsRTF)
                     {
                         HandleCustomPropertySaving(file, currentRichEditBox, navigationViewItem);
                     }
@@ -305,7 +304,8 @@ namespace PelotonIDE.Presentation
                 CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
                 CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
                 // var t1 = tab1;
-                if (currentRichEditBox.isDirty) {
+                if (currentRichEditBox.IsDirty)
+                {
                     if (!await AreYouSureToClose()) return;
                 }
                 _richEditBoxes.Remove(navigationViewItem.Tag);
@@ -509,7 +509,6 @@ namespace PelotonIDE.Presentation
         private void ContentControl_Click(object sender, RoutedEventArgs e)
         {
             var me = (MenuFlyoutItem)sender;
-            
         }
 
         private void ErrorText_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
@@ -536,6 +535,5 @@ namespace PelotonIDE.Presentation
             };
             _ = dialog.ShowAsync();
         }
-
     }
 }

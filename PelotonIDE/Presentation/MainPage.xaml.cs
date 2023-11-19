@@ -19,13 +19,11 @@ using LanguageConfigurationStructure = System.Collections.Generic.Dictionary<str
     System.Collections.Generic.Dictionary<string,
         System.Collections.Generic.Dictionary<string, string>>>;
 
-
-
 namespace PelotonIDE.Presentation
 {
     public sealed partial class MainPage : Page
     {
-        readonly Dictionary<object, CustomRichEditBox> _richEditBoxes = new();
+        readonly Dictionary<object, CustomRichEditBox> _richEditBoxes = [];
         bool outputPanelShowing = true;
         enum OutputPanelPosition
         {
@@ -46,18 +44,18 @@ namespace PelotonIDE.Presentation
         OutputPanelPosition outputPanelPosition = OutputPanelPosition.Bottom;
         string? Engine = string.Empty;
         string? Scripts = string.Empty;
+        string? InterpreterOld = string.Empty;
+        string? InterpreterNew = string.Empty;
 
         //string engineArguments = string.Empty;
 
-        InterpreterParametersStructure? GlobalInterpreterParameters = new();
-        InterpreterParametersStructure? PerTabInterpreterParameters = new();
-        LanguageConfigurationStructure? LanguageSettings = new();
-        FactorySettingsStructure? FactorySettings = new();
-        ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
-
+        InterpreterParametersStructure? GlobalInterpreterParameters = [];
+        InterpreterParametersStructure? PerTabInterpreterParameters = [];
+        LanguageConfigurationStructure? LanguageSettings = [];
+        FactorySettingsStructure? FactorySettings = [];
+        readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
         public MainPage()
         {
-
             this.InitializeComponent();
 
             //System.Timers.Timer t = new(1000)
@@ -69,8 +67,6 @@ namespace PelotonIDE.Presentation
             //};
             //t.Elapsed += TimerTick;
             //t.Start();
-
-
             // GetGlobals();
             CustomRichEditBox customREBox = new()
             {
@@ -90,7 +86,6 @@ namespace PelotonIDE.Presentation
             // InterpreterLanguageSelectionBuilder(contextualLanguagesFlyout, "mnuLanguage", some_click);
             UpdateTabCommandLine();
         }
-
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -112,15 +107,44 @@ namespace PelotonIDE.Presentation
                     LocalSettings.Values["Scripts"] = parameters.KVPs["Scripts"].ToString();
                     break;
                 case "TranslatePage":
-                    // TargetLanguage
-                    // TargetText
+                    CustomRichEditBox richEditBox = new()
+                    {
+                        IsDirty = true,
+                        IsRTF = true,
+
+                    };
+                    richEditBox.KeyDown += RichEditBox_KeyDown;
+                    richEditBox.AcceptsReturn = true;
+                    richEditBox.Document.SetText(Microsoft.UI.Text.TextSetOptions.UnicodeBidi, parameters.KVPs["TargetText"].ToString());
+
+                    CustomTabItem navigationViewItem = new()
+                    {
+                        Content = "Tab " + (tabControl.MenuItems.Count + 1),
+                        Tag = "Tab" + (tabControl.MenuItems.Count + 1),
+                        IsNewFile = true,
+                        TabSettingsDict = Clone(PerTabInterpreterParameters),
+                        Height = 30,
+
+                    };
+                    navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
+                    navigationViewItem.TabSettingsDict["Language"]["Value"] = (long)parameters.KVPs["TargetLanguage"];
+
+                    richEditBox.Tag = navigationViewItem.Tag;
+                    tabControl.Content = richEditBox;
+
+                    _richEditBoxes[richEditBox.Tag] = richEditBox;
+                    tabControl.MenuItems.Add(navigationViewItem);
+                    tabControl.SelectedItem = navigationViewItem;
+                    richEditBox.Focus(FocusState.Keyboard);
+                    UpdateLanguageName(navigationViewItem.TabSettingsDict);
+                    UpdateTabCommandLine();
                     break;
             }
         }
 
         private InterpreterParametersStructure CopyFromGlobalCodeRunCargo()
         {
-            InterpreterParametersStructure tsj = new();
+            InterpreterParametersStructure tsj = [];
             foreach (var key in GlobalInterpreterParameters.Keys)
             {
                 var kvp = GlobalInterpreterParameters[key];
@@ -132,7 +156,7 @@ namespace PelotonIDE.Presentation
         private Dictionary<string, object> GetTabSettingsFromRegistry()
         {
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-            Dictionary<string, object> dict = new();
+            Dictionary<string, object> dict = [];
             foreach (var value in localSettings.Values)
             {
                 if (value.Key.StartsWith("tab_"))
@@ -140,7 +164,6 @@ namespace PelotonIDE.Presentation
             }
             return dict;
         }
-
 
         public static async Task<InterpreterParametersStructure?> GetGlobalInterpreterParameters()
         {
@@ -160,7 +183,9 @@ namespace PelotonIDE.Presentation
         {
             var languageConfig = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\LanguageConfiguration.json"));
             string languageConfigString = File.ReadAllText(languageConfig.Path);
-            return JsonConvert.DeserializeObject<LanguageConfigurationStructure>(languageConfigString);
+            var languages = JsonConvert.DeserializeObject<LanguageConfigurationStructure>(languageConfigString);
+            languages.Remove("Viet");
+            return languages;
         }
 
         private async void InterfaceLanguageSelectionBuilder(MenuFlyoutSubItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
@@ -189,7 +214,6 @@ namespace PelotonIDE.Presentation
                         Name = names.First(),
                         Foreground = names.First() == InterfaceLanguageName ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
                         Background = names.First() == InterfaceLanguageName ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
-
                     };
                     menuFlyoutItem.Click += routedEventHandler; //  Internationalization_Click;
                     menuBarItem.Items.Add(menuFlyoutItem);
@@ -199,7 +223,6 @@ namespace PelotonIDE.Presentation
 
         private async void InterpreterLanguageSelectionBuilder(MenuBarItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
         {
-
             var tabset = await GetGlobalInterpreterParameters();
 
             LanguageSettings = await GetLanguageConfiguration();
@@ -223,7 +246,6 @@ namespace PelotonIDE.Presentation
                 BorderBrush = new SolidColorBrush() { Color = Colors.LightGray },
                 Name = menuLabel
             };
-
 
             //var items = new List<MenuFlyoutItem>();
 
@@ -251,9 +273,7 @@ namespace PelotonIDE.Presentation
             }
             menuBarItem.Items.Add(sub);
         }
-
-
-        private void ControlHighligter(MenuFlyoutItem? menuFlyoutItem, bool onish)
+        private static void ControlHighligter(MenuFlyoutItem? menuFlyoutItem, bool onish)
         {
             if (onish)
             {
@@ -266,12 +286,7 @@ namespace PelotonIDE.Presentation
                 menuFlyoutItem.Background = new SolidColorBrush(Colors.White);
             }
         }
-
-
-        private void UpdateVariableLengthMode(InterpreterParameterStructure variableLength)
-        {
-            ControlHighligter(mnuVariableLength, ((bool)variableLength["Defined"]));
-        }
+        private void UpdateVariableLengthMode(InterpreterParameterStructure variableLength) => ControlHighligter(mnuVariableLength, (bool)variableLength["Defined"]);
 
         private void UpdateMenuRunningMode(InterpreterParameterStructure quietude)
         {
@@ -310,7 +325,7 @@ namespace PelotonIDE.Presentation
             {
                 foreach (var _reb in _richEditBoxes)
                 {
-                    if (_reb.Value.isDirty)
+                    if (_reb.Value.IsDirty)
                     {
                         var key = _reb.Key;
                         var aRichEditBox = _richEditBoxes[key];
@@ -341,18 +356,16 @@ namespace PelotonIDE.Presentation
             localSettings.Values["Engine"] = Engine;
             localSettings.Values["Quietude"] = LastSelectedQuietude;
             localSettings.Values["Scripts"] = Scripts;
+            localSettings.Values["Interpreter.P3"] = InterpreterNew;
+            localSettings.Values["Interpreter.P2"] = InterpreterOld;
         }
 
         #region Event Handlers
-
-
-
-
         private void CreateNewRichEditBox()
         {
             CustomRichEditBox richEditBox = new()
             {
-                isDirty = false,
+                IsDirty = false,
             };
             richEditBox.KeyDown += RichEditBox_KeyDown;
             richEditBox.AcceptsReturn = true;
@@ -371,14 +384,11 @@ namespace PelotonIDE.Presentation
             tabControl.MenuItems.Add(navigationViewItem);
             tabControl.SelectedItem = navigationViewItem; // in focus?
             richEditBox.Focus(FocusState.Keyboard);
-            //navigationViewItem.tabSettingJson["Language"]["Defined"] = true;
-            //navigationViewItem.tabSettingJson["Language"]["Value"] = InterfaceLanguageID;
-            //languageName.Text = LanguageSettings[InterfaceLanguageName]["GLOBAL"][$"{101 + InterfaceLanguageID}"];
             UpdateLanguageName(navigationViewItem.TabSettingsDict);
             UpdateTabCommandLine();
         }
 
-        private InterpreterParametersStructure Clone(InterpreterParametersStructure? perTabInterpreterParameters)
+        private static InterpreterParametersStructure Clone(InterpreterParametersStructure? perTabInterpreterParameters)
         {
             var clone = new InterpreterParametersStructure();
             foreach (var okey in perTabInterpreterParameters.Keys)
@@ -401,10 +411,10 @@ namespace PelotonIDE.Presentation
             var languages = from lang in LanguageSettings.Keys
                             where long.Parse(LanguageSettings[lang]["GLOBAL"]["ID"]) == langValue
                             select LanguageSettings[lang];
-            if (languages.Count() > 0)
+            if (languages.Any())
             {
                 var first = languages.First();
-                var value = tabSettingJson["Language"]["Value"];
+                var value = (long)tabSettingJson["Language"]["Value"];
                 var type = value.GetType().Name;
                 long i = 0;
                 if (type == "Int32")
@@ -426,6 +436,10 @@ namespace PelotonIDE.Presentation
         private void UpdateLanguageName(InterpreterParametersStructure? tabSettingJson)
         {
             languageName.Text = GetTabsLanguageName(tabSettingJson);
+            LastSelectedInterpreterLanguageID = (long)tabSettingJson["Language"]["Value"];
+            LastSelectedInterpreterLanguageName = languageName.Text;
+            ApplicationData.Current.LocalSettings.Values["LastSelectedInterpreterLanguageName"] = LastSelectedInterpreterLanguageName;
+            ApplicationData.Current.LocalSettings.Values["LastSelectedInterpreterLanguageID"] = LastSelectedInterpreterLanguageID;
         }
 
         #endregion
@@ -439,7 +453,6 @@ namespace PelotonIDE.Presentation
 
         public static void HandleCustomPropertySaving(StorageFile file, CustomRichEditBox customRichEditBox, CustomTabItem navigationViewItem)
         {
-
             string rtfContent = File.ReadAllText(file.Path);
             StringBuilder rtfBuilder = new(rtfContent);
 
@@ -459,16 +472,15 @@ namespace PelotonIDE.Presentation
             {
                 var fullBlock = rtfContent.Substring(infos.First().Index, infos.First().Length);
                 var blockMatches = regex.Matches(fullBlock);
-
             }
             else
             {
-                var start = @"{\rtf1";
+                const string start = @"{\rtf1";
                 var i = rtfContent.IndexOf(start);
                 var j = i + start.Length;
                 rtfBuilder.Insert(j, info);
             }
-            File.WriteAllText(file.Path, rtfBuilder.ToString());
+            File.WriteAllText(file.Path, rtfBuilder.ToString(), Encoding.ASCII);
         }
 
         public static void HandleCustomPropertyLoading(StorageFile file, CustomRichEditBox customRichEditBox, CustomTabItem navigationViewItem)
@@ -509,13 +521,12 @@ namespace PelotonIDE.Presentation
                             navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = flag == "1";
                         }
                     }
-
                 }
             }
             else
             {
                 navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
-                navigationViewItem.TabSettingsDict["Language"]["Value"] = 0;
+                navigationViewItem.TabSettingsDict["Language"]["Value"] = (long)0;
                 if (rtfContent.Contains("<# "))
                 {
                     navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = true;
@@ -572,7 +583,7 @@ namespace PelotonIDE.Presentation
         {
             static List<string> BuildWith(InterpreterParametersStructure? interpreterParametersStructure)
             {
-                List<string> paras = new();
+                List<string> paras = [];
                 if (interpreterParametersStructure != null)
                 {
                     foreach (var key in interpreterParametersStructure.Keys)
@@ -600,17 +611,14 @@ namespace PelotonIDE.Presentation
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
 
-            List<string> paras = new();
-            paras.AddRange(BuildWith(GlobalInterpreterParameters));
-            paras.AddRange(BuildWith(navigationViewItem.TabSettingsDict));
+            List<string> paras = [.. BuildWith(GlobalInterpreterParameters), .. BuildWith(navigationViewItem.TabSettingsDict)];
 
-            return string.Join(" ", paras.ToArray());
+            return string.Join(" ", [.. paras]);
         }
 
         private void UpdateTabCommandLine()
         {
             tabCommandLine.Text = BuildTabCommandLine();
         }
-
     }
 }

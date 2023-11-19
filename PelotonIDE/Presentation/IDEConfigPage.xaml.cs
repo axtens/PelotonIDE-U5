@@ -19,6 +19,10 @@ using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
 
+using LanguageConfigurationStructureSelection =
+    System.Collections.Generic.Dictionary<string,
+        System.Collections.Generic.Dictionary<string, string>>;
+
 namespace PelotonIDE.Presentation
 {
     public sealed partial class IDEConfigPage : Page
@@ -26,11 +30,25 @@ namespace PelotonIDE.Presentation
         public IDEConfigPage()
         {
             this.InitializeComponent();
-            interpreterTextBox.Text = ApplicationData.Current.LocalSettings.Values[ApplicationData.Current.LocalSettings.Values["Engine"].ToString()].ToString();
-            sourceTextBox.Text = ApplicationData.Current.LocalSettings.Values["Scripts"].ToString();
         }
 
-        private async void interpreterLocationBtn_Click(object sender, RoutedEventArgs e)
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+
+            var parameters = (NavigationData)e.Parameter;
+
+            if (parameters.Source == "MainPage")
+            {
+                interpreterTextBox.Text = parameters.KVPs["Interpreter"].ToString();
+                sourceTextBox.Text = parameters.KVPs["Scripts"].ToString();
+                var lcs = (LanguageConfigurationStructureSelection)parameters.KVPs["Language"];
+                cmdCancel.Content = lcs["frmMain"]["cmdCancel"];
+                cmdSaveMemory.Content = lcs["frmMain"]["cmdSaveMemory"];
+                lblSourceDirectory.Text = lcs["frmMain"]["lblSourceDirectory"];
+            }
+        }
+        private async void InterpreterLocationBtn_Click(object sender, RoutedEventArgs e)
         {
             FileOpenPicker open = new()
             {
@@ -49,7 +67,7 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        private async void sourceDirectoryBtn_Click(object sender, RoutedEventArgs e)
+        private async void SourceDirectoryBtn_Click(object sender, RoutedEventArgs e)
         {
             FolderPicker folderPicker = new()
             {
@@ -65,7 +83,6 @@ namespace PelotonIDE.Presentation
             if (pickedFolder != null)
             {
                 sourceTextBox.Text = pickedFolder.Path;
-                
             }
         }
 

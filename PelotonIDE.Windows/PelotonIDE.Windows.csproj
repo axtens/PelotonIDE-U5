@@ -28,6 +28,11 @@
 		<PackageCertificateThumbprint>2CB45DDA66A114860391D05C4132C58DD59D9FEB</PackageCertificateThumbprint>
 		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
 		<AppxPackageSigningTimestampServerUrl>https://timestamp.comodoca.com</AppxPackageSigningTimestampServerUrl>
+		<ApplicationIcon>Peloton_Logo_MarkOnly_TransparentBack-lighter.ico</ApplicationIcon>
+		<Authors>Bruce Axtens, Hakob Chalikyan</Authors>
+		<Company>The Peloton Project</Company>
+		<Product>PelotonIDE</Product>
+		<PackageIcon>Peloton_Logo_MarkOnly_TransparentBack-lighter.png</PackageIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -69,6 +74,19 @@
 
 	<ItemGroup>
 	  <SourceGeneratorInput Remove="PelotonIDE.Windows_TemporaryKey.pfx" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="Peloton_Logo_MarkOnly_TransparentBack-lighter.ico">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\..\..\..\..\..\Downloads\Peloton_Logo_MarkOnly_TransparentBack-lighter.png">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
 	</ItemGroup>
 
 	<ItemGroup>

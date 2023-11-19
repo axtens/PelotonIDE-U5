@@ -18,7 +18,7 @@ namespace PelotonIDE.Presentation
             // generate arguments string
             string stdOut;
             string stdErr;
-            if (ApplicationData.Current.LocalSettings.Values["Engine"].ToString() == "Interpreter.New")
+            if (ApplicationData.Current.LocalSettings.Values["Engine"].ToString() == "Interpreter.P3")
             {
                 (stdOut, stdErr) = RunPeloton(engineArguments, selectedText);
             }
@@ -27,7 +27,7 @@ namespace PelotonIDE.Presentation
                 (stdOut, stdErr) = RunProtium(engineArguments, selectedText);
             }
 
-            var stamp = ">\r\n"; // System.DateTime.Now.ToString("O") + "\r\n";
+            const string stamp = ">\r\n"; // System.DateTime.Now.ToString("O") + "\r\n";
             stdErr = stdErr.Insert(0, stamp);
             stdOut = stdOut.Insert(0, stamp);
             Run run = new();
@@ -51,7 +51,7 @@ namespace PelotonIDE.Presentation
 
         public static (string StdOut, string StdErr) RunProtium(string args, string buff)
         {
-            string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.Old"].ToString();
+            string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.P2"].ToString();
             var temp = Path.GetTempFileName();
             File.WriteAllText(temp, buff);
 
@@ -80,12 +80,11 @@ namespace PelotonIDE.Presentation
             proc.Dispose();
 
             return (StdOut: stdout.ToString().Trim(), StdErr: stderr.ToString().Trim());
-
         }
 
         public static (string StdOut, string StdErr) RunPeloton(string args, string buff)
         {
-            string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.New"].ToString();
+            string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.P3"].ToString();
 
             ProcessStartInfo info = new()
             {
@@ -116,6 +115,5 @@ namespace PelotonIDE.Presentation
 
             return (StdOut: stdout.ToString().Trim(), StdErr: stderr.ToString().Trim());
         }
-
     }
 }

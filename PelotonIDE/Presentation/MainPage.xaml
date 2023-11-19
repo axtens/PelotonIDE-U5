@@ -150,7 +150,7 @@
             </MenuBarItem>
             
             <MenuBarItem Title="Source" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuSource">
-                <MenuFlyoutItem x:Name="mnuTranslate" Text="Translate" Click="mnuTranslate_Click"/>
+                <MenuFlyoutItem x:Name="mnuTranslate" Text="Translate" Click="MnuTranslate_Click"/>
                 <MenuFlyoutItem Name="mnuVariableLength" Click="VariableLength_Click" Text="Variable Length">
                     <!--<MenuFlyoutItem.Icon>
                         <FontIcon  FontFamily="Segoe MDL2 Assets" Glyph="&#xF0B7;" />
@@ -177,7 +177,7 @@
             
             <MenuBarItem Title="Settings" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuSettings" >
 
-                <MenuFlyoutItem x:Name="mnuIDEConfiguration" Text="Editor Configuration" Click="mnuIDEConfiguration_Click"  Command="{Binding GoToIDEConfig}" />
+                <MenuFlyoutItem x:Name="mnuIDEConfiguration" Text="Editor Configuration" Click="MnuIDEConfiguration_Click"  Command="{Binding GoToIDEConfig}" />
                 <MenuFlyoutSubItem x:Name="mnuSelectLanguage" Text="Choose interface language"></MenuFlyoutSubItem>
 
             </MenuBarItem>
