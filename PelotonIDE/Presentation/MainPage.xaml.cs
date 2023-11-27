@@ -51,9 +51,15 @@ namespace PelotonIDE.Presentation
 
         InterpreterParametersStructure? GlobalInterpreterParameters = [];
         InterpreterParametersStructure? PerTabInterpreterParameters = [];
-        LanguageConfigurationStructure? LanguageSettings = [];
+        /// <summary>
+        /// does not change
+        /// </summary>
+        LanguageConfigurationStructure? LanguageSettings;
         FactorySettingsStructure? FactorySettings = [];
         readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
+
+        public LanguageConfigurationStructure? LanguageSettings1 { get => LanguageSettings; set => LanguageSettings = value; }
+
         public MainPage()
         {
             this.InitializeComponent();
@@ -111,7 +117,6 @@ namespace PelotonIDE.Presentation
                     {
                         IsDirty = true,
                         IsRTF = true,
-
                     };
                     richEditBox.KeyDown += RichEditBox_KeyDown;
                     richEditBox.AcceptsReturn = true;
@@ -124,7 +129,6 @@ namespace PelotonIDE.Presentation
                         IsNewFile = true,
                         TabSettingsDict = Clone(PerTabInterpreterParameters),
                         Height = 30,
-
                     };
                     navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
                     navigationViewItem.TabSettingsDict["Language"]["Value"] = (long)parameters.KVPs["TargetLanguage"];
@@ -451,7 +455,7 @@ namespace PelotonIDE.Presentation
         //    return new string(charArray);
         //}
 
-        public static void HandleCustomPropertySaving(StorageFile file, CustomRichEditBox customRichEditBox, CustomTabItem navigationViewItem)
+        public void HandleCustomPropertySaving(StorageFile file, CustomRichEditBox customRichEditBox, CustomTabItem navigationViewItem)
         {
             string rtfContent = File.ReadAllText(file.Path);
             StringBuilder rtfBuilder = new(rtfContent);
@@ -462,7 +466,7 @@ namespace PelotonIDE.Presentation
             info = ques.Replace(info, (bool)navigationViewItem.TabSettingsDict["VariableLength"]["Value"] ? "1" : "0", 1);
             // info = ques.Replace(info, (bool)navigationViewItem.TabSettingsDict["Spaced"]["Value"] ? "1" : "0", 1);
 
-            var regex = new Regex(@"\{\*?\\[^{}]+}|[{}]|\\\n?[A-Za-z]+\n?(?:-?\d+)?[ ]?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            var regex = CustomRTFRegex();
 
             var matches = regex.Matches(rtfContent);
 
@@ -483,10 +487,10 @@ namespace PelotonIDE.Presentation
             File.WriteAllText(file.Path, rtfBuilder.ToString(), Encoding.ASCII);
         }
 
-        public static void HandleCustomPropertyLoading(StorageFile file, CustomRichEditBox customRichEditBox, CustomTabItem navigationViewItem)
+        public void HandleCustomPropertyLoading(StorageFile file, CustomRichEditBox customRichEditBox, CustomTabItem navigationViewItem)
         {
             string rtfContent = File.ReadAllText(file.Path);
-            var regex = new Regex(@"\{\*?\\[^{}]+}|[{}]|\\\n?[A-Za-z]+\n?(?:-?\d+)?[ ]?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            var regex = CustomRTFRegex();
 
             var matches = regex.Matches(rtfContent);
 
@@ -499,8 +503,9 @@ namespace PelotonIDE.Presentation
                     var items = ilang.First().Value.Split(' ');
                     if (items.Any())
                     {
+                        var internalLanguageID = ConvertILangToInternalLanguage(long.Parse(items[1].Replace("}", "")));
                         navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
-                        navigationViewItem.TabSettingsDict["Language"]["Value"] = long.Parse(items[1].Replace("}", ""));
+                        navigationViewItem.TabSettingsDict["Language"]["Value"] = internalLanguageID;
                     }
                 }
                 var ilength = from match in matches where match.Value.Contains(@"\ilength") select match;
@@ -525,14 +530,56 @@ namespace PelotonIDE.Presentation
             }
             else
             {
-                navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
-                navigationViewItem.TabSettingsDict["Language"]["Value"] = (long)0;
+                var deflang = from match in matches where match.Value.StartsWith(@"\deflang") select match;
+                if (deflang.Any())
+                {
+                    var deflangId = deflang.First().Value.Replace(@"\deflang", "");
+                    var internalLanguageID = ConvertILangToInternalLanguage(long.Parse(deflangId));
+                    navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
+                    navigationViewItem.TabSettingsDict["Language"]["Value"] = internalLanguageID;
+                }
+                else
+                {
+                    var lang = from match in matches where match.Value.StartsWith(@"\lang") select match;
+                    if (lang.Any())
+                    {
+                        var langId = lang.First().Value.Replace(@"\lang", "");
+                        var internalLanguageID = ConvertILangToInternalLanguage(long.Parse(langId));
+                        navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
+                        navigationViewItem.TabSettingsDict["Language"]["Value"] = internalLanguageID;
+                    }
+                    else
+                    {
+                        navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
+                        navigationViewItem.TabSettingsDict["Language"]["Value"] = (long)0;
+                    }
+                }
                 if (rtfContent.Contains("<# "))
                 {
                     navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = true;
                     navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = rtfContent.Contains("<# ");
                 }
             }
+        }
+
+        private long ConvertILangToInternalLanguage(long v)
+        {
+            foreach (string language in LanguageSettings.Keys)
+            {
+                var global = LanguageSettings[language]["GLOBAL"];
+                if (long.Parse(global["ilang"]) == v)
+                {
+                    return long.Parse(global["ID"]);
+                }
+                else
+                {
+                    if (global["ilangAlso"].Split(',').Contains(v.ToString()))
+                    {
+                        return long.Parse(global["ID"]);
+                    }
+                }
+            }
+            return long.Parse(LanguageSettings["English"]["GLOBAL"]["ID"]);
         }
 
         private static void HandlePossibleAmpersand(string name, MenuFlyoutItemBase mfib)
@@ -620,5 +667,8 @@ namespace PelotonIDE.Presentation
         {
             tabCommandLine.Text = BuildTabCommandLine();
         }
+
+        [GeneratedRegex("\\{\\*?\\\\[^{}]+}|[{}]|\\\\\\n?[A-Za-z]+\\n?(?:-?\\d+)?[ ]?", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-AU")]
+        private static partial Regex CustomRTFRegex();
     }
 }

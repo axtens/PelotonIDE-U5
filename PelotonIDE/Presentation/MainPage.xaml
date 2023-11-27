@@ -26,9 +26,25 @@
         <SolidColorBrush Color="DarkSlateGray" x:Key="TopNavigationViewItemBackgroundSelectedPointerOver"/>
         <SolidColorBrush Color="DarkGray" x:Key="TopNavigationViewItemBackgroundPressed"/>
         <SolidColorBrush Color="DarkSlateGray" x:Key="TopNavigationViewItemBackgroundSelectedPressed"/>
-        
-        <SolidColorBrush Color="#F9F8BD" x:Key="ProtiumYellow" />
-        
+
+        <SolidColorBrush Color="#F9F8BD" x:Key="TextControlBackgroundPointerOver"/>
+        <SolidColorBrush Color="#F9F8BD" x:Key="TextControlBackgroundFocused"/>
+        <SolidColorBrush Color="#F9F8BD" x:Key="TextControlBackground"/>
+
+
+        <Style TargetType="RichEditBox" x:Key="CustomRichEditBoxStyle">
+            <Setter Property="Background" Value="#F9F8BD"/>
+            <!-- Set your desired background color here -->
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RichEditBox">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter Content="{TemplateBinding Header}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Page.Resources>
     <RelativePanel x:Name="relativePanel" Margin="0,0,0,0" HorizontalAlignment="Stretch">
         <RelativePanel.Resources>
@@ -119,11 +135,11 @@
 
 
             <MenuBarItem Title="Search" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuSearch" />
-            
+
             <MenuBarItem Title="Format" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuFormat" />
-            
+
             <MenuBarItem Title="View" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuView" />
-            
+
             <MenuBarItem Title="Interpreter" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuRun" >
                 <MenuFlyoutSubItem x:Name="mnuRunningMode" Text="Running Mode" >
                     <MenuFlyoutItem Text="Quiet"               x:Name="mnuQuiet"         Click="InterpretBar_RunningMode_Click" />
@@ -148,7 +164,7 @@
                     <MenuFlyoutItem Text="P3 Peloton" x:Name="mnuNewEngine"  Click="ChooseNewEngine_Click" />
                 </MenuFlyoutSubItem>
             </MenuBarItem>
-            
+
             <MenuBarItem Title="Source" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuSource">
                 <MenuFlyoutItem x:Name="mnuTranslate" Text="Translate" Click="MnuTranslate_Click"/>
                 <MenuFlyoutItem Name="mnuVariableLength" Click="VariableLength_Click" Text="Variable Length">
@@ -174,7 +190,7 @@
                     </MenuFlyoutItem>
                 </MenuFlyoutSubItem>
             </MenuBarItem>
-            
+
             <MenuBarItem Title="Settings" BorderBrush="LightGray"  BorderThickness="1" x:Name="mnuSettings" >
 
                 <MenuFlyoutItem x:Name="mnuIDEConfiguration" Text="Editor Configuration" Click="MnuIDEConfiguration_Click"  Command="{Binding GoToIDEConfig}" />

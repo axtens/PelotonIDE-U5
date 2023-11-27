@@ -8,6 +8,8 @@
     <PropertyGroup>
         <LangVersion>latest</LangVersion>
         <UnoUIUseRoslynSourceGenerators>true</UnoUIUseRoslynSourceGenerators>
+        <ApplicationIcon>Peloton_Logo_MarkOnly_TransparentBack-lighter.ico</ApplicationIcon>
+        <PackageIcon>Peloton_Logo_MarkOnly_TransparentBack-lighter.png</PackageIcon>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
@@ -100,6 +102,7 @@
         <UpToDateCheckInput Remove="Presentation\TranslatePage.xaml" />
     </ItemGroup>
     <ItemGroup>
+        <Content Include="Peloton_Logo_MarkOnly_TransparentBack-lighter.ico" />
         <Content Include="Presentation\PerTabInterpreterParameters.json" />
         <Content Include="Presentation\GlobalInterpreterParameters.json" />
         <Content Include="Presentation\FactorySettings.json" />
@@ -107,6 +110,12 @@
     </ItemGroup>
     <ItemGroup>
       <AdditionalFiles Remove="Presentation\TranslatePage.xaml" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Include="..\Peloton_Logo_MarkOnly_TransparentBack-lighter.png">
+        <Pack>True</Pack>
+        <PackagePath>\</PackagePath>
+      </None>
     </ItemGroup>
     <ItemGroup>
       <Reference Include="EncodingChecker">

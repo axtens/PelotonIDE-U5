@@ -1,8 +1,13 @@
-﻿using Microsoft.UI.Input;
+﻿using Microsoft.UI;
+using Microsoft.UI.Input;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+
+// using Uno.Extensions.Authentication.WinUI;
 
 using Windows.ApplicationModel.DataTransfer;
 using Windows.System;
+using Windows.UI;
 using Windows.UI.Core;
 
 namespace PelotonIDE.Presentation
@@ -18,14 +23,10 @@ namespace PelotonIDE.Presentation
             IsRTF = true;
             SelectionFlyout = null;
             ContextFlyout = null;
-            //Style = new Style()
-            //{
-            //    TargetType = CustomRichEditBox,
-            //    Setters = {}
-            //}
-            //Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0xF9, 0xF8, 0xBD));
-            //Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0xF9, 0xF8, 0xBD));
-
+            // https://stackoverflow.com/ai/search/16916
+            //Background = new SolidColorBrush(Color.FromArgb(255,0xF9,0xF8, 0xbd)); // "#F9F8BD"
+            //PointerEntered += (sender, e) => e.Handled = true;
+            //Style = (Style)Application.Current.Resources["CustomRichEditBoxStyle"];
         }
 
         protected override void OnKeyDown(KeyRoutedEventArgs e)

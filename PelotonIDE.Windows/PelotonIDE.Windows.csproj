@@ -10,6 +10,9 @@
 		<UseWinUI>true</UseWinUI>
 		<EnableMsixTooling>true</EnableMsixTooling>
 	</PropertyGroup>
+    <PropertyGroup>
+        <LangVersion>latest</LangVersion>
+    </PropertyGroup>
 	<PropertyGroup>
 		<!-- Bundles the WinAppSDK binaries (Uncomment for unpackaged builds) -->
 		<!-- <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained> -->
@@ -22,17 +25,17 @@
 		<GenerateTestArtifacts>True</GenerateTestArtifacts>
 		<AppxBundle>Always</AppxBundle>
 		<AppxBundlePlatforms>x64</AppxBundlePlatforms>
-		<AppInstallerUri>c:\temp\pi</AppInstallerUri>
+		<AppInstallerUri>file:///c:/temp/pi</AppInstallerUri>
 		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
 		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
 		<PackageCertificateThumbprint>2CB45DDA66A114860391D05C4132C58DD59D9FEB</PackageCertificateThumbprint>
 		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
 		<AppxPackageSigningTimestampServerUrl>https://timestamp.comodoca.com</AppxPackageSigningTimestampServerUrl>
-		<ApplicationIcon>Peloton_Logo_MarkOnly_TransparentBack-lighter.ico</ApplicationIcon>
 		<Authors>Bruce Axtens, Hakob Chalikyan</Authors>
 		<Company>The Peloton Project</Company>
 		<Product>PelotonIDE</Product>
 		<PackageIcon>Peloton_Logo_MarkOnly_TransparentBack-lighter.png</PackageIcon>
+		<ApplicationIcon>Peloton_Logo_MarkOnly_TransparentBack-lighter.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -77,13 +80,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Content Include="Peloton_Logo_MarkOnly_TransparentBack-lighter.ico">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
+	  <Content Include="Peloton_Logo_MarkOnly_TransparentBack-lighter.ico" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="..\..\..\..\..\..\Downloads\Peloton_Logo_MarkOnly_TransparentBack-lighter.png">
+	  <None Include="..\Peloton_Logo_MarkOnly_TransparentBack-lighter.png">
 	    <Pack>True</Pack>
 	    <PackagePath>\</PackagePath>
 	  </None>
