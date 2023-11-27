@@ -34,8 +34,6 @@
 		<Authors>Bruce Axtens, Hakob Chalikyan</Authors>
 		<Company>The Peloton Project</Company>
 		<Product>PelotonIDE</Product>
-		<PackageIcon>Peloton_Logo_MarkOnly_TransparentBack-lighter.png</PackageIcon>
-		<ApplicationIcon>Peloton_Logo_MarkOnly_TransparentBack-lighter.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -8,8 +8,6 @@
     <PropertyGroup>
         <LangVersion>latest</LangVersion>
         <UnoUIUseRoslynSourceGenerators>true</UnoUIUseRoslynSourceGenerators>
-        <ApplicationIcon>Peloton_Logo_MarkOnly_TransparentBack-lighter.ico</ApplicationIcon>
-        <PackageIcon>Peloton_Logo_MarkOnly_TransparentBack-lighter.png</PackageIcon>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
