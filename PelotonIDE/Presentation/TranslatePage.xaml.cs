@@ -207,7 +207,6 @@ namespace PelotonIDE.Presentation
 
             var spaced = chkSpaceOut.IsChecked ?? false;
             return TranslatePage.ProcessCode(code, source, target, spaced);
-
         }
 
         private static string ProcessCode(string buff, Plex sourcePlex, Plex targetPlex, bool spaceOut)
@@ -220,9 +219,9 @@ namespace PelotonIDE.Presentation
                 for (int i = matches[mi].Groups[1].Captures.Count - 1; i >= 0; i--)
                 {
                     var capture = matches[mi].Groups[1].Captures[i];
-                    if (sourcePlex.OpcodesByKey.ContainsKey(capture.Value))
+                    if (sourcePlex.OpcodesByKey.ContainsKey(capture.Value.ToUpper(System.Globalization.CultureInfo.InvariantCulture)))
                     {
-                        var opcode = sourcePlex.OpcodesByKey[capture.Value];
+                        var opcode = sourcePlex.OpcodesByKey[capture.Value.ToUpper(System.Globalization.CultureInfo.InvariantCulture)];
                         if (targetPlex.OpcodesByValue.ContainsKey(opcode))
                         {
                             var newKey = targetPlex.OpcodesByValue[opcode];
@@ -288,6 +287,5 @@ namespace PelotonIDE.Presentation
                     TranslateCode(code, ((ListBoxItem)sourceLanguageList.SelectedItem).Name, ((ListBoxItem)targetLanguageList.SelectedItem).Name));
             // targetText.FlowDirection = GetFlowDirection(((ListBoxItem)targetLanguageList.SelectedItem).Name);
         }
-
     }
 }

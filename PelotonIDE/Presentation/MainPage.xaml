@@ -347,7 +347,7 @@
                         </Button>
                     </TabView.TabStripFooter>
                     <TabView.TabItems>
-                        <TabViewItem Header="Output" IsSelected="True" IsClosable="False" Background="DarkGray" Foreground="White" DoubleTapped="OutputText_DoubleTapped" >
+                        <TabViewItem Header="Output" IsSelected="True" IsClosable="False" Background="DarkGray" Foreground="White" RightTapped="TabViewItem_Output_RightTapped" >
                             <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto"
                                               HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto"
@@ -360,7 +360,7 @@
                                 </ScrollViewer>
                             </Border>
                         </TabViewItem>
-                        <TabViewItem Header="Error" IsClosable="False" Background="DarkGray" Foreground="White" DoubleTapped="ErrorText_DoubleTapped" >
+                        <TabViewItem Header="Error" IsClosable="False" Background="DarkGray" Foreground="White" RightTapped="TabViewItem_Error_RightTapped" >
                             <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto"  VerticalScrollMode="Auto"
                                               HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto"
@@ -380,7 +380,7 @@
         <StackPanel x:Name="statusBar" RelativePanel.AlignBottomWithPanel="True" Orientation="Horizontal" Height="35">
             <!--<TextBlock Text="0 words" Margin="0,0,20,0" Name="wordCount"/>-->
             <Border BorderThickness="1" BorderBrush="Black">
-                <ContentControl DoubleTapped="ContentControl_DoubleTapped">
+                <ContentControl RightTapped="ContentControl_LanguageName_RightTapped">
                     <TextBlock Name="languageName" Height="30" Width="200" VerticalAlignment="Bottom" HorizontalAlignment="Left" Padding="5" />
                 </ContentControl>
             </Border>
@@ -426,4 +426,5 @@
         </StackPanel>
 
     </RelativePanel>
+
 </Page>

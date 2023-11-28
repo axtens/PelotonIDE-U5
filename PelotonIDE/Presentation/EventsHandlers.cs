@@ -459,81 +459,54 @@ namespace PelotonIDE.Presentation
                 outputDockingFlyout.Hide();
             }
         }
-        private void ContentControl_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-        { /*
-            var me = (ContentControl)sender;
-            
-            var sub = new MenuFlyoutSubItem()
-        {
-                Text = LanguageSettings[LastSelectedInterpreterLanguageName!]["frmMain"]["mnuLanguage"],
-                BorderThickness = new Thickness(1, 1, 1, 1),
-                BorderBrush = new SolidColorBrush() { Color = Colors.LightGray },
-                Name = "mnuLanguage"
-            };
-
-            var globals = LanguageSettings[LastSelectedInterpreterLanguageName!]["GLOBAL"];
-            var count = LanguageSettings.Keys.Count;
-            for (var i = 0; i < count; i++)
-            {
-                var names = from lang in LanguageSettings.Keys
-                            where LanguageSettings.ContainsKey(lang) && LanguageSettings[lang]["GLOBAL"]["ID"] == i.ToString()
-                            let name = LanguageSettings[lang]["GLOBAL"]["Name"]
-                            select name;
-                if (names.Any())
-                {
-                    MenuFlyoutItem menuFlyoutItem = new()
-                    {
-                        Text = globals[$"{100 + i + 1}"],
-                        Name = names.First(),
-                        Foreground = names.First() == LastSelectedInterpreterLanguageName ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
-                        Background = names.First() == LastSelectedInterpreterLanguageName ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
-                    };
-                    menuFlyoutItem.Click += ContentControl_Click;
-                    sub.Items.Add(menuFlyoutItem);
-                }
-            }
-            me.Content = sub;
-
-            */
-            ContentDialog dialog = new()
-            {
-                XamlRoot = this.XamlRoot,
-                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                Title = "Interpreter language",
-                Content = "Selection of interpreter language\ncurrently only available from menu",
-                CloseButtonText = "OK"
-            };
-            _ = dialog.ShowAsync();
-        }
 
         private void ContentControl_Click(object sender, RoutedEventArgs e)
         {
             var me = (MenuFlyoutItem)sender;
+            var name = me.Name;
+            // change the current tab to that lang but don't change the pertab settings
+            var globals = LanguageSettings[name]["GLOBAL"];
+            var id = globals["ID"];
+
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            //CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+
+            var currentTabSettings = navigationViewItem.TabSettingsDict;
+            currentTabSettings["Language"]["Defined"] = true;
+            currentTabSettings["Language"]["Value"] = long.Parse(id);
+
+            //UpdateLanguageInInterpreterMenu((MenuBarItem)me, name);
+            UpdateLanguageInContextualMenu(me, name);
+            if (me.Tag is Dictionary<string, object> parent)
+            {
+                if (parent.ContainsKey("ContentControl") && parent.ContainsKey("ContentControlPreviousContent"))
+                    parent["ContentControl"] = parent["ContentControlPreviousContent"];
+                // ((MenuFlyoutSubItem)parent["MenuFlyoutSubItem"]) ;
+            }
         }
 
-        private void ErrorText_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        private void UpdateLanguageInContextualMenu(MenuFlyoutItem me, string name)
         {
-            ContentDialog dialog = new()
+            if (me.Tag is Dictionary<string, object> parent)
             {
-                XamlRoot = this.XamlRoot,
-                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                Title = "Error Text selection",
-                Content = "Double-click selection not available",
-                CloseButtonText = "OK"
-            };
-            _ = dialog.ShowAsync();
-        }
-        private void OutputText_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            ContentDialog dialog = new()
-            {
-                XamlRoot = this.XamlRoot,
-                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                Title = "Output Text selection",
-                Content = "Double-click selection not available",
-                CloseButtonText = "OK"
-            };
-            _ = dialog.ShowAsync();
+                IList<MenuFlyoutItemBase> subMenus = ((MenuFlyoutSubItem)parent["MenuFlyoutSubItem"]).Items; //  from menu in ((MenuFlyoutSubItem)me.Tag).Items select menu;
+                if (subMenus != null)
+                {
+                    foreach (var item in subMenus)
+                    {
+                        if (item.Name == name)
+                        {
+                            item.Foreground = new SolidColorBrush(Colors.White);
+                            item.Background = new SolidColorBrush(Colors.Black);
+                        }
+                        else
+                        {
+                            item.Foreground = new SolidColorBrush(Colors.Black);
+                            item.Background = new SolidColorBrush(Colors.White);
+                        }
+                    }
+                }
+            }
         }
     }
 }

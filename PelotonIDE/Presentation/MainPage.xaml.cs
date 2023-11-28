@@ -1,9 +1,11 @@
 ﻿using Microsoft.UI;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
 
 using Newtonsoft.Json;
 
+using System.Collections;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -86,11 +88,11 @@ namespace PelotonIDE.Presentation
             _richEditBoxes[customREBox.Tag] = customREBox;
             tab1.TabSettingsDict = null;
             tabControl.SelectedItem = tab1;
-            customREBox.Focus(FocusState.Keyboard);
             App._window.Closed += MainWindow_Closed;
-
             // InterpreterLanguageSelectionBuilder(contextualLanguagesFlyout, "mnuLanguage", some_click);
             UpdateTabCommandLine();
+            customREBox.Focus(FocusState.Keyboard);
+            customREBox.Document.Selection.SetIndex(Microsoft.UI.Text.TextRangeUnit.Character,1, false);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -324,7 +326,7 @@ namespace PelotonIDE.Presentation
         /// </summary>
         private void MainWindow_Closed(object sender, object e)
         {
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            //CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             if (_richEditBoxes.Count > 0)
             {
                 foreach (var _reb in _richEditBoxes)
@@ -340,7 +342,7 @@ namespace PelotonIDE.Presentation
                             if (content == key as string)
                             {
                                 Debug.WriteLine(cti.Content);
-                                cti.Focus(FocusState.Pointer);
+                                cti.Focus(FocusState.Keyboard); // was Pointer
                             }
                         }
                     }
@@ -670,5 +672,87 @@ namespace PelotonIDE.Presentation
 
         [GeneratedRegex("\\{\\*?\\\\[^{}]+}|[{}]|\\\\\\n?[A-Za-z]+\\n?(?:-?\\d+)?[ ]?", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-AU")]
         private static partial Regex CustomRTFRegex();
+
+        private void TabViewItem_Output_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = "Output Text context menu",
+                Content = "right-click menu not enabled",
+                CloseButtonText = "OK"
+            };
+            _ = dialog.ShowAsync();
+        }
+
+        private void TabViewItem_Error_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = "Error Text context menu",
+                Content = "right-click menu not enabled",
+                CloseButtonText = "OK"
+            };
+            _ = dialog.ShowAsync();
+        }
+
+        private void ContentControl_LanguageName_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            //ContentDialog dialog = new()
+            //{
+            //    XamlRoot = this.XamlRoot,
+            //    Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+            //    Title = "Interpreter language",
+            //    Content = "Context menu selection of interpreter language\ncurrently only available from menu",
+            //    CloseButtonText = "OK"
+            //};
+            //_ = dialog.ShowAsync();
+
+            var me = (ContentControl)sender;
+
+            var prevContent = me.Content;
+
+            
+
+            MenuFlyoutSubItem mfsu = new()
+            {
+                //Text = "»",
+                BorderThickness = new Thickness(1, 1, 1, 1),
+                BorderBrush = new SolidColorBrush() { Color = Colors.LightGray },
+                Name = "mnuLanguage"
+            };
+
+            var globals = LanguageSettings[LastSelectedInterpreterLanguageName!]["GLOBAL"];
+            var count = LanguageSettings.Keys.Count;
+            for (var i = 0; i < count; i++)
+            {
+                var names = from lang in LanguageSettings.Keys
+                            where LanguageSettings.ContainsKey(lang) && LanguageSettings[lang]["GLOBAL"]["ID"] == i.ToString()
+                            let name = LanguageSettings[lang]["GLOBAL"]["Name"]
+                            select name;
+                if (names.Any())
+                {
+                    MenuFlyoutItem menuFlyoutItem = new()
+                    {
+                        Text = globals[$"{100 + i + 1}"],
+                        Name = names.First(),
+                        Foreground = names.First() == LastSelectedInterpreterLanguageName ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
+                        Background = names.First() == LastSelectedInterpreterLanguageName ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
+                        Tag = new Dictionary<string, object>()
+                        {
+                            {"MenuFlyoutSubItem",mfsu },
+                            {"ContentControlPreviousContent",prevContent },
+                            {"ContentControl" ,me}
+                        }
+                    };
+                    menuFlyoutItem.Click += ContentControl_Click; // this has to reset the cell to its original value
+                    mfsu.Items.Add(menuFlyoutItem);
+                }
+            }
+            me.Content = mfsu;
+        }
     }
 }
