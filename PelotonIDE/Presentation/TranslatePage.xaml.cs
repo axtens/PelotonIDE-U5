@@ -19,6 +19,7 @@ using LanguageConfigurationStructureSelection =
         System.Collections.Generic.Dictionary<string, string>>;
 using Microsoft.UI.Text;
 using static System.Net.Mime.MediaTypeNames;
+using Uno;
 
 namespace PelotonIDE.Presentation
 {
@@ -137,6 +138,7 @@ namespace PelotonIDE.Presentation
                     Source = "TranslatePage",
                     KVPs = new() {
                         { "TargetLanguage" , (long)targetLanguageList.SelectedIndex },
+                        { "TargetVariableLength", chkVarLengthTo.IsChecked ?? false},
                         { "TargetText" ,  txt}
                     }
                 });
@@ -152,7 +154,7 @@ namespace PelotonIDE.Presentation
         {
             if (targetLanguageList.SelectedItem == null) return;
             if (sourceLanguageList.SelectedItem == null) return;
-            ListBoxItem? selectedLanguage = targetLanguageList.SelectedItem as ListBoxItem;
+            // ListBoxItem? selectedLanguage = targetLanguageList.SelectedItem as ListBoxItem;
             // sourceText.FlowDirection = GetFlowDirection(((ListBoxItem)sourceLanguageList.SelectedItem).Name);
 
             //targetText.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, selectedLanguage.Name);
@@ -165,7 +167,7 @@ namespace PelotonIDE.Presentation
             // targetText.FlowDirection = GetFlowDirection(((ListBoxItem)targetLanguageList.SelectedItem).Name);
         }
 
-        private FlowDirection GetFlowDirection(string name)
+        private FlowDirection GetFlowDirection(string name) // REMOVE. RTL is not this
         {
             var thisLanguage = Langs[name];
             var thisGlobal = thisLanguage["GLOBAL"];
@@ -175,7 +177,7 @@ namespace PelotonIDE.Presentation
 
         private void TargetLanguageList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ListBoxItem? selectedLanguage = targetLanguageList.SelectedItem as ListBoxItem;
+            //ListBoxItem? selectedLanguage = targetLanguageList.SelectedItem as ListBoxItem;
             //targetText.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, selectedLanguage.Name);
             // sourceText.FlowDirection = GetFlowDirection(((ListBoxItem)sourceLanguageList.SelectedItem).Name);
             sourceText.Document.GetText(TextGetOptions.None, out string code);
@@ -206,12 +208,45 @@ namespace PelotonIDE.Presentation
             target = variableTarget && targetPlexVariable.Any() ? targetPlexVariable.First() : targetPlexFixed.First();
 
             var spaced = chkSpaceOut.IsChecked ?? false;
-            return TranslatePage.ProcessCode(code, source, target, spaced);
+
+            return variableSource && sourcePlexVariable.Any() ? TranslatePage.ProcessVariableToFixedOrVariable(code, source, target, spaced) : TranslatePage.ProcessFixedToFixedOrVariableWithOrWithoutSpace(code, source, target, spaced);
         }
 
-        private static string ProcessCode(string buff, Plex sourcePlex, Plex targetPlex, bool spaceOut)
+        private static string ProcessVariableToFixedOrVariable(string code, Plex source, Plex target, bool spaced)
         {
-            var pattern = PelotonRegex();
+            var wordList = from word in source.OpcodesByKey.Keys orderby -word.Length select word;
+            var pattern = PelotonVariableSpacedPattern();
+            MatchCollection matches = pattern.Matches(code);
+            for (int mi = matches.Count - 1; mi >= 0; mi--)
+            {
+                for (int i = matches[mi].Groups[1].Captures.Count - 1; i >= 0; i--)
+                {
+                    var capture = matches[mi].Groups[1].Captures[i];
+                    foreach (var word in wordList)
+                    {
+                        if (capture.Value.Contains(word))
+                        {
+                            if (source.OpcodesByKey.TryGetValue(word, out long opcode))
+                            {
+                                if (target.OpcodesByValue.TryGetValue(opcode, out string? value))
+                                {
+                                    var newKey = value;
+                                    //var next = code.Substring(capture.Index + word.Length, 1);
+                                    //var wordLength = next == " " ? word.Length + 1 : word.Length;
+                                    //code = code.Remove(capture.Index, wordLength)
+                                    //    .Insert(capture.Index, newKey + ((spaced && next != ">") ? " " : ""));
+                                    code = code.Replace(word, newKey);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return code;
+        }
+        private static string ProcessFixedToFixedOrVariableWithOrWithoutSpace(string buff, Plex sourcePlex, Plex targetPlex, bool spaceOut)
+        {
+            var pattern = PelotonFixedSpacedPattern();
             MatchCollection matches = pattern.Matches(buff);
             for (int mi = matches.Count - 1; mi >= 0; mi--)
             {
@@ -219,12 +254,12 @@ namespace PelotonIDE.Presentation
                 for (int i = matches[mi].Groups[1].Captures.Count - 1; i >= 0; i--)
                 {
                     var capture = matches[mi].Groups[1].Captures[i];
-                    if (sourcePlex.OpcodesByKey.ContainsKey(capture.Value.ToUpper(System.Globalization.CultureInfo.InvariantCulture)))
+                    var key = capture.Value.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim();
+                    if (sourcePlex.OpcodesByKey.TryGetValue(key, out long opcode))
                     {
-                        var opcode = sourcePlex.OpcodesByKey[capture.Value.ToUpper(System.Globalization.CultureInfo.InvariantCulture)];
-                        if (targetPlex.OpcodesByValue.ContainsKey(opcode))
+                        if (targetPlex.OpcodesByValue.TryGetValue(opcode, out string? value))
                         {
-                            var newKey = targetPlex.OpcodesByValue[opcode];
+                            var newKey = value;
                             var next = buff.Substring(capture.Index + capture.Length, 1);
                             buff = buff.Remove(capture.Index, capture.Length)
                                 .Insert(capture.Index, newKey + ((spaceOut && next != ">") ? " " : ""));
@@ -233,12 +268,12 @@ namespace PelotonIDE.Presentation
                 }
                 // var tag = matches[mi].Groups[1].Captures[0];
             }
-            return buff;
+            return targetPlex.Meta.Variable ? buff.Replace("<@ ", "<# ").Replace("</@>", "</#>") : buff;
         }
 
         private void SourceLanguageList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ListBoxItem? selectedLanguage = sourceLanguageList.SelectedItem as ListBoxItem;
+            //ListBoxItem? selectedLanguage = sourceLanguageList.SelectedItem as ListBoxItem;
             //sourceText.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, selectedLanguage.Name);
             // sourceText.FlowDirection = GetFlowDirection(((ListBoxItem)sourceLanguageList.SelectedItem).Name);
             sourceText.Document.GetText(TextGetOptions.None, out string code);
@@ -253,14 +288,17 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        [GeneratedRegex("<(?:@|#) (...)+?>", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled, "en-AU")]
-        private static partial Regex PelotonRegex();
+        [GeneratedRegex(@"<# (.+?)>", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled, "en-AU")]
+        private static partial Regex PelotonVariableSpacedPattern();
+
+        [GeneratedRegex(@"<@ (...\s{0,1})+?>", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled, "en-AU")]
+        private static partial Regex PelotonFixedSpacedPattern();
 
         private void ChkVarLengthFrom_Click(object sender, RoutedEventArgs e)
         {
             if (targetLanguageList.SelectedItem == null) return;
             if (sourceLanguageList.SelectedItem == null) return;
-            ListBoxItem? selectedLanguage = targetLanguageList.SelectedItem as ListBoxItem;
+            //ListBoxItem? selectedLanguage = targetLanguageList.SelectedItem as ListBoxItem;
             //targetText.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, selectedLanguage.Name);
             // sourceText.FlowDirection = GetFlowDirection(((ListBoxItem)sourceLanguageList.SelectedItem).Name);
             sourceText.Document.GetText(TextGetOptions.None, out string code);
@@ -276,7 +314,7 @@ namespace PelotonIDE.Presentation
         {
             if (targetLanguageList.SelectedItem == null) return;
             if (sourceLanguageList.SelectedItem == null) return;
-            ListBoxItem? selectedLanguage = targetLanguageList.SelectedItem as ListBoxItem;
+            //ListBoxItem? selectedLanguage = targetLanguageList.SelectedItem as ListBoxItem;
             //targetText.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, selectedLanguage.Name);
             // sourceText.FlowDirection = GetFlowDirection(((ListBoxItem)sourceLanguageList.SelectedItem).Name);
             sourceText.Document.GetText(TextGetOptions.None, out string code);

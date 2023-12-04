@@ -92,7 +92,7 @@ namespace PelotonIDE.Presentation
             // InterpreterLanguageSelectionBuilder(contextualLanguagesFlyout, "mnuLanguage", some_click);
             UpdateTabCommandLine();
             customREBox.Focus(FocusState.Keyboard);
-            customREBox.Document.Selection.SetIndex(Microsoft.UI.Text.TextRangeUnit.Character,1, false);
+            customREBox.Document.Selection.SetIndex(Microsoft.UI.Text.TextRangeUnit.Character, 1, false);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -134,16 +134,22 @@ namespace PelotonIDE.Presentation
                     };
                     navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
                     navigationViewItem.TabSettingsDict["Language"]["Value"] = (long)parameters.KVPs["TargetLanguage"];
-
+                    if (parameters.KVPs.TryGetValue("TargetVariableLength", out object? value))
+                    {
+                        navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = (bool)value;
+                        navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = (bool)value;
+                    }
                     richEditBox.Tag = navigationViewItem.Tag;
-                    tabControl.Content = richEditBox;
+                    //tabControl.Content = richEditBox; // Needed?
 
                     _richEditBoxes[richEditBox.Tag] = richEditBox;
                     tabControl.MenuItems.Add(navigationViewItem);
                     tabControl.SelectedItem = navigationViewItem;
                     richEditBox.Focus(FocusState.Keyboard);
-                    UpdateLanguageName(navigationViewItem.TabSettingsDict);
-                    UpdateTabCommandLine();
+                    languageName.Text = null;
+                    languageName.Text = GetTabsLanguageName(navigationViewItem.TabSettingsDict);
+                    tabCommandLine.Text = BuildTabCommandLine();
+
                     break;
             }
         }
@@ -715,7 +721,7 @@ namespace PelotonIDE.Presentation
 
             var prevContent = me.Content;
 
-            
+
 
             MenuFlyoutSubItem mfsu = new()
             {

@@ -501,21 +501,21 @@ namespace PelotonIDE.Presentation
             currentRichEditBox.Document.Selection.Delete(Microsoft.UI.Text.TextRangeUnit.Character, 1);
         }
 
-        private async void TransformButton_Click(object sender, RoutedEventArgs e)
-        {
-            Frame.Navigate(typeof(TranslatePage), new NavigationData()
-            {
-                Source = "MainPage",
-                KVPs = new()
-                {
-                    { "RichEditBox", (CustomRichEditBox)tabControl!.Content },
-                    { "InterpreterLanguage",  LastSelectedInterpreterLanguageID},
-                    { "InterfaceLanguageID", InterfaceLanguageID},
-                    { "InterfaceLanguageName",InterfaceLanguageName! },
-                    { "Languages", LanguageSettings! }
-                }
-            });
-        }
+        //private async void TransformButton_Click(object sender, RoutedEventArgs e)
+        //{
+        //    Frame.Navigate(typeof(TranslatePage), new NavigationData()
+        //    {
+        //        Source = "MainPage",
+        //        KVPs = new()
+        //        {
+        //            { "RichEditBox", (CustomRichEditBox)tabControl!.Content },
+        //            { "InterpreterLanguage",  LastSelectedInterpreterLanguageID},
+        //            { "InterfaceLanguageID", InterfaceLanguageID},
+        //            { "InterfaceLanguageName",InterfaceLanguageName! },
+        //            { "Languages", LanguageSettings! }
+        //        }
+        //    });
+        //}
 
         private void ToggleOutputButton_Click(object sender, RoutedEventArgs e)
         {
@@ -725,18 +725,24 @@ namespace PelotonIDE.Presentation
 
         private void MnuTranslate_Click(object sender, RoutedEventArgs e)
         {
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+            currentRichEditBox.Document.GetText(TextGetOptions.None, out string? text);
+            var tabLangId = from kvp in navigationViewItem.TabSettingsDict where kvp.Key == "Language" select kvp.Value;
             Frame.Navigate(typeof(TranslatePage), new NavigationData()
             {
                 Source = "MainPage",
                 KVPs = new()
                 {
                     { "RichEditBox", (CustomRichEditBox)tabControl!.Content },
+                    { "TabLanguageID",tabLangId.First()["Value"] },
+                    { "TabVariableLength", text.Contains("<# ") && text.Contains("</#>") },
                     { "InterpreterLanguage",  LastSelectedInterpreterLanguageID},
                     { "InterfaceLanguageID", InterfaceLanguageID},
                     { "InterfaceLanguageName",InterfaceLanguageName! },
                     { "Languages", LanguageSettings! }
                 }
-            });
+            }) ;
         }
 
         private void ChooseNewEngine_Click(object sender, RoutedEventArgs e)

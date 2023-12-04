@@ -263,7 +263,7 @@
             </Button.Content>
         </Button>
         <Button x:Name="butTransform" AutomationProperties.Name="Transform" ToolTipService.ToolTip="Transform"
-            RelativePanel.RightOf="butSelectAll" RelativePanel.Below="menuBar" Click="TransformButton_Click">
+            RelativePanel.RightOf="butSelectAll" RelativePanel.Below="menuBar" Click="MnuTranslate_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE13C;"/>
             </Button.Content>
