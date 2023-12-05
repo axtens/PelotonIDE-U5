@@ -464,6 +464,7 @@ namespace PelotonIDE.Presentation
         {
             var me = (MenuFlyoutItem)sender;
             var name = me.Name;
+            languageName.Text = name;
             // change the current tab to that lang but don't change the pertab settings
             var globals = LanguageSettings[name]["GLOBAL"];
             var id = globals["ID"];
@@ -489,7 +490,7 @@ namespace PelotonIDE.Presentation
         {
             if (me.Tag is Dictionary<string, object> parent)
             {
-                IList<MenuFlyoutItemBase> subMenus = ((MenuFlyoutSubItem)parent["MenuFlyoutSubItem"]).Items; //  from menu in ((MenuFlyoutSubItem)me.Tag).Items select menu;
+                IList<MenuFlyoutItemBase> subMenus = ((MenuFlyout)parent["MenuFlyout"]).Items; //  from menu in ((MenuFlyoutSubItem)me.Tag).Items select menu;
                 if (subMenus != null)
                 {
                     foreach (var item in subMenus)

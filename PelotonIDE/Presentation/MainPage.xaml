@@ -348,19 +348,33 @@
                     </TabView.TabStripFooter>
                     <TabView.TabItems>
                         <TabViewItem Header="Output" IsSelected="True" IsClosable="False" Background="DarkGray" Foreground="White" RightTapped="TabViewItem_Output_RightTapped" >
+                            <FlyoutBase.AttachedFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem x:Name="FileCopyOutputButton" Text="File Copy" Click="FileCopyOutputButton_Click"/>
+                                    <MenuFlyoutItem x:Name="ClipboardCopyOutputButton" Text="Clipboard Copy" Click="ClipboardCopyOutputButton_Click"/>
+                                    <MenuFlyoutItem x:Name="ClearOutputButton" Text="Clear" Click="ClearOutputButton_Click"/>
+                                </MenuFlyout>
+                            </FlyoutBase.AttachedFlyout>
                             <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto"
                                               HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto"
                                               VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                                     <RichTextBlock x:Name="outputText" IsTextSelectionEnabled="True"   >
                                         <Paragraph>
-
+                                            
                                         </Paragraph>
                                     </RichTextBlock>
                                 </ScrollViewer>
                             </Border>
                         </TabViewItem>
                         <TabViewItem Header="Error" IsClosable="False" Background="DarkGray" Foreground="White" RightTapped="TabViewItem_Error_RightTapped" >
+                            <FlyoutBase.AttachedFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem x:Name="FileCopyErrorButton" Text="File Copy" Click="FileCopyErrorButton_Click"/>
+                                    <MenuFlyoutItem x:Name="ClipboardCopyErrorButton" Text="Clipboard Copy" Click="ClipboardCopyErrorButton_Click"/>
+                                    <MenuFlyoutItem x:Name="ClearErrorButton" Text="Clear" Click="ClearErrorButton_Click"/>
+                                </MenuFlyout>
+                            </FlyoutBase.AttachedFlyout>
                             <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto"  VerticalScrollMode="Auto"
                                               HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto"

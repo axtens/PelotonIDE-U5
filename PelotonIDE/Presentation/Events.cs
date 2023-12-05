@@ -154,6 +154,7 @@ namespace PelotonIDE.Presentation
                 }
                 InterpreterNew ??= "Interpreter.P3";
             }
+            (tabControl.Content as CustomRichEditBox).Focus(FocusState.Keyboard);
         }
 
         private void UpdateEngineSelectionFromFactorySettings()

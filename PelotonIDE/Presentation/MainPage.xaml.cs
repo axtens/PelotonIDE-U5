@@ -1,5 +1,6 @@
 ﻿using Microsoft.UI;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
 
@@ -9,8 +10,11 @@ using System.Collections;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
+using Windows.ApplicationModel.DataTransfer;
 
 using Windows.Storage;
+using Windows.Storage.Pickers;
+using Windows.Storage.Provider;
 using Windows.System;
 
 using FactorySettingsStructure = System.Collections.Generic.Dictionary<string, object>;
@@ -91,8 +95,7 @@ namespace PelotonIDE.Presentation
             App._window.Closed += MainWindow_Closed;
             // InterpreterLanguageSelectionBuilder(contextualLanguagesFlyout, "mnuLanguage", some_click);
             UpdateTabCommandLine();
-            customREBox.Focus(FocusState.Keyboard);
-            customREBox.Document.Selection.SetIndex(Microsoft.UI.Text.TextRangeUnit.Character, 1, false);
+            customREBox.Document.Selection.SetIndex(Microsoft.UI.Text.TextRangeUnit.Character,1, false);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -668,7 +671,7 @@ namespace PelotonIDE.Presentation
 
             List<string> paras = [.. BuildWith(GlobalInterpreterParameters), .. BuildWith(navigationViewItem.TabSettingsDict)];
 
-            return string.Join(" ", [.. paras]);
+            return string.Join<string>(" ", [.. paras]);
         }
 
         private void UpdateTabCommandLine()
@@ -681,55 +684,29 @@ namespace PelotonIDE.Presentation
 
         private void TabViewItem_Output_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            ContentDialog dialog = new()
-            {
-                XamlRoot = this.XamlRoot,
-                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                Title = "Output Text context menu",
-                Content = "right-click menu not enabled",
-                CloseButtonText = "OK"
-            };
-            _ = dialog.ShowAsync();
+            FrameworkElement? senderElement = sender as FrameworkElement;
+
+            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
+            flyoutBase.ShowAt(senderElement);
         }
 
         private void TabViewItem_Error_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            ContentDialog dialog = new()
-            {
-                XamlRoot = this.XamlRoot,
-                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                Title = "Error Text context menu",
-                Content = "right-click menu not enabled",
-                CloseButtonText = "OK"
-            };
-            _ = dialog.ShowAsync();
+            FrameworkElement? senderElement = sender as FrameworkElement;
+
+            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
+            flyoutBase.ShowAt(senderElement);
         }
 
         private void ContentControl_LanguageName_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            //ContentDialog dialog = new()
-            //{
-            //    XamlRoot = this.XamlRoot,
-            //    Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-            //    Title = "Interpreter language",
-            //    Content = "Context menu selection of interpreter language\ncurrently only available from menu",
-            //    CloseButtonText = "OK"
-            //};
-            //_ = dialog.ShowAsync();
-
             var me = (ContentControl)sender;
 
             var prevContent = me.Content;
 
 
 
-            MenuFlyoutSubItem mfsu = new()
-            {
-                //Text = "»",
-                BorderThickness = new Thickness(1, 1, 1, 1),
-                BorderBrush = new SolidColorBrush() { Color = Colors.LightGray },
-                Name = "mnuLanguage"
-            };
+            MenuFlyout mf = new MenuFlyout();
 
             var globals = LanguageSettings[LastSelectedInterpreterLanguageName!]["GLOBAL"];
             var count = LanguageSettings.Keys.Count;
@@ -749,16 +726,136 @@ namespace PelotonIDE.Presentation
                         Background = names.First() == LastSelectedInterpreterLanguageName ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
                         Tag = new Dictionary<string, object>()
                         {
-                            {"MenuFlyoutSubItem",mfsu },
+                            {"MenuFlyout",mf },
                             {"ContentControlPreviousContent",prevContent },
                             {"ContentControl" ,me}
                         }
                     };
                     menuFlyoutItem.Click += ContentControl_Click; // this has to reset the cell to its original value
-                    mfsu.Items.Add(menuFlyoutItem);
+                    mf.Items.Add(menuFlyoutItem);
                 }
             }
-            me.Content = mfsu;
+            FrameworkElement? senderElement = sender as FrameworkElement;
+
+            //the code can show the flyout in your mouse click 
+            mf.ShowAt(sender as UIElement, e.GetPosition(sender as UIElement));
+
+            //me.Content = mfsu;
+        }
+
+        private async void FileCopyOutputButton_Click(object sender, RoutedEventArgs e)
+        {
+            FileSavePicker savePicker = new()
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+            };
+
+            // Dropdown of file types the user can save the file as
+            savePicker.FileTypeChoices.Add("Text File", new List<string>() { ".txt" });
+
+            savePicker.SuggestedFileName = "Output";
+
+            // For Uno.WinUI-based apps
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
+            WinRT.Interop.InitializeWithWindow.Initialize(savePicker, hwnd);
+
+            StorageFile file = await savePicker.PickSaveFileAsync();
+            if (file != null)
+            {
+                // Prevent updates to the remote version of the file until we
+                // finish making changes and call CompleteUpdatesAsync.
+                CachedFileManager.DeferUpdates(file);
+
+                outputText.SelectAll();
+                String output = outputText.SelectedText;
+                // write to file
+                await FileIO.WriteTextAsync(file, output);
+
+                // Let Windows know that we're finished changing the file so the
+                // other app can update the remote version of the file.
+                FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
+                if (status != FileUpdateStatus.Complete)
+                {
+                    Windows.UI.Popups.MessageDialog errorBox =
+                        new($"File {file.Name} couldn't be saved.");
+                    await errorBox.ShowAsync();
+                }
+            }
+        }
+
+        private void ClipboardCopyOutputButton_Click(object sender, RoutedEventArgs e)
+        {
+            outputText.SelectAll();
+            String output = outputText.SelectedText;
+            DataPackage dataPackage = new();
+            dataPackage.SetText(output);
+            Clipboard.SetContent(dataPackage);
+        }
+
+        private void ClearOutputButton_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var block in outputText.Blocks)
+            {
+                (block as Paragraph).Inlines.Clear();
+            }
+        }
+        private async void FileCopyErrorButton_Click(object sender, RoutedEventArgs e)
+        {
+            FileSavePicker savePicker = new()
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+            };
+
+            // Dropdown of file types the user can save the file as
+            savePicker.FileTypeChoices.Add("Text File", new List<string>() { ".txt" });
+
+            savePicker.SuggestedFileName = "Error";
+
+            // For Uno.WinUI-based apps
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
+            WinRT.Interop.InitializeWithWindow.Initialize(savePicker, hwnd);
+
+            StorageFile file = await savePicker.PickSaveFileAsync();
+            if (file != null)
+            {
+                // Prevent updates to the remote version of the file until we
+                // finish making changes and call CompleteUpdatesAsync.
+                CachedFileManager.DeferUpdates(file);
+
+                errorText.SelectAll();
+                String error = errorText.SelectedText;
+                // write to file
+                await FileIO.WriteTextAsync(file, error);
+
+                // Let Windows know that we're finished changing the file so the
+                // other app can update the remote version of the file.
+                FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
+                if (status != FileUpdateStatus.Complete)
+                {
+                    Windows.UI.Popups.MessageDialog errorBox =
+                        new($"File {file.Name} couldn't be saved.");
+                    await errorBox.ShowAsync();
+                }
+            }
+
+        }
+
+        private void ClipboardCopyErrorButton_Click(object sender, RoutedEventArgs e)
+        {
+            errorText.SelectAll();
+            String error = errorText.SelectedText;
+            DataPackage dataPackage = new();
+            dataPackage.SetText(error);
+            Clipboard.SetContent(dataPackage);
+
+        }
+
+        private void ClearErrorButton_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var block in errorText.Blocks)
+            {
+                (block as Paragraph).Inlines.Clear();
+            }
         }
     }
 }
