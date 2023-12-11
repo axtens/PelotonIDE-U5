@@ -155,6 +155,13 @@ namespace PelotonIDE.Presentation
                 InterpreterNew ??= "Interpreter.P3";
             }
             (tabControl.Content as CustomRichEditBox).Focus(FocusState.Keyboard);
+
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            var currentLanguageName = GetTabsLanguageName(navigationViewItem.TabSettingsDict);
+            if (languageName.Text != currentLanguageName)
+            {
+                languageName.Text = currentLanguageName;
+            }
         }
 
         private void UpdateEngineSelectionFromFactorySettings()
