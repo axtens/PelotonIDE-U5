@@ -704,9 +704,7 @@ namespace PelotonIDE.Presentation
 
             var prevContent = me.Content;
 
-
-
-            MenuFlyout mf = new MenuFlyout();
+            MenuFlyout mf = new();
 
             var globals = LanguageSettings[LastSelectedInterpreterLanguageName!]["GLOBAL"];
             var count = LanguageSettings.Keys.Count;
@@ -837,7 +835,6 @@ namespace PelotonIDE.Presentation
                     await errorBox.ShowAsync();
                 }
             }
-
         }
 
         private void ClipboardCopyErrorButton_Click(object sender, RoutedEventArgs e)
@@ -847,7 +844,6 @@ namespace PelotonIDE.Presentation
             DataPackage dataPackage = new();
             dataPackage.SetText(error);
             Clipboard.SetContent(dataPackage);
-
         }
 
         private void ClearErrorButton_Click(object sender, RoutedEventArgs e)

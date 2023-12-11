@@ -736,14 +736,22 @@ namespace PelotonIDE.Presentation
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
             currentRichEditBox.Document.GetText(TextGetOptions.None, out string? text);
-            var tabLangId = from kvp in navigationViewItem.TabSettingsDict where kvp.Key == "Language" select kvp.Value;
+            if (!navigationViewItem.TabSettingsDict.TryGetValue("Language", out Dictionary<string,object>? dict))
+            {
+                return;
+            }
+
+            var tabLangId = (long)dict["Value"];
+
+            var tabLangName = from lang in LanguageSettings where long.Parse(lang.Value["GLOBAL"]["ID"]) == tabLangId select lang.Key;
             Frame.Navigate(typeof(TranslatePage), new NavigationData()
             {
                 Source = "MainPage",
                 KVPs = new()
                 {
                     { "RichEditBox", (CustomRichEditBox)tabControl!.Content },
-                    { "TabLanguageID",tabLangId.First()["Value"] },
+                    { "TabLanguageID",tabLangId },
+                    { "TabLanguageName", tabLangName.First() },
                     { "TabVariableLength", text.Contains("<# ") && text.Contains("</#>") },
                     { "InterpreterLanguage",  LastSelectedInterpreterLanguageID},
                     { "InterfaceLanguageID", InterfaceLanguageID},

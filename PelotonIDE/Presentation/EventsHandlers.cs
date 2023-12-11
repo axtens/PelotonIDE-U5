@@ -484,6 +484,7 @@ namespace PelotonIDE.Presentation
                     parent["ContentControl"] = parent["ContentControlPreviousContent"];
                 // ((MenuFlyoutSubItem)parent["MenuFlyoutSubItem"]) ;
             }
+            UpdateTabCommandLine();
         }
 
         private void UpdateLanguageInContextualMenu(MenuFlyoutItem me, string name)

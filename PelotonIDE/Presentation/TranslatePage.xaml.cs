@@ -48,8 +48,10 @@ namespace PelotonIDE.Presentation
             if (parameters.Source == "MainPage")
             {
                 Langs = (LanguageConfigurationStructure)parameters.KVPs["Languages"];
+                var tabLanguageName = parameters.KVPs["TabLanguageName"].ToString();
+                var tabLanguageId = (int)(long)parameters.KVPs["TabLanguageID"];
                 var interfaceLanguageName = parameters.KVPs["InterfaceLanguageName"].ToString();
-                //var interfaceLanguageID = (int)(long)parameters.KVPs["InterfaceLanguageID"];
+                var interfaceLanguageID = (int)(long)parameters.KVPs["InterfaceLanguageID"];
 
                 FillLanguagesIntoList(Langs, interfaceLanguageName!, sourceLanguageList);
                 FillLanguagesIntoList(Langs, interfaceLanguageName!, targetLanguageList);
@@ -65,10 +67,10 @@ namespace PelotonIDE.Presentation
                 rtb.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string selectedText);
                 sourceText.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, selectedText);
 
-                var index = (int)(long)parameters.KVPs["InterpreterLanguage"];
-                sourceLanguageList.SelectedIndex = index;
+                //var index = (int)(long)parameters.KVPs["InterpreterLanguage"];
+                sourceLanguageList.SelectedIndex = tabLanguageId;
                 //sourceLanguageList.Focus(FocusState.Keyboard);
-                (sourceLanguageList.ItemContainerGenerator.ContainerFromIndex(index) as ListBoxItem)?.Focus(FocusState.Programmatic);
+                (sourceLanguageList.ItemContainerGenerator.ContainerFromIndex(tabLanguageId) as ListBoxItem)?.Focus(FocusState.Programmatic);
 
                 this.Plexes = GetAllPlexes();
             }
