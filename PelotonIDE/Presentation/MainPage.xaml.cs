@@ -472,7 +472,7 @@ namespace PelotonIDE.Presentation
             StringBuilder rtfBuilder = new(rtfContent);
 
             var ques = new Regex(Regex.Escape("?"));
-            string info = @"\info {\*\ilang ?} {\*\ilength ?} } "; // {\*\ipadout ?}
+            string info = @"{\info {\*\ilang ?} {\*\ilength ?} } "; // {\*\ipadout ?}
             info = ques.Replace(info, $"{navigationViewItem.TabSettingsDict["Language"]["Value"]}", 1);
             info = ques.Replace(info, (bool)navigationViewItem.TabSettingsDict["VariableLength"]["Value"] ? "1" : "0", 1);
             // info = ques.Replace(info, (bool)navigationViewItem.TabSettingsDict["Spaced"]["Value"] ? "1" : "0", 1);

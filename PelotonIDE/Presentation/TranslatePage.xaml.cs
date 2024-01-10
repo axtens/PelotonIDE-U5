@@ -20,6 +20,8 @@ using LanguageConfigurationStructureSelection =
 using Microsoft.UI.Text;
 using static System.Net.Mime.MediaTypeNames;
 using Uno;
+using System.ComponentModel.Design;
+using Uno.Extensions;
 
 namespace PelotonIDE.Presentation
 {
@@ -66,6 +68,10 @@ namespace PelotonIDE.Presentation
                 var rtb = ((CustomRichEditBox)parameters.KVPs["RichEditBox"]);
                 rtb.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string selectedText);
                 sourceText.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, selectedText);
+                if (selectedText.Contains("</#>"))
+                {
+                    chkVarLengthFrom.IsChecked = true;
+                }
 
                 //var index = (int)(long)parameters.KVPs["InterpreterLanguage"];
                 sourceLanguageList.SelectedIndex = tabLanguageId;
@@ -141,6 +147,7 @@ namespace PelotonIDE.Presentation
                     KVPs = new() {
                         { "TargetLanguage" , (long)targetLanguageList.SelectedIndex },
                         { "TargetVariableLength", chkVarLengthTo.IsChecked ?? false},
+                        { "TargetPadOutCode", chkSpaceOut.IsChecked ?? false},
                         { "TargetText" ,  txt}
                     }
                 });
@@ -169,13 +176,13 @@ namespace PelotonIDE.Presentation
             // targetText.FlowDirection = GetFlowDirection(((ListBoxItem)targetLanguageList.SelectedItem).Name);
         }
 
-        private FlowDirection GetFlowDirection(string name) // REMOVE. RTL is not this
+        /*private FlowDirection GetFlowDirection(string name) // REMOVE. RTL is not this
         {
             var thisLanguage = Langs[name];
             var thisGlobal = thisLanguage["GLOBAL"];
             var thisRTL = bool.Parse(thisGlobal["RTL"] ?? "false");
             return thisRTL ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
-        }
+        }*/
 
         private void TargetLanguageList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -211,12 +218,53 @@ namespace PelotonIDE.Presentation
 
             var spaced = chkSpaceOut.IsChecked ?? false;
 
-            return variableSource && sourcePlexVariable.Any() ? TranslatePage.ProcessVariableToFixedOrVariable(code, source, target, spaced) : TranslatePage.ProcessFixedToFixedOrVariableWithOrWithoutSpace(code, source, target, spaced);
+            if (variableSource && sourcePlexVariable.Any())
+            {
+                return ProcessVariableToFixedOrVariable(code, source, target, spaced);
+            }
+            else
+            {
+                return ProcessFixedToFixedOrVariableWithOrWithoutSpace(code, source, target, spaced);
+            }
         }
 
         private static string ProcessVariableToFixedOrVariable(string code, Plex source, Plex target, bool spaced)
         {
-            var wordList = from word in source.OpcodesByKey.Keys orderby -word.Length select word;
+            var variableLengthWords = from variableLengthWord in source.OpcodesByKey.Keys orderby -variableLengthWord.Length select variableLengthWord;
+
+            var fixedLengthEquivalents = (from word in variableLengthWords
+                                          let sourceop = source.OpcodesByKey[word]
+                                          let targetword = target.OpcodesByValue[sourceop]
+                                          select (word, targetword)).ToDictionary(x => x.Item1, x => x.Item2);
+
+            var codeBlocks = GetCodeBlocks(code); // in reverse order
+
+            foreach (var block in codeBlocks)
+            {
+                var codeChunk = block.Value;
+                foreach (var vlw in variableLengthWords)
+                {
+                    if (!codeChunk.Contains(vlw, StringComparison.CurrentCulture)) continue;
+                    if (spaced)
+                    {
+                        if (codeChunk.IndexOf(vlw) + vlw.Length < codeChunk.Length && codeChunk.Substring(codeChunk.IndexOf(vlw) + vlw.Length, 1) == " ")
+                        {
+                            codeChunk = codeChunk.Replace(vlw + " ", fixedLengthEquivalents[vlw]);
+                        }
+                        else
+                        {
+                            codeChunk = codeChunk.Replace(vlw, fixedLengthEquivalents[vlw]);
+                        }
+                    }
+                    else
+                    {
+                        codeChunk = codeChunk.Replace(vlw, fixedLengthEquivalents[vlw]);
+                    }
+                }
+                code = code.Remove(block.Index, block.Length);
+                code = code.Insert(block.Index, codeChunk);
+            }
+            /*
             var pattern = PelotonVariableSpacedPattern();
             MatchCollection matches = pattern.Matches(code);
             for (int mi = matches.Count - 1; mi >= 0; mi--)
@@ -224,28 +272,55 @@ namespace PelotonIDE.Presentation
                 for (int i = matches[mi].Groups[1].Captures.Count - 1; i >= 0; i--)
                 {
                     var capture = matches[mi].Groups[1].Captures[i];
-                    foreach (var word in wordList)
+                    foreach (var variableLengthWord in variableLengthWords)
                     {
-                        if (capture.Value.Contains(word))
+                        if (capture.Value.Contains(variableLengthWord))
                         {
-                            if (source.OpcodesByKey.TryGetValue(word, out long opcode))
+                            if (source.OpcodesByKey.TryGetValue(variableLengthWord, out long opcode))
                             {
                                 if (target.OpcodesByValue.TryGetValue(opcode, out string? value))
                                 {
                                     var newKey = value;
-                                    //var next = code.Substring(capture.Index + word.Length, 1);
-                                    //var wordLength = next == " " ? word.Length + 1 : word.Length;
-                                    //code = code.Remove(capture.Index, wordLength)
-                                    //    .Insert(capture.Index, newKey + ((spaced && next != ">") ? " " : ""));
-                                    code = code.Replace(word, newKey);
+                                    int idx = capture.Index;
+                                    int len = capture.Length;
+                                    string captured = code.Substring(idx, len);
+                                    
+                                    string[] parts = captured.Split(" ");
+                                    for (int part = parts.Length - 1;part >= 0 ; part--)
+                                    {
+                                        if (parts[part].Contains(variableLengthWord))
+                                            parts[part] = parts[part].Replace(variableLengthWord, newKey);
+                                    }
+                                    var reCaptured = spaced ? parts.JoinBy(" ") : parts.JoinBy("");
+                                    code = code.Remove(idx, len);
+                                    code = code.Insert(idx, reCaptured);
                                 }
                             }
                         }
+                        //var capval = capture.Value;
                     }
                 }
-            }
+            }*/
             return code;
         }
+
+        private static List<Capture> GetCodeBlocks(string code)
+        {
+            var codeBlocks = new List<Capture>();
+            var pattern = PelotonVariableSpacedPattern();
+            MatchCollection matches = pattern.Matches(code);
+            for (int mi = matches.Count - 1; mi >= 0; mi--)
+            {
+                for (int i = matches[mi].Groups[1].Captures.Count - 1; i >= 0; i--)
+                {
+                    Capture cap = matches[mi].Groups[1].Captures[i];
+                    if (cap == null) continue;
+                    codeBlocks.Add(cap);
+                }
+            }
+            return codeBlocks;
+        }
+
         private static string ProcessFixedToFixedOrVariableWithOrWithoutSpace(string buff, Plex sourcePlex, Plex targetPlex, bool spaceOut)
         {
             var pattern = PelotonFixedSpacedPattern();
