@@ -1,4 +1,7 @@
-﻿using Microsoft.UI;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+
+using Microsoft.UI;
+using Microsoft.UI.Text;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Documents;
@@ -6,16 +9,18 @@ using Microsoft.UI.Xaml.Input;
 
 using Newtonsoft.Json;
 
-using System.Collections;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
+
 using Windows.ApplicationModel.DataTransfer;
 
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.Storage.Provider;
 using Windows.System;
+
 
 using FactorySettingsStructure = System.Collections.Generic.Dictionary<string, object>;
 using InterpreterParametersStructure = System.Collections.Generic.Dictionary<string,
@@ -29,6 +34,9 @@ namespace PelotonIDE.Presentation
 {
     public sealed partial class MainPage : Page
     {
+        [GeneratedRegex("\\{\\*?\\\\[^{}]+}|[{}]|\\\\\\n?[A-Za-z]+\\n?(?:-?\\d+)?[ ]?", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-AU")]
+        private static partial Regex CustomRTFRegex();
+        private Object rtbLock = new();
         readonly Dictionary<object, CustomRichEditBox> _richEditBoxes = [];
         bool outputPanelShowing = true;
         enum OutputPanelPosition
@@ -40,23 +48,22 @@ namespace PelotonIDE.Presentation
         string? InterfaceLanguageName = "English";
         long InterfaceLanguageID = 0;
 
-        string? LastSelectedInterpreterLanguageName;
-        long LastSelectedInterpreterLanguageID;
+        string? InterpreterLanguageName;
+        long InterpreterLanguageID;
 
-        bool LastSelectedVariableLength;
-        //bool LastSelectedSpaced;
-        long LastSelectedQuietude = 2;
+        //bool VariableLength;
+        long Quietude = 2;
 
         OutputPanelPosition outputPanelPosition = OutputPanelPosition.Bottom;
         string? Engine = string.Empty;
         string? Scripts = string.Empty;
-        string? InterpreterOld = string.Empty;
-        string? InterpreterNew = string.Empty;
+        string? InterpreterP2 = string.Empty;
+        string? InterpreterP3 = string.Empty;
 
-        //string engineArguments = string.Empty;
+        int TabControlCounter = 2; // Because the XAML defines the first tab
 
-        InterpreterParametersStructure? GlobalInterpreterParameters = [];
         InterpreterParametersStructure? PerTabInterpreterParameters = [];
+
         /// <summary>
         /// does not change
         /// </summary>
@@ -64,22 +71,14 @@ namespace PelotonIDE.Presentation
         FactorySettingsStructure? FactorySettings = [];
         readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
 
-        public LanguageConfigurationStructure? LanguageSettings1 { get => LanguageSettings; set => LanguageSettings = value; }
+        // public LanguageConfigurationStructure? LanguageSettings1 { get => LanguageSettings; set => LanguageSettings = value; }
+
+        bool AfterTranslation = false;
 
         public MainPage()
         {
             this.InitializeComponent();
 
-            //System.Timers.Timer t = new(1000)
-            //{
-            //    AutoReset = true,
-            //    Enabled = true,
-
-            //    //Elapsed += new ElapsedEventHandler(OnTimedEvent_Tick)
-            //};
-            //t.Elapsed += TimerTick;
-            //t.Start();
-            // GetGlobals();
             CustomRichEditBox customREBox = new()
             {
                 Tag = tab1.Tag
@@ -87,140 +86,47 @@ namespace PelotonIDE.Presentation
             customREBox.KeyDown += RichEditBox_KeyDown;
             customREBox.AcceptsReturn = true;
 
-            // richEditBox.Background = 
             tabControl.Content = customREBox;
             _richEditBoxes[customREBox.Tag] = customREBox;
             tab1.TabSettingsDict = null;
             tabControl.SelectedItem = tab1;
             App._window.Closed += MainWindow_Closed;
-            // InterpreterLanguageSelectionBuilder(contextualLanguagesFlyout, "mnuLanguage", some_click);
-            UpdateTabCommandLine();
-            customREBox.Document.Selection.SetIndex(Microsoft.UI.Text.TextRangeUnit.Character,1, false);
-        }
-
-        protected override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            base.OnNavigatedTo(e);
-
-            if (e.Parameter == null)
-            {
-                return;
-            }
-
-            var parameters = (NavigationData)e.Parameter;
-
-            //var selectedLanguage = parameters.selectedLangauge;
-            //var translatedREB = parameters.translatedREB;
-            switch (parameters.Source)
-            {
-                case "IDEConfig":
-                    LocalSettings.Values[LocalSettings.Values["Engine"].ToString()] = parameters.KVPs["Interpreter"].ToString();
-                    LocalSettings.Values["Scripts"] = parameters.KVPs["Scripts"].ToString();
-                    break;
-                case "TranslatePage":
-                    CustomRichEditBox richEditBox = new()
-                    {
-                        IsDirty = true,
-                        IsRTF = true,
-                    };
-                    richEditBox.KeyDown += RichEditBox_KeyDown;
-                    richEditBox.AcceptsReturn = true;
-                    richEditBox.Document.SetText(Microsoft.UI.Text.TextSetOptions.UnicodeBidi, parameters.KVPs["TargetText"].ToString());
-
-                    CustomTabItem navigationViewItem = new()
-                    {
-                        Content = "Tab " + (tabControl.MenuItems.Count + 1),
-                        Tag = "Tab" + (tabControl.MenuItems.Count + 1),
-                        IsNewFile = true,
-                        TabSettingsDict = Clone(PerTabInterpreterParameters),
-                        Height = 30,
-                    };
-                    navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
-                    navigationViewItem.TabSettingsDict["Language"]["Value"] = (long)parameters.KVPs["TargetLanguage"];
-                    if (parameters.KVPs.TryGetValue("TargetVariableLength", out object? value))
-                    {
-                        navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = (bool)value;
-                        navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = (bool)value;
-                    }
-                    richEditBox.Tag = navigationViewItem.Tag;
-                    //tabControl.Content = richEditBox; // Needed?
-
-                    _richEditBoxes[richEditBox.Tag] = richEditBox;
-                    tabControl.MenuItems.Add(navigationViewItem);
-                    tabControl.SelectedItem = navigationViewItem;
-                    richEditBox.Focus(FocusState.Keyboard);
-                    languageName.Text = null;
-                    languageName.Text = GetTabsLanguageName(navigationViewItem.TabSettingsDict);
-                    tabCommandLine.Text = BuildTabCommandLine();
-
-                    break;
-            }
-        }
-
-        private InterpreterParametersStructure CopyFromGlobalCodeRunCargo()
-        {
-            InterpreterParametersStructure tsj = [];
-            foreach (var key in GlobalInterpreterParameters.Keys)
-            {
-                var kvp = GlobalInterpreterParameters[key];
-                tsj.Add(key, kvp);
-            }
-            return tsj;
-        }
-
-        private Dictionary<string, object> GetTabSettingsFromRegistry()
-        {
-            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-            Dictionary<string, object> dict = [];
-            foreach (var value in localSettings.Values)
-            {
-                if (value.Key.StartsWith("tab_"))
-                    dict.Add(value.Key, value.Value);
-            }
-            return dict;
-        }
-
-        public static async Task<InterpreterParametersStructure?> GetGlobalInterpreterParameters()
-        {
-            var tabSettingStorage = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\GlobalInterpreterParameters.json"));
-            string tabSettings = File.ReadAllText(tabSettingStorage.Path);
-            return JsonConvert.DeserializeObject<InterpreterParametersStructure>(tabSettings);
+            UpdateCommandLineInStatusBar();
+            customREBox.Document.Selection.SetIndex(TextRangeUnit.Character, 1, false);
         }
 
         public static async Task<InterpreterParametersStructure?> GetPerTabInterpreterParameters()
         {
-            var tabSettingStorage = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\PerTabInterpreterParameters.json"));
+            StorageFile tabSettingStorage = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\PerTabInterpreterParameters.json"));
             string tabSettings = File.ReadAllText(tabSettingStorage.Path);
             return JsonConvert.DeserializeObject<InterpreterParametersStructure>(tabSettings);
         }
 
         private static async Task<LanguageConfigurationStructure?> GetLanguageConfiguration()
         {
-            var languageConfig = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\LanguageConfiguration.json"));
+            StorageFile languageConfig = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\LanguageConfiguration.json"));
             string languageConfigString = File.ReadAllText(languageConfig.Path);
-            var languages = JsonConvert.DeserializeObject<LanguageConfigurationStructure>(languageConfigString);
+            LanguageConfigurationStructure? languages = JsonConvert.DeserializeObject<LanguageConfigurationStructure>(languageConfigString);
             languages.Remove("Viet");
             return languages;
         }
 
-        private async void InterfaceLanguageSelectionBuilder(MenuFlyoutSubItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
+        private async void InterfaceLanguageSelectionBuilder(MenuFlyoutSubItem menuBarItem, RoutedEventHandler routedEventHandler)
         {
-            //var tabset = await GetGlobalInterpreterParameters();
-
             if (InterfaceLanguageName == null || !LanguageSettings.ContainsKey(InterfaceLanguageName))
             {
                 return;
             }
 
             // what is current language?
-            var globals = LanguageSettings[InterfaceLanguageName]["GLOBAL"];
-            var count = LanguageSettings.Keys.Count;
-            for (var i = 0; i < count; i++)
+            Dictionary<string, string> globals = LanguageSettings[InterfaceLanguageName]["GLOBAL"];
+            int count = LanguageSettings.Keys.Count;
+            for (int i = 0; i < count; i++)
             {
-                var names = from lang in LanguageSettings.Keys
-                            where LanguageSettings.ContainsKey(lang) && LanguageSettings[lang]["GLOBAL"]["ID"] == i.ToString()
-                            let name = LanguageSettings[lang]["GLOBAL"]["Name"]
-                            select name;
+                IEnumerable<string> names = from lang in LanguageSettings.Keys
+                                            where LanguageSettings.ContainsKey(lang) && LanguageSettings[lang]["GLOBAL"]["ID"] == i.ToString()
+                                            let name = LanguageSettings[lang]["GLOBAL"]["Name"]
+                                            select name;
                 if (names.Any())
                 {
                     MenuFlyoutItem menuFlyoutItem = new()
@@ -238,8 +144,6 @@ namespace PelotonIDE.Presentation
 
         private async void InterpreterLanguageSelectionBuilder(MenuBarItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
         {
-            var tabset = await GetGlobalInterpreterParameters();
-
             LanguageSettings = await GetLanguageConfiguration();
 
             if (InterfaceLanguageName == null || !LanguageSettings.ContainsKey(InterfaceLanguageName))
@@ -247,13 +151,13 @@ namespace PelotonIDE.Presentation
                 return;
             }
 
-            var foo = from item in menuBarItem.Items where item.GetType().Name == "MenuFlyoutSubItem" && item.Name == menuLabel select item;
+            IEnumerable<MenuFlyoutItemBase> foo = from item in menuBarItem.Items where item.GetType().Name == "MenuFlyoutSubItem" && item.Name == menuLabel select item;
             if (foo.Any())
             {
                 return;
             }
 
-            var sub = new MenuFlyoutSubItem
+            MenuFlyoutSubItem sub = new()
             {
                 // <!--<MenuFlyoutSubItem Text="Choose interface language" BorderBrush="LightGray" BorderThickness="1" names:Name="SettingsBar_InterfaceLanguage" />-->
                 Text = LanguageSettings[InterfaceLanguageName]["frmMain"][menuLabel],
@@ -262,33 +166,31 @@ namespace PelotonIDE.Presentation
                 Name = menuLabel
             };
 
-            //var items = new List<MenuFlyoutItem>();
-
             // what is current language?
-            var globals = LanguageSettings[InterfaceLanguageName]["GLOBAL"];
-            var count = LanguageSettings.Keys.Count;
-            for (var i = 0; i < count; i++)
+            Dictionary<string, string> globals = LanguageSettings[InterfaceLanguageName]["GLOBAL"];
+            int count = LanguageSettings.Keys.Count;
+            for (int i = 0; i < count; i++)
             {
-                var names = from lang in LanguageSettings.Keys
-                            where LanguageSettings.ContainsKey(lang) && LanguageSettings[lang]["GLOBAL"]["ID"] == i.ToString()
-                            let name = LanguageSettings[lang]["GLOBAL"]["Name"]
-                            select name;
+                IEnumerable<string> names = from lang in LanguageSettings.Keys
+                                            where LanguageSettings.ContainsKey(lang) && LanguageSettings[lang]["GLOBAL"]["ID"] == i.ToString()
+                                            let name = LanguageSettings[lang]["GLOBAL"]["Name"]
+                                            select name;
                 if (names.Any())
                 {
                     MenuFlyoutItem menuFlyoutItem = new()
                     {
                         Text = globals[$"{100 + i + 1}"],
                         Name = names.First(),
-                        Foreground = names.First() == LastSelectedInterpreterLanguageName ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
-                        Background = names.First() == LastSelectedInterpreterLanguageName ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
+                        Foreground = names.First() == InterpreterLanguageName ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
+                        Background = names.First() == InterpreterLanguageName ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
                     };
-                    menuFlyoutItem.Click += routedEventHandler; //  Internationalization_Click;
+                    menuFlyoutItem.Click += routedEventHandler;
                     sub.Items.Add(menuFlyoutItem);
                 }
             }
             menuBarItem.Items.Add(sub);
         }
-        private static void ControlHighligter(MenuFlyoutItem? menuFlyoutItem, bool onish)
+        private static void MenuItemHighlightController(MenuFlyoutItem? menuFlyoutItem, bool onish)
         {
             if (onish)
             {
@@ -301,30 +203,44 @@ namespace PelotonIDE.Presentation
                 menuFlyoutItem.Background = new SolidColorBrush(Colors.White);
             }
         }
-        private void UpdateVariableLengthMode(InterpreterParameterStructure variableLength) => ControlHighligter(mnuVariableLength, (bool)variableLength["Defined"]);
+        // private void ToggleVariableLengthModeInMenu(InterpreterParameterStructure variableLength) => MenuItemHighlightController(mnuVariableLength, (bool)variableLength["Defined"]);
+        private void SetVariableLengthModeInMenu(MenuFlyoutItem? menuFlyoutItem, bool showEnabled)
+        {
+            if (showEnabled)
+            {
+                menuFlyoutItem.Background = new SolidColorBrush(Colors.Black);
+                menuFlyoutItem.Foreground = new SolidColorBrush(Colors.White);
+            }
+            else
+            {
+                menuFlyoutItem.Background = new SolidColorBrush(Colors.White);
+                menuFlyoutItem.Foreground = new SolidColorBrush(Colors.Black);
+            }
+        }
+        private void ToggleVariableLengthModeInMenu(bool flag) => MenuItemHighlightController(mnuVariableLength, flag);
 
-        private void UpdateMenuRunningMode(InterpreterParameterStructure quietude)
+        private void UpdateMenuRunningModeInMenu(InterpreterParameterStructure quietude)
         {
             if ((bool)quietude["Defined"])
             {
-                foreach (var item in from key in new string[] { "mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit" }
-                                     let items = from item in mnuRunningMode.Items where item.Name == key select item
-                                     from item in items
-                                     select item)
+                foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit" }
+                                                     let items = from item in mnuRunningMode.Items where item.Name == key select item
+                                                     from item in items
+                                                     select item)
                 {
-                    ControlHighligter((MenuFlyoutItem)item!, false);
+                    MenuItemHighlightController((MenuFlyoutItem)item!, false);
                 }
 
                 switch ((long)quietude["Value"])
                 {
                     case 0:
-                        ControlHighligter(mnuQuiet, true);
+                        MenuItemHighlightController(mnuQuiet, true);
                         break;
                     case 1:
-                        ControlHighligter(mnuVerbose, true);
+                        MenuItemHighlightController(mnuVerbose, true);
                         break;
                     case 2:
-                        ControlHighligter(mnuVerbosePauseOnExit, true);
+                        MenuItemHighlightController(mnuVerbosePauseOnExit, true);
                         break;
                 }
             }
@@ -335,19 +251,18 @@ namespace PelotonIDE.Presentation
         /// </summary>
         private void MainWindow_Closed(object sender, object e)
         {
-            //CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             if (_richEditBoxes.Count > 0)
             {
-                foreach (var _reb in _richEditBoxes)
+                foreach (KeyValuePair<object, CustomRichEditBox> _reb in _richEditBoxes)
                 {
                     if (_reb.Value.IsDirty)
                     {
-                        var key = _reb.Key;
-                        var aRichEditBox = _richEditBoxes[key];
-                        foreach (var item in tabControl.MenuItems)
+                        object key = _reb.Key;
+                        CustomRichEditBox aRichEditBox = _richEditBoxes[key];
+                        foreach (object? item in tabControl.MenuItems)
                         {
-                            var cti = item as CustomTabItem;
-                            var content = cti.Content.ToString().Replace(" ", "");
+                            CustomTabItem? cti = item as CustomTabItem;
+                            string content = cti.Content.ToString().Replace(" ", "");
                             if (content == key as string)
                             {
                                 Debug.WriteLine(cti.Content);
@@ -357,80 +272,38 @@ namespace PelotonIDE.Presentation
                     }
                 }
             }
-
-            ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-            localSettings.Values["OutputPanelPosition"] = outputPanelPosition.ToString();
-            localSettings.Values["OutputHeight"] = outputPanel.Height;
-            localSettings.Values["OutputWidth"] = outputPanel.Width;
-            localSettings.Values["InterfaceLanguageName"] = InterfaceLanguageName;
-            localSettings.Values["InterfaceLanguageID"] = InterfaceLanguageID;
-            localSettings.Values["LastSelectedInterpreterLanguageName"] = LastSelectedInterpreterLanguageName;
-            localSettings.Values["LastSelectedInterpreterLanguageID"] = LastSelectedInterpreterLanguageID;
-            localSettings.Values["LastSelectedVariableLength"] = LastSelectedVariableLength;
-            // localSettings.Values["LastSelectedSpaced"] = LastSelectedSpaced;
-            localSettings.Values["Engine"] = Engine;
-            localSettings.Values["Quietude"] = LastSelectedQuietude;
-            localSettings.Values["Scripts"] = Scripts;
-            localSettings.Values["Interpreter.P3"] = InterpreterNew;
-            localSettings.Values["Interpreter.P2"] = InterpreterOld;
         }
 
         #region Event Handlers
-        private void CreateNewRichEditBox()
+        private static InterpreterParametersStructure ClonePerTabSettings(InterpreterParametersStructure? perTabInterpreterParameters)
         {
-            CustomRichEditBox richEditBox = new()
+            InterpreterParametersStructure clone = new InterpreterParametersStructure();
+            foreach (string outerKey in perTabInterpreterParameters.Keys)
             {
-                IsDirty = false,
-            };
-            richEditBox.KeyDown += RichEditBox_KeyDown;
-            richEditBox.AcceptsReturn = true;
-
-            CustomTabItem navigationViewItem = new()
-            {
-                Content = "Tab " + (tabControl.MenuItems.Count + 1),
-                Tag = "Tab" + (tabControl.MenuItems.Count + 1),
-                IsNewFile = true,
-                TabSettingsDict = Clone(PerTabInterpreterParameters),
-                Height = 30
-            };
-            richEditBox.Tag = navigationViewItem.Tag;
-            tabControl.Content = richEditBox;
-            _richEditBoxes[richEditBox.Tag] = richEditBox;
-            tabControl.MenuItems.Add(navigationViewItem);
-            tabControl.SelectedItem = navigationViewItem; // in focus?
-            richEditBox.Focus(FocusState.Keyboard);
-            UpdateLanguageName(navigationViewItem.TabSettingsDict);
-            UpdateTabCommandLine();
-        }
-
-        private static InterpreterParametersStructure Clone(InterpreterParametersStructure? perTabInterpreterParameters)
-        {
-            var clone = new InterpreterParametersStructure();
-            foreach (var okey in perTabInterpreterParameters.Keys)
-            {
-                var inner = new Dictionary<string, object>();
-                foreach (var ikey in perTabInterpreterParameters[okey].Keys)
+                FactorySettingsStructure inner = new Dictionary<string, object>();
+                foreach (string innerKey in perTabInterpreterParameters[outerKey].Keys)
                 {
-                    inner[ikey] = perTabInterpreterParameters[okey][ikey];
+                    inner[innerKey] = perTabInterpreterParameters[outerKey][innerKey];
                 }
-                clone[okey] = inner;
+                clone[outerKey] = inner;
             }
             return clone;
         }
 
-        public string GetTabsLanguageName(InterpreterParametersStructure? tabSettingJson)
+        public string GetLanguageNameOfCurrentTab(InterpreterParametersStructure? tabSettingJson)
         {
-            var langValue = InterfaceLanguageID;
-            var langName = string.Empty;
-            // select from LanguageSettings the record where GLOBAL.ID matches langValue
-            var languages = from lang in LanguageSettings.Keys
-                            where long.Parse(LanguageSettings[lang]["GLOBAL"]["ID"]) == langValue
-                            select LanguageSettings[lang];
+            long langValue = InterfaceLanguageID;
+            string langName = string.Empty;
+
+            IEnumerable<Dictionary<string, Dictionary<string, string>>> languages = from lang in LanguageSettings.Keys
+                                                                                    where long.Parse(LanguageSettings[lang]["GLOBAL"]["ID"]) == langValue
+                                                                                    select LanguageSettings[lang];
+
             if (languages.Any())
             {
-                var first = languages.First();
-                var value = (long)tabSettingJson["Language"]["Value"];
-                var type = value.GetType().Name;
+                Dictionary<string, Dictionary<string, string>> first = languages.First();
+                long value = (long)tabSettingJson["Language"]["Value"];
+                string type = value.GetType().Name;
                 long i = 0;
                 if (type == "Int32")
                 {
@@ -442,163 +315,164 @@ namespace PelotonIDE.Presentation
                     i = (long)value;
                 }
 
-                var nameName = $"{101 + i}";
+                string nameName = $"{101 + i}";
                 langName = first["GLOBAL"][nameName];
             }
             return langName;
         }
 
-        private void UpdateLanguageName(InterpreterParametersStructure? tabSettingJson)
+        private void UpdateLanguageNameInStatusBar(InterpreterParametersStructure? tabSettingJson)
         {
-            languageName.Text = GetTabsLanguageName(tabSettingJson);
-            LastSelectedInterpreterLanguageID = (long)tabSettingJson["Language"]["Value"];
-            LastSelectedInterpreterLanguageName = languageName.Text;
-            ApplicationData.Current.LocalSettings.Values["LastSelectedInterpreterLanguageName"] = LastSelectedInterpreterLanguageName;
-            ApplicationData.Current.LocalSettings.Values["LastSelectedInterpreterLanguageID"] = LastSelectedInterpreterLanguageID;
+            languageName.Text = GetLanguageNameOfCurrentTab(tabSettingJson);
+            InterpreterLanguageID = (long)tabSettingJson["Language"]["Value"];
+            InterpreterLanguageName = GetLanguageNameFromID(InterpreterLanguageID); // languageName.Text;
+            Type_1_UpdateVirtualRegistry("InterpreterLanguageName", InterpreterLanguageName);
+            Type_1_UpdateVirtualRegistry("InterpreterLanguageID", InterpreterLanguageID);
         }
+
+        private string? GetLanguageNameFromID(long interpreterLanguageID) => (from lang
+                                                                              in LanguageSettings
+                                                                              where long.Parse(lang.Value["GLOBAL"]["ID"]) == interpreterLanguageID
+                                                                              select lang.Value["GLOBAL"]["Name"]).First();
 
         #endregion
 
-        //public static string Reverse(string s)
-        //{
-        //    char[] charArray = s.ToCharArray();
-        //    Array.Reverse(charArray);
-        //    return new string(charArray);
-        //}
-
-        public void HandleCustomPropertySaving(StorageFile file, CustomRichEditBox customRichEditBox, CustomTabItem navigationViewItem)
+        public void HandleCustomPropertySaving(StorageFile file, CustomTabItem navigationViewItem)
         {
             string rtfContent = File.ReadAllText(file.Path);
             StringBuilder rtfBuilder = new(rtfContent);
 
-            var ques = new Regex(Regex.Escape("?"));
+            Regex ques = new Regex(Regex.Escape("?"));
             string info = @"{\info {\*\ilang ?} {\*\ilength ?} } "; // {\*\ipadout ?}
             info = ques.Replace(info, $"{navigationViewItem.TabSettingsDict["Language"]["Value"]}", 1);
             info = ques.Replace(info, (bool)navigationViewItem.TabSettingsDict["VariableLength"]["Value"] ? "1" : "0", 1);
-            // info = ques.Replace(info, (bool)navigationViewItem.TabSettingsDict["Spaced"]["Value"] ? "1" : "0", 1);
 
-            var regex = CustomRTFRegex();
+            Regex regex = CustomRTFRegex();
 
-            var matches = regex.Matches(rtfContent);
+            MatchCollection matches = regex.Matches(rtfContent);
 
-            var infos = from match in matches where match.Value == @"\info" select match;
+            IEnumerable<Match> infos = from match in matches where match.Value == @"\info" select match;
 
             if (infos.Any())
             {
-                var fullBlock = rtfContent.Substring(infos.First().Index, infos.First().Length);
-                var blockMatches = regex.Matches(fullBlock);
+                string fullBlock = rtfContent.Substring(infos.First().Index, infos.First().Length);
+                MatchCollection blockMatches = regex.Matches(fullBlock);
             }
             else
             {
                 const string start = @"{\rtf1";
-                var i = rtfContent.IndexOf(start);
-                var j = i + start.Length;
+                int i = rtfContent.IndexOf(start);
+                int j = i + start.Length;
                 rtfBuilder.Insert(j, info);
             }
             File.WriteAllText(file.Path, rtfBuilder.ToString(), Encoding.ASCII);
         }
 
-        public void HandleCustomPropertyLoading(StorageFile file, CustomRichEditBox customRichEditBox, CustomTabItem navigationViewItem)
+        public void HandleCustomPropertyLoading(StorageFile file, CustomRichEditBox customRichEditBox)
         {
             string rtfContent = File.ReadAllText(file.Path);
-            var regex = CustomRTFRegex();
+            Regex regex = CustomRTFRegex();
+            string orientation = "00";
+            MatchCollection matches = regex.Matches(rtfContent);
 
-            var matches = regex.Matches(rtfContent);
-
-            var infos = from match in matches where match.Value.StartsWith(@"\info") select match;
+            IEnumerable<Match> infos = from match in matches where match.Value.StartsWith(@"\info") select match;
             if (infos.Any())
             {
-                var ilang = from match in matches where match.Value.Contains(@"\ilang") select match;
+                IEnumerable<Match> ilang = from match in matches where match.Value.Contains(@"\ilang") select match;
                 if (ilang.Any())
                 {
-                    var items = ilang.First().Value.Split(' ');
+                    string[] items = ilang.First().Value.Split(' ');
                     if (items.Any())
                     {
-                        var internalLanguageID = ConvertILangToInternalLanguage(long.Parse(items[1].Replace("}", "")));
-                        navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
-                        navigationViewItem.TabSettingsDict["Language"]["Value"] = internalLanguageID;
+                        (long id, string orientation) internalLanguageIdAndOrientation = ConvertILangToInternalLanguageAndOrientation(long.Parse(items[1].Replace("}", "")));
+                        Type_3_UpdateInFocusTabSettings("Language", true, internalLanguageIdAndOrientation.id);
+                        orientation = internalLanguageIdAndOrientation.orientation;
                     }
                 }
-                var ilength = from match in matches where match.Value.Contains(@"\ilength") select match;
+                IEnumerable<Match> ilength = from match in matches where match.Value.Contains(@"\ilength") select match;
                 if (ilength.Any())
                 {
-                    var items = ilength.First().Value.Split(' ');
+                    string[] items = ilength.First().Value.Split(' ');
                     if (items.Any())
                     {
-                        var flag = items[1].Replace("}", "");
+                        string flag = items[1].Replace("}", "");
                         if (flag == "0")
                         {
-                            navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = false;
-                            navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = flag == "1";
+                            Type_3_UpdateInFocusTabSettings("VariableLength", false, false);
                         }
                         else
                         {
-                            navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = true;
-                            navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = flag == "1";
+                            Type_3_UpdateInFocusTabSettings("VariableLength", true, true);
                         }
                     }
                 }
             }
             else
             {
-                var deflang = from match in matches where match.Value.StartsWith(@"\deflang") select match;
+                IEnumerable<Match> deflang = from match in matches where match.Value.StartsWith(@"\deflang") select match;
                 if (deflang.Any())
                 {
-                    var deflangId = deflang.First().Value.Replace(@"\deflang", "");
-                    var internalLanguageID = ConvertILangToInternalLanguage(long.Parse(deflangId));
-                    navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
-                    navigationViewItem.TabSettingsDict["Language"]["Value"] = internalLanguageID;
+                    string deflangId = deflang.First().Value.Replace(@"\deflang", "");
+                    (long id, string orientation) internalLanguageIdAndOrientation = ConvertILangToInternalLanguageAndOrientation(long.Parse(deflangId));
+                    Type_3_UpdateInFocusTabSettings("Language", true, internalLanguageIdAndOrientation.id);
+                    orientation = internalLanguageIdAndOrientation.orientation;
                 }
                 else
                 {
-                    var lang = from match in matches where match.Value.StartsWith(@"\lang") select match;
+                    IEnumerable<Match> lang = from match in matches where match.Value.StartsWith(@"\lang") select match;
                     if (lang.Any())
                     {
-                        var langId = lang.First().Value.Replace(@"\lang", "");
-                        var internalLanguageID = ConvertILangToInternalLanguage(long.Parse(langId));
-                        navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
-                        navigationViewItem.TabSettingsDict["Language"]["Value"] = internalLanguageID;
+                        string langId = lang.First().Value.Replace(@"\lang", "");
+                        (long id, string orientation) internalLanguageIdAndOrientation = ConvertILangToInternalLanguageAndOrientation(long.Parse(langId));
+                        Type_3_UpdateInFocusTabSettings("Language", true, internalLanguageIdAndOrientation.id);
+                        orientation = internalLanguageIdAndOrientation.orientation;
                     }
                     else
                     {
-                        navigationViewItem.TabSettingsDict["Language"]["Defined"] = true;
-                        navigationViewItem.TabSettingsDict["Language"]["Value"] = (long)0;
+                        Type_3_UpdateInFocusTabSettings("Language", true, 0L);
                     }
                 }
                 if (rtfContent.Contains("<# "))
                 {
-                    navigationViewItem.TabSettingsDict["VariableLength"]["Defined"] = true;
-                    navigationViewItem.TabSettingsDict["VariableLength"]["Value"] = rtfContent.Contains("<# ");
+                    Type_3_UpdateInFocusTabSettings("Language", true, rtfContent.Contains("<# "));
                 }
+            }
+            if (orientation[1] == '1')
+            {
+                customRichEditBox.FlowDirection = FlowDirection.RightToLeft;
             }
         }
 
-        private long ConvertILangToInternalLanguage(long v)
+        private (long id, string orientation) ConvertILangToInternalLanguageAndOrientation(long v)
         {
             foreach (string language in LanguageSettings.Keys)
             {
-                var global = LanguageSettings[language]["GLOBAL"];
-                if (long.Parse(global["ilang"]) == v)
+                Dictionary<string, string> global = LanguageSettings[language]["GLOBAL"];
+                if (long.Parse(global["ID"]) == v)
                 {
-                    return long.Parse(global["ID"]);
+                    return (long.Parse(global["ID"]), global["TextOrientation"]);
                 }
                 else
                 {
                     if (global["ilangAlso"].Split(',').Contains(v.ToString()))
                     {
-                        return long.Parse(global["ID"]);
+                        return (long.Parse(global["ID"]), global["TextOrientation"]);
                     }
                 }
             }
-            return long.Parse(LanguageSettings["English"]["GLOBAL"]["ID"]);
+            return (long.Parse(LanguageSettings["English"]["GLOBAL"]["ID"]), LanguageSettings["English"]["GLOBAL"]["TextOrientation"]);
         }
 
-        private static void HandlePossibleAmpersand(string name, MenuFlyoutItemBase mfib)
+        private static void HandlePossibleAmpersandInMenuItem(string name, MenuFlyoutItemBase mfib)
         {
             if (name.Contains('&'))
             {
                 string accel = name.Substring(name.IndexOf("&") + 1, 1);
-                mfib.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = Enum.Parse<VirtualKey>(accel.ToUpperInvariant()), Modifiers = VirtualKeyModifiers.Menu });
+                mfib.KeyboardAccelerators.Add(new KeyboardAccelerator()
+                {
+                    Key = Enum.Parse<VirtualKey>(accel.ToUpperInvariant()),
+                    Modifiers = VirtualKeyModifiers.Menu
+                });
                 name = name.Replace("&", "");
             }
             switch (mfib.GetType().Name)
@@ -615,23 +489,31 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        private static void HandlePossibleAmpersand(string name, MenuBarItem mbi)
+        private static void HandlePossibleAmpersandInMenuItem(string name, MenuBarItem mbi)
         {
             if (name.Contains('&'))
             {
                 string accel = name.Substring(name.IndexOf("&") + 1, 1);
-                mbi.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = Enum.Parse<VirtualKey>(accel.ToUpperInvariant()), Modifiers = VirtualKeyModifiers.Menu });
+                mbi.KeyboardAccelerators.Add(new KeyboardAccelerator()
+                {
+                    Key = Enum.Parse<VirtualKey>(accel.ToUpperInvariant()),
+                    Modifiers = VirtualKeyModifiers.Menu
+                });
                 name = name.Replace("&", "");
             }
             mbi.Title = name;
         }
 
-        private static void HandlePossibleAmpersand(string name, MenuFlyoutItem mfi)
+        private static void HandlePossibleAmpersandInMenuItem(string name, MenuFlyoutItem mfi)
         {
             if (name.Contains('&'))
             {
                 string accel = name.Substring(name.IndexOf("&") + 1, 1);
-                mfi.KeyboardAccelerators.Add(new KeyboardAccelerator() { Key = Enum.Parse<VirtualKey>(accel.ToUpperInvariant()), Modifiers = VirtualKeyModifiers.Menu });
+                mfi.KeyboardAccelerators.Add(new KeyboardAccelerator()
+                {
+                    Key = Enum.Parse<VirtualKey>(accel.ToUpperInvariant()),
+                    Modifiers = VirtualKeyModifiers.Menu
+                });
                 name = name.Replace("&", "");
             }
             mfi.Text = name;
@@ -642,19 +524,20 @@ namespace PelotonIDE.Presentation
             static List<string> BuildWith(InterpreterParametersStructure? interpreterParametersStructure)
             {
                 List<string> paras = [];
+
                 if (interpreterParametersStructure != null)
                 {
-                    foreach (var key in interpreterParametersStructure.Keys)
+                    foreach (string key in interpreterParametersStructure.Keys)
                     {
                         if ((bool)interpreterParametersStructure[key]["Defined"])
                         {
-                            var entry = $"/{interpreterParametersStructure[key]["Key"]}";
-                            var value = interpreterParametersStructure[key]["Value"];
-                            var type = value.GetType().Name;
+                            string entry = $"/{interpreterParametersStructure[key]["Key"]}";
+                            object value = interpreterParametersStructure[key]["Value"];
+                            string type = value.GetType().Name;
                             switch (type)
                             {
                                 case "Boolean":
-                                    paras.Add(entry);
+                                    if ((bool)value) paras.Add(entry);
                                     break;
                                 default:
                                     paras.Add($"{entry}:{value}");
@@ -667,191 +550,99 @@ namespace PelotonIDE.Presentation
             }
 
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-
-            List<string> paras = [.. BuildWith(GlobalInterpreterParameters), .. BuildWith(navigationViewItem.TabSettingsDict)];
+            List<string> paras = [];
+            if (navigationViewItem != null)
+                paras = [.. BuildWith(navigationViewItem.TabSettingsDict)];
 
             return string.Join<string>(" ", [.. paras]);
         }
 
-        private void UpdateTabCommandLine()
+        private void UpdateCommandLineInStatusBar()
         {
-            tabCommandLine.Text = BuildTabCommandLine();
+            tabCommandLine.Text = BuildTabCommandLine(); ;
         }
 
-        [GeneratedRegex("\\{\\*?\\\\[^{}]+}|[{}]|\\\\\\n?[A-Za-z]+\\n?(?:-?\\d+)?[ ]?", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-AU")]
-        private static partial Regex CustomRTFRegex();
 
-        private void TabViewItem_Output_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        #region Getters
+        private object Type_1_GetVirtualRegistry(string name)
         {
-            FrameworkElement? senderElement = sender as FrameworkElement;
-
-            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
-            flyoutBase.ShowAt(senderElement);
+            object result = ApplicationData.Current.LocalSettings.Values[name];
+            Track("Type_1_GetVirtualRegistry", name, result);
+            return result;
         }
 
-        private void TabViewItem_Error_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        private T Type_1_GetVirtualRegistry<T>(string name)
         {
-            FrameworkElement? senderElement = sender as FrameworkElement;
-
-            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
-            flyoutBase.ShowAt(senderElement);
+            object result = ApplicationData.Current.LocalSettings.Values[name];
+            Track("Type_1_GetVirtualRegistry", name, result);
+            return (T)result;
         }
 
-        private void ContentControl_LanguageName_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        private bool Type_1_GetVirtualRegistry_Boolean(string name)
         {
-            var me = (ContentControl)sender;
+            object result = ApplicationData.Current.LocalSettings.Values[name];
+            Track("Type_1_GetVirtualRegistry_Boolean", name, result);
+            return (bool)result;
+        }
+        #endregion
 
-            var prevContent = me.Content;
+        #region Setters
 
-            MenuFlyout mf = new();
+        // 1. virt reg
+        private void Type_1_UpdateVirtualRegistry<T>(string name, T value)
+        {
+            Track("Type_1_UpdateVirtualRegistry", name, value);
+            ApplicationData.Current.LocalSettings.Values[name] = value;
+        }
 
-            var globals = LanguageSettings[LastSelectedInterpreterLanguageName!]["GLOBAL"];
-            var count = LanguageSettings.Keys.Count;
-            for (var i = 0; i < count; i++)
+        // 2. pertab
+        private void Type_2_UpdatePerTabSettings<T>(string name, bool enabled, T value)
+        {
+            Track("Type_2_UpdatePerTabSettings", name, enabled, value);
+            PerTabInterpreterParameters[name]["Defined"] = enabled;
+            PerTabInterpreterParameters[name]["Value"] = value!;
+        }
+
+        // 3. currtab
+        private void Type_3_UpdateInFocusTabSettings<T>(string name, bool enabled, T value)
+        {
+            Track("Type_3_UpdateInFocusTabSettings", name, enabled, value);
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            navigationViewItem.TabSettingsDict[name]["Defined"] = enabled;
+            navigationViewItem.TabSettingsDict[name]["Value"] = value!;
+        }
+        #endregion
+
+        public static void Track(params object?[] args)
+        {
+            StorageFolder folder = ApplicationData.Current.LocalFolder;
+            string path = Path.Combine(folder.Path, "pi.log");
+            List<string> list = [];
+            StringBuilder sb = new();
+            for (int i = 0; i < args.Length; i++)
             {
-                var names = from lang in LanguageSettings.Keys
-                            where LanguageSettings.ContainsKey(lang) && LanguageSettings[lang]["GLOBAL"]["ID"] == i.ToString()
-                            let name = LanguageSettings[lang]["GLOBAL"]["Name"]
-                            select name;
-                if (names.Any())
+                string item = $"{args[i]}";
+                if (i == 0)
                 {
-                    MenuFlyoutItem menuFlyoutItem = new()
+                    sb.Append(item);
+                }
+                else
+                {
+                    string prev = $"{args[i - 1]}";
+                    if (prev.EndsWith("="))
                     {
-                        Text = globals[$"{100 + i + 1}"],
-                        Name = names.First(),
-                        Foreground = names.First() == LastSelectedInterpreterLanguageName ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
-                        Background = names.First() == LastSelectedInterpreterLanguageName ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
-                        Tag = new Dictionary<string, object>()
-                        {
-                            {"MenuFlyout",mf },
-                            {"ContentControlPreviousContent",prevContent },
-                            {"ContentControl" ,me}
-                        }
-                    };
-                    menuFlyoutItem.Click += ContentControl_Click; // this has to reset the cell to its original value
-                    mf.Items.Add(menuFlyoutItem);
+                        sb.Append(item);
+                    }
+                    else
+                    {
+                        sb.Append(" ").Append(item);
+                    }
                 }
             }
-            FrameworkElement? senderElement = sender as FrameworkElement;
-
-            //the code can show the flyout in your mouse click 
-            mf.ShowAt(sender as UIElement, e.GetPosition(sender as UIElement));
-
-            //me.Content = mfsu;
+            File.AppendAllText(path, "---\r\n", Encoding.UTF8);
+            File.AppendAllText(path, $"{DateTime.Now:o} > {sb}\r\n", Encoding.UTF8);
         }
 
-        private async void FileCopyOutputButton_Click(object sender, RoutedEventArgs e)
-        {
-            FileSavePicker savePicker = new()
-            {
-                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-            };
 
-            // Dropdown of file types the user can save the file as
-            savePicker.FileTypeChoices.Add("Text File", new List<string>() { ".txt" });
-
-            savePicker.SuggestedFileName = "Output";
-
-            // For Uno.WinUI-based apps
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
-            WinRT.Interop.InitializeWithWindow.Initialize(savePicker, hwnd);
-
-            StorageFile file = await savePicker.PickSaveFileAsync();
-            if (file != null)
-            {
-                // Prevent updates to the remote version of the file until we
-                // finish making changes and call CompleteUpdatesAsync.
-                CachedFileManager.DeferUpdates(file);
-
-                outputText.SelectAll();
-                String output = outputText.SelectedText;
-                // write to file
-                await FileIO.WriteTextAsync(file, output);
-
-                // Let Windows know that we're finished changing the file so the
-                // other app can update the remote version of the file.
-                FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
-                if (status != FileUpdateStatus.Complete)
-                {
-                    Windows.UI.Popups.MessageDialog errorBox =
-                        new($"File {file.Name} couldn't be saved.");
-                    await errorBox.ShowAsync();
-                }
-            }
-        }
-
-        private void ClipboardCopyOutputButton_Click(object sender, RoutedEventArgs e)
-        {
-            outputText.SelectAll();
-            String output = outputText.SelectedText;
-            DataPackage dataPackage = new();
-            dataPackage.SetText(output);
-            Clipboard.SetContent(dataPackage);
-        }
-
-        private void ClearOutputButton_Click(object sender, RoutedEventArgs e)
-        {
-            foreach (var block in outputText.Blocks)
-            {
-                (block as Paragraph).Inlines.Clear();
-            }
-        }
-        private async void FileCopyErrorButton_Click(object sender, RoutedEventArgs e)
-        {
-            FileSavePicker savePicker = new()
-            {
-                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-            };
-
-            // Dropdown of file types the user can save the file as
-            savePicker.FileTypeChoices.Add("Text File", new List<string>() { ".txt" });
-
-            savePicker.SuggestedFileName = "Error";
-
-            // For Uno.WinUI-based apps
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
-            WinRT.Interop.InitializeWithWindow.Initialize(savePicker, hwnd);
-
-            StorageFile file = await savePicker.PickSaveFileAsync();
-            if (file != null)
-            {
-                // Prevent updates to the remote version of the file until we
-                // finish making changes and call CompleteUpdatesAsync.
-                CachedFileManager.DeferUpdates(file);
-
-                errorText.SelectAll();
-                String error = errorText.SelectedText;
-                // write to file
-                await FileIO.WriteTextAsync(file, error);
-
-                // Let Windows know that we're finished changing the file so the
-                // other app can update the remote version of the file.
-                FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
-                if (status != FileUpdateStatus.Complete)
-                {
-                    Windows.UI.Popups.MessageDialog errorBox =
-                        new($"File {file.Name} couldn't be saved.");
-                    await errorBox.ShowAsync();
-                }
-            }
-        }
-
-        private void ClipboardCopyErrorButton_Click(object sender, RoutedEventArgs e)
-        {
-            errorText.SelectAll();
-            String error = errorText.SelectedText;
-            DataPackage dataPackage = new();
-            dataPackage.SetText(error);
-            Clipboard.SetContent(dataPackage);
-        }
-
-        private void ClearErrorButton_Click(object sender, RoutedEventArgs e)
-        {
-            foreach (var block in errorText.Blocks)
-            {
-                (block as Paragraph).Inlines.Clear();
-            }
-        }
     }
 }

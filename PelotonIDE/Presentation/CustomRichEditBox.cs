@@ -23,6 +23,10 @@ namespace PelotonIDE.Presentation
             IsRTF = true;
             SelectionFlyout = null;
             ContextFlyout = null;
+            TextAlignment = TextAlignment.DetectFromContent;
+            FlowDirection = FlowDirection.LeftToRight;
+            FontFamily = new FontFamily("Lucida Sans Unicode,Tahoma");
+            
             // https://stackoverflow.com/ai/search/16916
             //Background = new SolidColorBrush(Color.FromArgb(255,0xF9,0xF8, 0xbd)); // "#F9F8BD"
             //PointerEntered += (sender, e) => e.Handled = true;
@@ -31,8 +35,8 @@ namespace PelotonIDE.Presentation
 
         protected override void OnKeyDown(KeyRoutedEventArgs e)
         {
-            var ctrlState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
-            var isCtrlPressed = ctrlState.HasFlag(CoreVirtualKeyStates.Down);
+            CoreVirtualKeyStates ctrlState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
+            bool isCtrlPressed = ctrlState.HasFlag(CoreVirtualKeyStates.Down);
 
             if (e.Key == VirtualKey.X && isCtrlPressed)
             {
@@ -82,7 +86,7 @@ namespace PelotonIDE.Presentation
 
         private async void PasteText()
         {
-            var dataPackageView = Clipboard.GetContent();
+            DataPackageView dataPackageView = Clipboard.GetContent();
             if (dataPackageView.Contains(StandardDataFormats.Text))
             {
                 string textToPaste = await dataPackageView.GetTextAsync();
@@ -97,8 +101,8 @@ namespace PelotonIDE.Presentation
         private void SelectAll()
         {
             Focus(FocusState.Pointer);
-            Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out var allText);
-            var endPosition = allText.Length - 1;
+            Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string? allText);
+            int endPosition = allText.Length - 1;
             Document.Selection.SetRange(0, endPosition);
         }
     }

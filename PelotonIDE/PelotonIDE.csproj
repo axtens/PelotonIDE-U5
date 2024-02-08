@@ -13,33 +13,35 @@
         <UnoUIUseRoslynSourceGenerators>true</UnoUIUseRoslynSourceGenerators>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
-        <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2"/>
-        <PackageReference Include="Uno.Dsp.Tasks" Version="1.2.7"/>
-        <PackageReference Include="Uno.WinUI" Version="5.0.19"/>
-        <PackageReference Include="Uno.Resizetizer" Version="1.2.0"/>
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2"/>
-        <PackageReference Include="Uno.Extensions.Configuration" Version="3.0.10"/>
-        <PackageReference Include="Uno.Extensions.Http" Version="3.0.10"/>
-        <PackageReference Include="Uno.Extensions.Http.Refit" Version="3.0.10"/>
-        <PackageReference Include="Uno.Extensions.Logging.WinUI" Version="3.0.10"/>
-        <PackageReference Include="Uno.Extensions.Serialization.Http" Version="3.0.10"/>
-        <PackageReference Include="Uno.Extensions.Serialization.Refit" Version="3.0.10"/>
-        <PackageReference Include="Uno.Material.WinUI" Version="4.0.4"/>
-        <PackageReference Include="Uno.Toolkit.WinUI.Material" Version="5.0.15"/>
-        <PackageReference Include="Uno.Toolkit.WinUI" Version="5.0.15"/>
-        <PackageReference Include="Uno.Extensions.Authentication.WinUI" Version="3.0.10"/>
-        <PackageReference Include="Uno.Extensions.Hosting.WinUI" Version="3.0.10"/>
-        <PackageReference Include="Uno.Extensions.Localization.WinUI" Version="3.0.10"/>
-        <PackageReference Include="Uno.Extensions.Navigation.Toolkit.WinUI" Version="3.0.10"/>
-        <PackageReference Include="Uno.Extensions.Navigation.WinUI" Version="3.0.10"/>
-        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0"/>
+        <PackageReference Include="ClosedXML" Version="0.102.2" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
+        <PackageReference Include="System.Collections.Specialized" Version="4.3.0" />
+        <PackageReference Include="Uno.Dsp.Tasks" Version="1.2.7" />
+        <PackageReference Include="Uno.WinUI" Version="5.0.19" />
+        <PackageReference Include="Uno.Resizetizer" Version="1.2.0" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+        <PackageReference Include="Uno.Extensions.Configuration" Version="3.0.10" />
+        <PackageReference Include="Uno.Extensions.Http" Version="3.0.10" />
+        <PackageReference Include="Uno.Extensions.Http.Refit" Version="3.0.10" />
+        <PackageReference Include="Uno.Extensions.Logging.WinUI" Version="3.0.10" />
+        <PackageReference Include="Uno.Extensions.Serialization.Http" Version="3.0.10" />
+        <PackageReference Include="Uno.Extensions.Serialization.Refit" Version="3.0.10" />
+        <PackageReference Include="Uno.Material.WinUI" Version="4.0.4" />
+        <PackageReference Include="Uno.Toolkit.WinUI.Material" Version="5.0.15" />
+        <PackageReference Include="Uno.Toolkit.WinUI" Version="5.0.15" />
+        <PackageReference Include="Uno.Extensions.Authentication.WinUI" Version="3.0.10" />
+        <PackageReference Include="Uno.Extensions.Hosting.WinUI" Version="3.0.10" />
+        <PackageReference Include="Uno.Extensions.Localization.WinUI" Version="3.0.10" />
+        <PackageReference Include="Uno.Extensions.Navigation.Toolkit.WinUI" Version="3.0.10" />
+        <PackageReference Include="Uno.Extensions.Navigation.WinUI" Version="3.0.10" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
     </ItemGroup>
     <Choose>
         <When Condition="$(IsWinAppSdk)">
             <ItemGroup>
-                <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.231008000"/>
-                <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.2428"/>
+                <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.231008000" />
+                <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.2428" />
             </ItemGroup>
             <ItemGroup>
                 <!--
@@ -58,61 +60,60 @@
         </When>
         <Otherwise>
             <ItemGroup>
-                <Content Include="Assets\**"/>
-                <Page Include="**\*.xaml" Exclude="bin\**\*.xaml;obj\**\*.xaml"/>
+                <Content Include="Assets\**" />
+                <Page Include="**\*.xaml" Exclude="bin\**\*.xaml;obj\**\*.xaml" />
                 <Compile Update="**\*.xaml.cs">
                     <DependentUpon>%(Filename)</DependentUpon>
                 </Compile>
-                <PRIResource Include="**\*.resw"/>
+                <PRIResource Include="**\*.resw" />
             </ItemGroup>
         </Otherwise>
     </Choose>
     <ItemGroup>
-        <ProjectReference Include="..\PelotonIDE.DataContracts\PelotonIDE.DataContracts.csproj"/>
+        <ProjectReference Include="..\PelotonIDE.DataContracts\PelotonIDE.DataContracts.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <UnoDspImportColors Include="Styles\*.zip" Generator="Xaml"/>
-        <UnoImage Include="Assets\**\*.svg"/>
-        <EmbeddedResource Include="appsettings.json"/>
-        <EmbeddedResource Include="appsettings.*.json" DependentUpon="appsettings.json"/>
-        <UpToDateCheckInput Include="**\*.xaml" Exclude="bin\**\*.xaml;obj\**\*.xaml"/>
+        <UnoDspImportColors Include="Styles\*.zip" Generator="Xaml" />
+        <UnoImage Include="Assets\**\*.svg" />
+        <EmbeddedResource Include="appsettings.json" />
+        <EmbeddedResource Include="appsettings.*.json" DependentUpon="appsettings.json" />
+        <UpToDateCheckInput Include="**\*.xaml" Exclude="bin\**\*.xaml;obj\**\*.xaml" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Remove="Presentation\Interpreter.cs"/>
-        <Compile Remove="Presentation\MainToTranslateParams.cs"/>
-        <Compile Remove="Presentation\TabSpecificSettings.cs"/>
-        <Compile Remove="Presentation\TranslateToMainParams.cs"/>
+        <Compile Remove="Presentation\Interpreter.cs" />
+        <Compile Remove="Presentation\MainToTranslateParams.cs" />
+        <Compile Remove="Presentation\TabSpecificSettings.cs" />
+        <Compile Remove="Presentation\TranslateToMainParams.cs" />
     </ItemGroup>
     <ItemGroup>
-        <None Remove="Presentation\FactorySettings.json"/>
-        <None Remove="Presentation\GlobalInterpreterParameters.json"/>
-        <None Remove="presentation\InterpreterSelectionDialog.xaml"/>
-        <None Remove="Presentation\LanguageConfiguration.json"/>
-        <None Remove="Presentation\LanguageConfiguration.json.bak"/>
-        <None Remove="Presentation\PerTabInterpreterParameters.json"/>
-        <None Remove="Presentation\rulesetrunner_repl_script.rr"/>
-        <None Remove="Presentation\TranslatePage.xaml"/>
+        <None Remove="Presentation\FactorySettings.json" />
+        <None Remove="Presentation\GlobalInterpreterParameters.json" />
+        <None Remove="presentation\InterpreterSelectionDialog.xaml" />
+        <None Remove="Presentation\LanguageConfiguration.json" />
+        <None Remove="Presentation\LanguageConfiguration.json.bak" />
+        <None Remove="Presentation\PerTabInterpreterParameters.json" />
+        <None Remove="Presentation\rulesetrunner_repl_script.rr" />
+        <None Remove="Presentation\TranslatePage.xaml" />
     </ItemGroup>
     <ItemGroup>
-        <Page Remove="Presentation\InterpreterSelectionDialog.xaml"/>
+        <Page Remove="Presentation\InterpreterSelectionDialog.xaml" />
     </ItemGroup>
     <ItemGroup>
-        <UpToDateCheckInput Remove="Presentation\IDEConfigPage.xaml"/>
-        <UpToDateCheckInput Remove="presentation\InterpreterSelectionDialog.xaml"/>
-        <UpToDateCheckInput Remove="Presentation\TranslatePage.xaml"/>
+        <UpToDateCheckInput Remove="Presentation\IDEConfigPage.xaml" />
+        <UpToDateCheckInput Remove="presentation\InterpreterSelectionDialog.xaml" />
+        <UpToDateCheckInput Remove="Presentation\TranslatePage.xaml" />
     </ItemGroup>
     <ItemGroup>
-        <Content Include="Peloton_Logo_MarkOnly_TransparentBack-lighter.ico"/>
-        <Content Include="Presentation\PerTabInterpreterParameters.json"/>
-        <Content Include="Presentation\GlobalInterpreterParameters.json"/>
-        <Content Include="Presentation\FactorySettings.json"/>
-        <Content Include="Presentation\LanguageConfiguration.json"/>
+        <Content Include="Peloton_Logo_MarkOnly_TransparentBack-lighter.ico" />
+        <Content Include="Presentation\PerTabInterpreterParameters.json" />
+        <Content Include="Presentation\FactorySettings.json" />
+        <Content Include="Presentation\LanguageConfiguration.json" />
     </ItemGroup>
     <ItemGroup>
-        <AdditionalFiles Remove="Presentation\TranslatePage.xaml"/>
+        <AdditionalFiles Remove="Presentation\TranslatePage.xaml" />
     </ItemGroup>
     <ItemGroup>
-        <None Include="..\Peloton_Logo_MarkOnly_TransparentBack-lighter.png">
+        <None Include="..\Peloton_Logo_MarkOnly_TransparentBack.svg"><!-- -lighter.png -->
             <Pack>True</Pack>
             <PackagePath>\</PackagePath>
         </None>

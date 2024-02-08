@@ -36,13 +36,13 @@ namespace PelotonIDE.Presentation
         {
             base.OnNavigatedTo(e);
 
-            var parameters = (NavigationData)e.Parameter;
+            NavigationData parameters = (NavigationData)e.Parameter;
 
             if (parameters.Source == "MainPage")
             {
                 interpreterTextBox.Text = parameters.KVPs["Interpreter"].ToString();
                 sourceTextBox.Text = parameters.KVPs["Scripts"].ToString();
-                var lcs = (LanguageConfigurationStructureSelection)parameters.KVPs["Language"];
+                LanguageConfigurationStructureSelection lcs = (LanguageConfigurationStructureSelection)parameters.KVPs["Language"];
                 cmdCancel.Content = lcs["frmMain"]["cmdCancel"];
                 cmdSaveMemory.Content = lcs["frmMain"]["cmdSaveMemory"];
                 lblSourceDirectory.Text = lcs["frmMain"]["lblSourceDirectory"];
@@ -57,7 +57,7 @@ namespace PelotonIDE.Presentation
             open.FileTypeFilter.Add(".exe");
 
             // For Uno.WinUI-based apps
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
+            nint hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
             WinRT.Interop.InitializeWithWindow.Initialize(open, hwnd);
 
             StorageFile pickedFile = await open.PickSingleFileAsync();
@@ -76,7 +76,7 @@ namespace PelotonIDE.Presentation
             folderPicker.FileTypeFilter.Add("*");
 
             // For Uno.WinUI-based apps
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
+            nint hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
             WinRT.Interop.InitializeWithWindow.Initialize(folderPicker, hwnd);
 
             StorageFolder pickedFolder = await folderPicker.PickSingleFolderAsync();

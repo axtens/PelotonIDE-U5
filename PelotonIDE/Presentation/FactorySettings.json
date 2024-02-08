@@ -1,11 +1,16 @@
 {
   "InterfaceLanguageName": "English",
   "InterfaceLanguageID": 0,
+  "InterpreterLanguageName": "English",
+  "InterpreterLanguageID":  0,
   "Engine": "Interpreter.P3",
   "OutputPanelHeight": 200.0,
   "OutputPanelShowing": true,
   "OutputPanelPosition": "Bottom",
   "Interpreter.P2": "c:\\protium\\bin\\pdb.exe",
   "Interpreter.P3": "c:\\peloton\\bin\\P3.exe",
-  "Scripts": "c:\\peloton\\code"
+  "Scripts": "c:\\peloton\\code",
+  "Quietude": 2,
+  "Timeout": 100,
+  "VariableLength": false
 }

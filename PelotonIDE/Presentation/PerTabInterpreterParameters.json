@@ -120,9 +120,9 @@
     "Value": false
   },
   "Override": {
-    "Defined": false,
+    "Defined": true,
     "Key": "O",
-    "Value": false
+    "Value": true
   },
   "PreventUnicode": {
     "Defined": false,
@@ -133,6 +133,11 @@
     "Defined": false,
     "Key": "P",
     "Value": ""
+  },
+  "Quietude": {
+    "Defined": true,
+    "Key": "Q",
+    "Value": 2
   },
   "Recordset": {
     "Defined": false,

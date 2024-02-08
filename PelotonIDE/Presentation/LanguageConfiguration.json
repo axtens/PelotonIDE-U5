@@ -2509,7 +2509,8 @@
       "Name": "Amharic",
       "ilang": 1118,
       "ilangAlso": "",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "ሰነድ"
     }
   },
   "Arabic": {
@@ -5022,7 +5023,8 @@
       "Name": "Arabic",
       "ilang": 1,
       "ilangAlso": "1025,2049,3073,4097,5121,6145,7169,8193,9217,10241,11265,12289,13313,14337,15361,16385",
-      "TextOrientation":"01"
+      "TextOrientation": "01",
+      "Document": "وثيقة"
     }
   },
   "Hanzi Simplified": {
@@ -7535,7 +7537,8 @@
       "Name": "Hanzi Simplified",
       "ilang": 2052,
       "ilangAlso": "",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "文档"
     }
   },
   "Hanzi Traditional": {
@@ -10048,7 +10051,8 @@
       "Name": "Hanzi Traditional",
       "ilang": 4,
       "ilangAlso": "1028,3076,3076,4100",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "文件"
     }
   },
   "Danish": {
@@ -12561,7 +12565,8 @@
       "Name": "Danish",
       "ilang": 1030,
       "ilangAlso": "",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "Dokument"
     }
   },
   "English": {
@@ -15074,7 +15079,8 @@
       "Name": "English",
       "ilang": 9,
       "ilangAlso": "1033,1033,2057,3081,4105,5129,6153,7177,8201,9225,10249,11273,13321",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "Document"
     }
   },
   "Farsi": {
@@ -17587,7 +17593,8 @@
       "Name": "Farsi",
       "ilang": 1065,
       "ilangAlso": "",
-      "TextOrientation":"01"
+      "TextOrientation": "01",
+      "Document": "سند"
     }
   },
   "French": {
@@ -20100,7 +20107,8 @@
       "Name": "French",
       "ilang": 1036,
       "ilangAlso": "2060,3084,4108,5132,6156,7180,8204,9228,10252,11276,12300,13324",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "Document"
     }
   },
   "German": {
@@ -22613,7 +22621,8 @@
       "Name": "German",
       "ilang": 1031,
       "ilangAlso": "2055,3079,4103,5127",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "Dokumentieren"
     }
   },
   "Greek": {
@@ -25126,7 +25135,8 @@
       "Name": "Greek",
       "ilang": 1032,
       "ilangAlso": "",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "Εγγραφο"
     }
   },
   "Hangul": {
@@ -27639,7 +27649,8 @@
       "Name": "Hangul",
       "ilang": 1042,
       "ilangAlso": "2066",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "문서"
     }
   },
   "Hebrew": {
@@ -30152,7 +30163,8 @@
       "Name": "Hebrew",
       "ilang": 1037,
       "ilangAlso": "",
-      "TextOrientation":"01"
+      "TextOrientation": "01",
+      "Document": "מסמך"
     }
   },
   "Hindi": {
@@ -32665,7 +32677,8 @@
       "Name": "Hindi",
       "ilang": 1081,
       "ilangAlso": "",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "दस्तावेज़"
     }
   },
   "Indonesian": {
@@ -35178,7 +35191,8 @@
       "Name": "Indonesian",
       "ilang": 1057,
       "ilangAlso": "",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "Dokumen"
     }
   },
   "Italian": {
@@ -37691,7 +37705,8 @@
       "Name": "Italian",
       "ilang": 1040,
       "ilangAlso": "2064",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "Documento"
     }
   },
   "Kanji": {
@@ -40204,10 +40219,11 @@
       "Name": "Kanji",
       "ilang": 1041,
       "ilangAlso": "",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "書類"
     }
   },
-  "Malaysian": {
+  "Malay": {
     "frmMain": {
       "mnuFile": "File",
       "mnuEdit": "Edit",
@@ -41260,7 +41276,7 @@
       "150": "*Chinese traditional",
       "151": "*Korean",
       "152": "*Japanese",
-      "153": "Malaysian",
+      "153": "Malay",
       "154": "*Peloton",
       "155": "*The Peloton Project",
       "156": "*The English Peloton Project",
@@ -42872,10 +42888,11 @@
       "088": "",
       "ID": 9,
       "Enabled": true,
-      "Name": "Malaysian",
+      "Name": "Malay",
       "ilang": 1086,
       "ilangAlso": "2110",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "Dokumen"
     }
   },
   "Maltese": {
@@ -45388,7 +45405,8 @@
       "Name": "Maltese",
       "ilang": 1082,
       "ilangAlso": "",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "Dokument"
     }
   },
   "Portuguese": {
@@ -47900,7 +47918,8 @@
       "Name": "Portuguese",
       "ilang": 2070,
       "ilangAlso": "1046",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "Documento"
     }
   },
   "Russian": {
@@ -50413,7 +50432,8 @@
       "Name": "Russian",
       "ilang": 1049,
       "ilangAlso": "2073",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "Документ"
     }
   },
   "Spanish": {
@@ -52926,7 +52946,8 @@
       "Name": "Spanish",
       "ilang": 1034,
       "ilangAlso": "2058,3082,4106,5130,6154,7178,8202,9226,10250,11274,12298,13322,14346,15370,16394,17418,18442,19466,20490",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "Documento"
     }
   },
   "Turkish": {
@@ -55439,7 +55460,8 @@
       "Name": "Turkish",
       "ilang": 1055,
       "ilangAlso": "",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "Belge"
     }
   },
   "Urdu": {
@@ -57952,7 +57974,8 @@
       "Name": "Urdu",
       "ilang": 1056,
       "ilangAlso": "2080",
-      "TextOrientation":"01"
+      "TextOrientation": "01",
+      "Document": "دستاویز"
     }
   },
   "Viet": {
@@ -60621,7 +60644,8 @@
       "Enabled": false,
       "ilang": 1066,
       "ilangAlso": "",
-      "TextOrientation": "00"
+      "TextOrientation": "00",
+      "Document": "Tài liệu"
     }
   }
 }

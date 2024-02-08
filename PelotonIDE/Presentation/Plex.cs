@@ -9,7 +9,7 @@
         public long OpCount { get; set; }
         public long KeyCount { get; set; }
         public long LanguageId { get; set; }
-        public long TextOrientation { get; set; }
+        public string? TextOrientation { get; set; }
     }
     internal class Plex
     {
