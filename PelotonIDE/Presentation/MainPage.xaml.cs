@@ -72,6 +72,7 @@ namespace PelotonIDE.Presentation
         readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
 
         // public LanguageConfigurationStructure? LanguageSettings1 { get => LanguageSettings; set => LanguageSettings = value; }
+        List<Plex>? Plexes = GetAllPlexes();
 
         bool AfterTranslation = false;
 
@@ -277,10 +278,10 @@ namespace PelotonIDE.Presentation
         #region Event Handlers
         private static InterpreterParametersStructure ClonePerTabSettings(InterpreterParametersStructure? perTabInterpreterParameters)
         {
-            InterpreterParametersStructure clone = new InterpreterParametersStructure();
+            InterpreterParametersStructure clone = [];
             foreach (string outerKey in perTabInterpreterParameters.Keys)
             {
-                FactorySettingsStructure inner = new Dictionary<string, object>();
+                FactorySettingsStructure inner = [];
                 foreach (string innerKey in perTabInterpreterParameters[outerKey].Keys)
                 {
                     inner[innerKey] = perTabInterpreterParameters[outerKey][innerKey];
@@ -326,8 +327,8 @@ namespace PelotonIDE.Presentation
             languageName.Text = GetLanguageNameOfCurrentTab(tabSettingJson);
             InterpreterLanguageID = (long)tabSettingJson["Language"]["Value"];
             InterpreterLanguageName = GetLanguageNameFromID(InterpreterLanguageID); // languageName.Text;
-            Type_1_UpdateVirtualRegistry("InterpreterLanguageName", InterpreterLanguageName);
-            Type_1_UpdateVirtualRegistry("InterpreterLanguageID", InterpreterLanguageID);
+            //Type_1_UpdateVirtualRegistry("InterpreterLanguageName", InterpreterLanguageName);
+            //Type_1_UpdateVirtualRegistry("InterpreterLanguageID", InterpreterLanguageID);
         }
 
         private string? GetLanguageNameFromID(long interpreterLanguageID) => (from lang
@@ -342,10 +343,12 @@ namespace PelotonIDE.Presentation
             string rtfContent = File.ReadAllText(file.Path);
             StringBuilder rtfBuilder = new(rtfContent);
 
-            Regex ques = new Regex(Regex.Escape("?"));
-            string info = @"{\info {\*\ilang ?} {\*\ilength ?} } "; // {\*\ipadout ?}
+            Regex ques = new(Regex.Escape("?"));
+            string info = @"{\info {\*\ilang ?} {\*\ilength ?} }"; // {\*\ipadout ?}
             info = ques.Replace(info, $"{navigationViewItem.TabSettingsDict["Language"]["Value"]}", 1);
             info = ques.Replace(info, (bool)navigationViewItem.TabSettingsDict["VariableLength"]["Value"] ? "1" : "0", 1);
+
+            MainPage.Track("info=", info);
 
             Regex regex = CustomRTFRegex();
 
@@ -365,6 +368,9 @@ namespace PelotonIDE.Presentation
                 int j = i + start.Length;
                 rtfBuilder.Insert(j, info);
             }
+
+            MainPage.Track("rtfBuilder=", rtfBuilder.ToString());
+
             File.WriteAllText(file.Path, rtfBuilder.ToString(), Encoding.ASCII);
         }
 
@@ -567,21 +573,21 @@ namespace PelotonIDE.Presentation
         private object Type_1_GetVirtualRegistry(string name)
         {
             object result = ApplicationData.Current.LocalSettings.Values[name];
-            Track("Type_1_GetVirtualRegistry", name, result);
+            Track(name, result);
             return result;
         }
 
         private T Type_1_GetVirtualRegistry<T>(string name)
         {
             object result = ApplicationData.Current.LocalSettings.Values[name];
-            Track("Type_1_GetVirtualRegistry", name, result);
+            Track(name, result);
             return (T)result;
         }
 
         private bool Type_1_GetVirtualRegistry_Boolean(string name)
         {
             object result = ApplicationData.Current.LocalSettings.Values[name];
-            Track("Type_1_GetVirtualRegistry_Boolean", name, result);
+            Track(name, result);
             return (bool)result;
         }
         #endregion
@@ -591,14 +597,14 @@ namespace PelotonIDE.Presentation
         // 1. virt reg
         private void Type_1_UpdateVirtualRegistry<T>(string name, T value)
         {
-            Track("Type_1_UpdateVirtualRegistry", name, value);
+            Track(name, value);
             ApplicationData.Current.LocalSettings.Values[name] = value;
         }
 
         // 2. pertab
         private void Type_2_UpdatePerTabSettings<T>(string name, bool enabled, T value)
         {
-            Track("Type_2_UpdatePerTabSettings", name, enabled, value);
+            Track(name, enabled, value);
             PerTabInterpreterParameters[name]["Defined"] = enabled;
             PerTabInterpreterParameters[name]["Value"] = value!;
         }
@@ -606,43 +612,11 @@ namespace PelotonIDE.Presentation
         // 3. currtab
         private void Type_3_UpdateInFocusTabSettings<T>(string name, bool enabled, T value)
         {
-            Track("Type_3_UpdateInFocusTabSettings", name, enabled, value);
+            Track(name, enabled, value);
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             navigationViewItem.TabSettingsDict[name]["Defined"] = enabled;
             navigationViewItem.TabSettingsDict[name]["Value"] = value!;
         }
         #endregion
-
-        public static void Track(params object?[] args)
-        {
-            StorageFolder folder = ApplicationData.Current.LocalFolder;
-            string path = Path.Combine(folder.Path, "pi.log");
-            List<string> list = [];
-            StringBuilder sb = new();
-            for (int i = 0; i < args.Length; i++)
-            {
-                string item = $"{args[i]}";
-                if (i == 0)
-                {
-                    sb.Append(item);
-                }
-                else
-                {
-                    string prev = $"{args[i - 1]}";
-                    if (prev.EndsWith("="))
-                    {
-                        sb.Append(item);
-                    }
-                    else
-                    {
-                        sb.Append(" ").Append(item);
-                    }
-                }
-            }
-            File.AppendAllText(path, "---\r\n", Encoding.UTF8);
-            File.AppendAllText(path, $"{DateTime.Now:o} > {sb}\r\n", Encoding.UTF8);
-        }
-
-
     }
 }

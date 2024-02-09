@@ -1,4 +1,6 @@
-﻿using Microsoft.UI;
+﻿using DocumentFormat.OpenXml.Office2019.Presentation;
+
+using Microsoft.UI;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -38,6 +40,8 @@ namespace PelotonIDE.Presentation
             CoreVirtualKeyStates ctrlState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
             bool isCtrlPressed = ctrlState.HasFlag(CoreVirtualKeyStates.Down);
 
+            MainPage.Track("ctrlState=", ctrlState, "isCtrlPressed", isCtrlPressed, "e.Key=", e.Key);
+            
             if (e.Key == VirtualKey.X && isCtrlPressed)
             {
                 Cut();

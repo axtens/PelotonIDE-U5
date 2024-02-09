@@ -21,7 +21,7 @@ namespace PelotonIDE.Presentation
     {
         private void ExecuteInterpreter(string selectedText)
         {
-            Track("ExecuteInterpreter", "selectedText=", selectedText);
+            Track("selectedText=", selectedText);
             // load tab settings
 
             DispatcherQueue dispatcher = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
@@ -43,7 +43,7 @@ namespace PelotonIDE.Presentation
                 (stdOut, stdErr) = RunProtium(engineArguments, selectedText, quietude);
             }
 
-            Track("ExecuteInterpreter", "stdOut=", stdOut, "stdErr=", stdErr);
+            Track("stdOut=", stdOut, "stdErr=", stdErr);
 
             if (!string.IsNullOrEmpty(stdErr))
             {
@@ -71,7 +71,7 @@ namespace PelotonIDE.Presentation
             {
                 return;
             }
-            Track("AddInsertParagraph", "text=", text, "addInsert=", addInsert, "withPrefix=", withPrefix);
+            Track("text=", text, "addInsert=", addInsert, "withPrefix=", withPrefix);
             const string stamp = "> ";
             if (withPrefix)
                 text = text.Insert(0, stamp);
@@ -94,8 +94,6 @@ namespace PelotonIDE.Presentation
 
         public (string StdOut, string StdErr) RunProtium(string args, string buff, long quietude)
         {
-            Track("RunProtium", args, buff);
-
             string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.P2"].ToString();
             string temp = Path.GetTempFileName();
             File.WriteAllText(temp, buff, Encoding.Unicode);
@@ -104,7 +102,7 @@ namespace PelotonIDE.Presentation
 
             args += $" /F:\"{temp}\"";
 
-            Track("RunProtium", args, buff);
+            Track("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
 
             ProcessStartInfo info = new()
             {
@@ -123,9 +121,10 @@ namespace PelotonIDE.Presentation
 
         public (string StdOut, string StdErr) RunPeloton(string args, string buff, long quietude)
         {
-            Track("RunPeloton", args, buff);
-
             string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.P3"].ToString();
+
+            Track("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
+
             string t_in = Path.GetTempFileName();
             string t_out = Path.ChangeExtension(t_in, "out");
             string t_err = Path.ChangeExtension(t_in, "err");
@@ -136,7 +135,7 @@ namespace PelotonIDE.Presentation
 
             args += $" /F:\"{t_in}\""; // 1>\"{t_out}\" 2>\"{t_err}\"";
 
-            Track("RunPeloton", args, buff);
+            Track(args, buff);
 
             ProcessStartInfo info = new()
             {
@@ -155,11 +154,9 @@ namespace PelotonIDE.Presentation
 
         public (string StdOut, string StdErr) RunPeloton2(string args, string buff, long quietude, DispatcherQueue dispatcher)
         {
-            Track("RunPeloton2", args, buff);
-
             string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.P3"].ToString();
 
-            Track("RunPeloton2", "Exe=", Exe);
+            Track("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
 
             ProcessStartInfo info = new()
             {
@@ -191,7 +188,7 @@ namespace PelotonIDE.Presentation
                 {
                     dispatcher.TryEnqueue(() =>
                     {
-                        Track("RunPeloton2", "stdout e.Data=", e.Data!);
+                        Track("stdout e.Data=", e.Data!);
                         AddOutput(e.Data!);
                     });
                 }
@@ -206,8 +203,6 @@ namespace PelotonIDE.Presentation
 
             proc.WaitForExit();
             proc.Dispose();
-
-            Track("RunPeloton2", "Disposed");
 
             return (StdOut: stdout.ToString().Trim(), StdErr: stderr.ToString().Trim());
         }

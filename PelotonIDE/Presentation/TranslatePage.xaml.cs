@@ -11,6 +11,7 @@ using Newtonsoft.Json.Bson;
 
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks.Dataflow;
 
@@ -29,14 +30,14 @@ namespace PelotonIDE.Presentation
     /// </summary>
     public sealed partial class TranslatePage : Microsoft.UI.Xaml.Controls.Page
     {
-        List<Plex>? Plexes;
-        List<PropertyBag>? OldPlexes;
+        //List<PropertyBag>? OldPlexes;
 
         LanguageConfigurationStructure? Langs;
         string? SourcePath { get; set; }
         string? SourceSpec { get; set; }
 
         long Quietude { get; set; }
+        internal static List<Plex>? Plexes { get; private set; }
 
         [GeneratedRegex(@"<(?:#|@) (.+?)>(.*?)</(?:#|@)>", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled, "en-AU")]
         private static partial Regex PelotonFullPattern();
@@ -60,6 +61,7 @@ namespace PelotonIDE.Presentation
 
             if (parameters.Source == "MainPage")
             {
+                Plexes = (List<Plex>?)parameters.KVPs["Plexes"];
                 Langs = (LanguageConfigurationStructure)parameters.KVPs["Languages"];
                 //string? tabLanguageName = parameters.KVPs["TabLanguageName"].ToString();
                 int tabLanguageId = (int)(long)parameters.KVPs["TabLanguageID"];
@@ -96,22 +98,22 @@ namespace PelotonIDE.Presentation
                 sourceLanguageList.SelectedIndex = tabLanguageId;
                 //sourceLanguageList.Focus(FocusState.Keyboard);
                 (sourceLanguageList.ItemContainerGenerator.ContainerFromIndex(tabLanguageId) as ListBoxItem)?.Focus(FocusState.Programmatic);
-                this.Plexes = GetAllPlexes();
-                this.OldPlexes = GetAllOldPlexes();
+                // Plexes = GetAllPlexes();
+                // this.OldPlexes = GetAllOldPlexes();
             }
         }
 
-        private List<PropertyBag> GetAllOldPlexes()
-        {
-            List<PropertyBag> result = new();
-            foreach (string file in Directory.GetFiles(@"c:\protium\bin\lexers", "*.plx"))
-            {
-                PropertyBag pb = new();
-                pb.LoadBagFromFile(file);
-                result.Add(pb);
-            }
-            return result;
-        }
+        //private List<PropertyBag> GetAllOldPlexes()
+        //{
+        //    List<PropertyBag> result = [];
+        //    foreach (string file in Directory.GetFiles(@"c:\protium\bin\lexers", "*.plx"))
+        //    {
+        //        PropertyBag pb = new();
+        //        pb.LoadBagFromFile(file);
+        //        result.Add(pb);
+        //    }
+        //    return result;
+        //}
 
         private bool ProbablySpacedInstructions(string selectedText)
         {
@@ -131,22 +133,6 @@ namespace PelotonIDE.Presentation
             return result > 0;
         }
 
-        private List<Plex>? GetAllPlexes()
-        {
-            List<Plex> list = [];
-            foreach (var file in Directory.GetFiles(@"c:\peloton\bin\lexers", "*.lex"))
-            {
-                byte[] data = File.ReadAllBytes(file);
-                using MemoryStream stream = new(data);
-                using BsonDataReader reader = new(stream);
-                JsonSerializer serializer = new();
-                Plex? p = serializer.Deserialize<Plex>(reader);
-                list.Add(p!);
-            }
-
-            return list;
-        }
-
         private static void FillLanguagesIntoList(LanguageConfigurationStructure languages, string interfaceLanguageName, ListBox listBox)
         {
             if (languages is null)
@@ -163,81 +149,23 @@ namespace PelotonIDE.Presentation
                             select name;
                 if (names.Any())
                 {
+                    string name = names.First();
+                    bool present = LanguageIsPresentInPlexes(name);
+                    
                     ListBoxItem listBoxItem = new()
                     {
                         Content = globals[$"{100 + i + 1}"],
-                        Name = names.First()  //languageJson[key]["GLOBAL"]["ID"]
+                        Name = name,  
+                        IsEnabled = present
                     };
                     listBox.Items.Add(listBoxItem);
                 }
             }
         }
 
-        private async void ApplyButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (targetLanguageList.SelectedIndex == -1)
-            {
-                ContentDialog dialog = new()
-                {
-                    XamlRoot = this.XamlRoot,
-                    Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                    Title = "Target Language Not Selected",
-                    PrimaryButtonText = "OK",
-                };
-                _ = await dialog.ShowAsync();
-            }
-            else
-            {
-                targetText.Document.GetText(TextGetOptions.None, out string txt);
-                Frame.Navigate(typeof(MainPage), new NavigationData()
-                {
-                    Source = "TranslatePage",
-                    KVPs = new() {
-                        { "TargetLanguageID" , (long)targetLanguageList.SelectedIndex },
-                        { "TargetVariableLength", chkVarLengthTo.IsChecked ?? false},
-                        { "TargetPadOutCode", chkSpaceOut.IsChecked ?? false},
-                        { "TargetText" ,  txt},
-                        { "Quietude",   Quietude}
-                    }
-                });
-            }
-        }
+        private static bool LanguageIsPresentInPlexes(string name) => (from plex in Plexes where plex.Meta.Language == name.Replace(" ", "") select plex).Any();
 
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            Frame.Navigate(typeof(MainPage), null);
-        }
-
-        private void ChkSpaceOut_Click(object sender, RoutedEventArgs e)
-        {
-            if (targetLanguageList.SelectedItem == null) return;
-            if (sourceLanguageList.SelectedItem == null) return;
-            int sourceIdx = sourceLanguageList.SelectedIndex;
-            int targetIdx = targetLanguageList.SelectedIndex;
-            sourceText.Document.GetText(TextGetOptions.None, out string code);
-            targetText
-                .Document
-                .SetText(
-                    TextSetOptions.None,
-                    TranslateCode(code, ((ListBoxItem)sourceLanguageList.SelectedItem).Name, ((ListBoxItem)targetLanguageList.SelectedItem).Name, sourceIdx, targetIdx));
-            targetText.FlowDirection = GetFlowDirection(((ListBoxItem)targetLanguageList.SelectedItem).Name);
-        }
-
-        private void TargetLanguageList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            int sourceIdx = sourceLanguageList.SelectedIndex;
-            int targetIdx = targetLanguageList.SelectedIndex;
-
-            sourceText.Document.GetText(TextGetOptions.None, out string code);
-            targetText
-                .Document
-                .SetText(
-                    TextSetOptions.None,
-                    TranslateCode(code, ((ListBoxItem)sourceLanguageList.SelectedItem).Name, ((ListBoxItem)targetLanguageList.SelectedItem).Name, sourceIdx, targetIdx));
-            targetText.FlowDirection = GetFlowDirection(((ListBoxItem)targetLanguageList.SelectedItem).Name);
-        }
-
-        private string TranslateCode(string code, string sourceLanguageName, string targetLanguageName, int sourceIdx, int targetIdx)
+        private string TranslateCode(string code, string sourceLanguageName, string targetLanguageName)
         {
             MainPage.Track("TranslateCode", "code=", code, "sourceLanguageName=", sourceLanguageName, "targetLanguageName=", targetLanguageName);
 
@@ -275,13 +203,13 @@ namespace PelotonIDE.Presentation
                                                         select bag;
             */
 
-            Plex englishFixed = (from plex in this.Plexes where plex.Meta.Language == "English" && !plex.Meta.Variable select plex).First();
+            Plex englishFixed = (from plex in Plexes where plex.Meta.Language == "English" && !plex.Meta.Variable select plex).First();
 
-            IEnumerable<Plex> sourcePlexVariable = from plex in this.Plexes where plex.Meta.Language == sourceLanguageName.Replace(" ", "") && plex.Meta.Variable select plex;
-            IEnumerable<Plex> targetPlexVariable = from plex in this.Plexes where plex.Meta.Language == targetLanguageName.Replace(" ", "") && plex.Meta.Variable select plex;
+            IEnumerable<Plex> sourcePlexVariable = from plex in Plexes where plex.Meta.Language == sourceLanguageName.Replace(" ", "") && plex.Meta.Variable select plex;
+            IEnumerable<Plex> targetPlexVariable = from plex in Plexes where plex.Meta.Language == targetLanguageName.Replace(" ", "") && plex.Meta.Variable select plex;
 
-            IEnumerable<Plex> sourcePlexFixed = from plex in this.Plexes where plex.Meta.Language == sourceLanguageName.Replace(" ", "") && !plex.Meta.Variable select plex;
-            IEnumerable<Plex> targetPlexFixed = from plex in this.Plexes where plex.Meta.Language == targetLanguageName.Replace(" ", "") && !plex.Meta.Variable select plex;
+            IEnumerable<Plex> sourcePlexFixed = from plex in Plexes where plex.Meta.Language == sourceLanguageName.Replace(" ", "") && !plex.Meta.Variable select plex;
+            IEnumerable<Plex> targetPlexFixed = from plex in Plexes where plex.Meta.Language == targetLanguageName.Replace(" ", "") && !plex.Meta.Variable select plex;
 
 
             MainPage.Track("TranslateCode", "variableTarget=", variableTarget, "variableSource=", variableSource, "fixedTarget=", fixedTarget, "fixedSource=", fixedSource, "spaced=", spaced);
@@ -463,68 +391,6 @@ namespace PelotonIDE.Presentation
             return variableTarget ? code.Replace("<@", "<#").Replace("</@>", "</#>") : code.Replace("<#", "<@").Replace("</#>", "</@>");
         }
 
-        private (bool dictOk, SortedDictionary<string, (double _typeCode, string _text)> dict) FillSortedDictionaryFromWorksheet(SortedDictionary<string, (double _typeCode, string _text)> sortedDictionary, IXLWorksheet? worksheet, int sourceCol, int targetCol)
-        {
-            IXLRows rows = worksheet.Rows();
-            for (int i = 2; i <= rows.Count(); i++)
-            {
-                //IXLCell typeCodeCell = worksheet.Cell(i, 1);
-                //double typeCode = typeCodeCell.GetDouble();
-                IXLCell sourceCell = worksheet.Cell(i, sourceCol + 1);
-                string sourceText = sourceCell.GetString().Trim();
-                IXLCell targetCell = worksheet.Cell(i, targetCol + 1);
-                string targetText = targetCell.GetString();
-                if (sourceText.Length > 0 && targetText.Length > 0)
-                    sortedDictionary[sourceText] = (11 /*typeCode*/, targetText); // smartness: 0
-            }
-            if (sortedDictionary.Count == 0) return (false, sortedDictionary);
-            return (true, sortedDictionary);
-        }
-
-        private (bool stOk, int sourceCol, int targetCol) GetSourceAndTargetColumnsFromWorksheet(IXLWorksheet? worksheet, long sourceLanguageId, long targetLanguageId)
-        {
-            // find column named after name of target language
-            // find column named after name of source language
-            int sourceCol = -1;
-            int targetCol = -1;
-            string sourceTag = $"[{sourceLanguageId}]";
-            string targetTag = $"[{targetLanguageId}]";
-            IXLColumns columns = worksheet.Columns();
-            for (int i = 0; i < columns.Count(); i++)
-            {
-                IXLColumn column = columns.ElementAt(i);
-                IXLCell head = column.Cell(1);
-                if (head.GetString().Contains(sourceTag))
-                {
-                    sourceCol = i;
-                }
-                if (head.GetString().Contains(targetTag))
-                {
-                    targetCol = i;
-                }
-                if (sourceCol > -1 && targetCol > -1) break;
-            }
-
-            // if !found, end
-            if (sourceCol == -1 || targetCol == -1) return (false, sourceCol, targetCol);
-            return (true, sourceCol, targetCol);
-        }
-
-        private (bool wsOk, IXLWorksheet? xLWorksheet) GetNamedWorksheetInExcelWorkbook(XLWorkbook? workbook, string? nameOfSource)
-        {
-            if (!workbook.Worksheets.Contains(nameOfSource)) return (false, null);
-            IXLWorksheet worksheet = workbook.Worksheet(nameOfSource);
-            return (true, worksheet);
-        }
-
-        private (bool ok, XLWorkbook? workbook) GetNamedExcelWorkbook(string? xlsxPath)
-        {
-            if (!File.Exists(xlsxPath)) return (false, null);
-            using FileStream xlsxStream = File.Open(xlsxPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            XLWorkbook workbook = new(xlsxStream);
-            return (true, workbook);
-        }
-
         private string UpdateInLabelSpace(string result, string sourceText, string targetText)
         {
             var pattern = PelotonFullPattern();
@@ -636,93 +502,6 @@ namespace PelotonIDE.Presentation
                 // var tag = kopMatches[mi].Groups[1].Captures[0];
             }
             return targetPlex.Meta.Variable ? buff.Replace("<@ ", "<# ").Replace("</@>", "</#>") : buff;
-        }
-
-        private void SourceLanguageList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            //ListBoxItem? selectedLanguage = sourceLanguageList.SelectedItem as ListBoxItem;
-            //sourceText.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, selectedLanguage.Name);
-            // sourceText.FlowDirection = GetFlowDirection(((ListBoxItem)sourceLanguageList.SelectedItem).Name);
-            int sourceIdx = sourceLanguageList.SelectedIndex;
-            int targetIdx = targetLanguageList.SelectedIndex;
-
-            sourceText.Document.GetText(TextGetOptions.None, out string code);
-            if ((ListBoxItem)targetLanguageList.SelectedItem != null)
-            {
-                targetText
-                .Document
-                .SetText(
-                    TextSetOptions.None,
-                    TranslateCode(code, ((ListBoxItem)sourceLanguageList.SelectedItem).Name, ((ListBoxItem)targetLanguageList.SelectedItem).Name, sourceIdx, targetIdx));
-                targetText.FlowDirection = GetFlowDirection(((ListBoxItem)targetLanguageList.SelectedItem).Name);
-            }
-        }
-
-        private void ChkVarLengthFrom_Click(object sender, RoutedEventArgs e)
-        {
-            if (targetLanguageList.SelectedItem == null) return;
-            if (sourceLanguageList.SelectedItem == null) return;
-            //ListBoxItem? selectedLanguage = targetLanguageList.SelectedItem as ListBoxItem;
-            //targetText.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, selectedLanguage.Name);
-            // sourceText.FlowDirection = GetFlowDirection(((ListBoxItem)sourceLanguageList.SelectedItem).Name);
-            int sourceIdx = sourceLanguageList.SelectedIndex;
-            int targetIdx = targetLanguageList.SelectedIndex;
-
-            sourceText.Document.GetText(TextGetOptions.None, out string code);
-            targetText
-                .Document
-                .SetText(
-                    TextSetOptions.None,
-                    TranslateCode(code, ((ListBoxItem)sourceLanguageList.SelectedItem).Name, ((ListBoxItem)targetLanguageList.SelectedItem).Name, sourceIdx, targetIdx));
-            targetText.FlowDirection = GetFlowDirection(((ListBoxItem)targetLanguageList.SelectedItem).Name);
-        }
-
-        private void ChkVarLengthTo_Click(object sender, RoutedEventArgs e)
-        {
-            if (targetLanguageList.SelectedItem == null) return;
-            if (sourceLanguageList.SelectedItem == null) return;
-            //ListBoxItem? selectedLanguage = targetLanguageList.SelectedItem as ListBoxItem;
-            //targetText.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, selectedLanguage.Name);
-            // sourceText.FlowDirection = GetFlowDirection(((ListBoxItem)sourceLanguageList.SelectedItem).Name);
-            int sourceIdx = sourceLanguageList.SelectedIndex;
-            int targetIdx = targetLanguageList.SelectedIndex;
-
-            sourceText.Document.GetText(TextGetOptions.None, out string code);
-            targetText
-                .Document
-                .SetText(
-                    TextSetOptions.None,
-                    TranslateCode(code, ((ListBoxItem)sourceLanguageList.SelectedItem).Name, ((ListBoxItem)targetLanguageList.SelectedItem).Name, sourceIdx, targetIdx));
-            targetText.FlowDirection = GetFlowDirection(((ListBoxItem)targetLanguageList.SelectedItem).Name);
-        }
-
-        private FlowDirection GetFlowDirection(string name)
-        {
-            Dictionary<string, string> globals = Langs[name]["GLOBAL"];
-            if (!globals.TryGetValue("TextOrientation", out string? td))
-            {
-                return FlowDirection.LeftToRight;
-            }
-            return td.Substring(1, 1) == "0" ? FlowDirection.LeftToRight : FlowDirection.RightToLeft;
-        }
-
-        private void ChkSpaceIn_Click(object sender, RoutedEventArgs e)
-        {
-        }
-    }
-    class LongestToShortestLengthComparer : IComparer<String>
-    {
-        public int Compare(string? x, string? y)
-        {
-            int lengthComparison = x.Length.CompareTo(y.Length);
-            if (lengthComparison == 0)
-            {
-                return x.CompareTo(y) * -1;
-            }
-            else
-            {
-                return lengthComparison * -1;
-            }
         }
     }
 }
