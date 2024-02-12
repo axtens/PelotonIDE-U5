@@ -16,6 +16,7 @@ namespace PelotonIDE.Presentation
     {
         private void OutputPanel_SizeChanged(object sender, SizeChangedEventArgs e)
         {
+            OutputPanelPosition outputPanelPosition = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), Type_1_GetVirtualRegistry<string>("OutputPanelPosition"));
             switch (outputPanelPosition)
             {
                 case OutputPanelPosition.Bottom:
@@ -42,6 +43,7 @@ namespace PelotonIDE.Presentation
 
         private void Thumb_DragDelta(object sender, Microsoft.UI.Xaml.Controls.Primitives.DragDeltaEventArgs e)
         {
+            OutputPanelPosition outputPanelPosition = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), Type_1_GetVirtualRegistry<string>("OutputPanelPosition"));
             double yadjust = outputPanel.Height - e.VerticalChange;
             double xRightAdjust = outputPanel.Width - e.HorizontalChange;
             double xLeftAdjust = outputPanel.Width + e.HorizontalChange;
@@ -84,6 +86,8 @@ namespace PelotonIDE.Presentation
 
         private async void OutputThumb_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
+            OutputPanelPosition outputPanelPosition = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), Type_1_GetVirtualRegistry<string>("OutputPanelPosition"));
+
             if (outputPanelPosition == OutputPanelPosition.Bottom)
             {
                 this.ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.SizeNorthSouth, 0));
@@ -101,17 +105,17 @@ namespace PelotonIDE.Presentation
 
         private void OutputLeft_Click(object sender, RoutedEventArgs e)
         {
-            HandleOutputPanelChange(OutputPanelPosition.Left);
+            HandleOutputPanelChange("Left");
         }
 
         private void OutputBottom_Click(object sender, RoutedEventArgs e)
         {
-            HandleOutputPanelChange(OutputPanelPosition.Bottom);
+            HandleOutputPanelChange("Bottom");
         }
 
         private void OutputRight_Click(object sender, RoutedEventArgs e)
         {
-            HandleOutputPanelChange(OutputPanelPosition.Right);
+            HandleOutputPanelChange("Right");
         }
 
 

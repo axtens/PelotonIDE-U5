@@ -1,6 +1,9 @@
+using DocumentFormat.OpenXml.Wordprocessing;
+
 using Microsoft.UI;
 using Microsoft.UI.Text;
 
+using System.ComponentModel;
 using System.Timers;
 
 namespace PelotonIDE.Presentation
@@ -97,20 +100,22 @@ namespace PelotonIDE.Presentation
 
             FactorySettings ??= await GetFactorySettings();
 
-            outputPanelShowing = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("OutputPanelShowing", FactorySettings, LocalSettings, true);
-            OutputPanelPosition outputPanelPosition = GetFactorySettingsWithLocalSettingsOverrideOrDefault("OutputPanelPosition", (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), "Bottom"), FactorySettings, LocalSettings);
-            HandleOutputPanelChange(outputPanelPosition);
-            outputPanel.Height = GetFactorySettingsWithLocalSettingsOverrideOrDefault<double>("OutputPanelHeight", FactorySettings, LocalSettings, 200);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<bool>("OutputPanelShowing", FactorySettings, true);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<OutputPanelPosition>("OutputPanelPosition", FactorySettings, (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), "Bottom"));
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<long>("OutputPanelHeight", FactorySettings, 200);
+            HandleOutputPanelChange(Type_1_GetVirtualRegistry<string>("OutputPanelPosition"));
 
-            InterfaceLanguageName ??= GetFactorySettingsWithLocalSettingsOverrideOrDefault<string>("InterfaceLanguageName", FactorySettings, LocalSettings, "English");
-            if (InterfaceLanguageID == 0)
-                InterfaceLanguageID = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("InterfaceLanguageID", FactorySettings, LocalSettings, 0);
-            InterpreterLanguageName ??= GetFactorySettingsWithLocalSettingsOverrideOrDefault<string>("InterpreterLanguageName", FactorySettings, LocalSettings, "English");
-            if (InterpreterLanguageID == 0)
-                InterfaceLanguageID = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("InterpreterLanguageID", FactorySettings, LocalSettings, 0);
+            outputPanel.Height = Type_1_GetVirtualRegistry<double>("OutputPanelHeight");
 
-            if (InterfaceLanguageName != null)
-                HandleInterfaceLanguageChange(InterfaceLanguageName);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<string>("InterfaceLanguageName", FactorySettings, "English");
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<long>("InterfaceLanguageID", FactorySettings, 0);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<string>("InterpreterLanguageName", FactorySettings, "English");
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<long>("InterpreterLanguageID", FactorySettings, 0);
+
+            if (Type_1_GetVirtualRegistry<string>("InterfaceLanguageName") != null)
+            {
+                HandleInterfaceLanguageChange(Type_1_GetVirtualRegistry<string>("InterfaceLanguageName"));
+            }
 
             // Engine selection:
             //  Engine will contain either "Interpreter.P2" or "Interpreter.P3"
@@ -127,27 +132,30 @@ namespace PelotonIDE.Presentation
             if (!AfterTranslation)
             {
 
-                bool VariableLength = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("VariableLength", FactorySettings, LocalSettings, false);
-                Type_1_UpdateVirtualRegistry("VariableLength", VariableLength);
-                long Quietude = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("Quietude", FactorySettings, LocalSettings, 2);
-                Type_1_UpdateVirtualRegistry("Quietude", Quietude);
+                //bool VariableLength = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("VariableLength", FactorySettings, LocalSettings, false);
+                IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<bool>("VariableLength", FactorySettings, false);
+                //Type_1_UpdateVirtualRegistry("VariableLength", VariableLength);
+                //long Quietude = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("Quietude", FactorySettings, LocalSettings, 2);
+                IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<long>("Quietude", FactorySettings, 2);
+                //Type_1_UpdateVirtualRegistry("Quietude", Quietude);
 
-                Type_2_UpdatePerTabSettings("Language", true, InterpreterLanguageID);
-                Type_2_UpdatePerTabSettings("VariableLength", VariableLength, VariableLength);
-                Type_2_UpdatePerTabSettings("Quietude", true, Quietude);
+                Type_2_UpdatePerTabSettings("Language", true,Type_1_GetVirtualRegistry<long>("InterpreterLanguageID"));
+                Type_2_UpdatePerTabSettings("VariableLength", Type_1_GetVirtualRegistry<bool>("VariableLength"), Type_1_GetVirtualRegistry<bool>("VariableLength"));
+                Type_2_UpdatePerTabSettings("Quietude", true, Type_1_GetVirtualRegistry<long>("Quietude"));
             }
 
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             navigationViewItem.TabSettingsDict ??= ClonePerTabSettings(PerTabInterpreterParameters);
 
-            UpdateTabDocumentNameIfOnlyOneAndFirst(tabControl, InterfaceLanguageName);
+            UpdateTabDocumentNameIfOnlyOneAndFirst(tabControl, Type_1_GetVirtualRegistry<string>("InterfaceLanguageName"));
 
             if (!AfterTranslation)
             {
-                Type_3_UpdateInFocusTabSettings("Language", true, InterpreterLanguageID);
+                Type_3_UpdateInFocusTabSettings("Language", true, Type_1_GetVirtualRegistry<long>("InterpreterLanguageID"));
                 // Do we also set the VariableLength of the inFocusTab?
-                bool VariableLength = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("VariableLength", FactorySettings, LocalSettings, false);
-                Type_3_UpdateInFocusTabSettings("VariableLength", VariableLength, VariableLength);
+                //bool VariableLength = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("VariableLength", FactorySettings, LocalSettings, false);
+                IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault("VariableLength", FactorySettings, false);
+                Type_3_UpdateInFocusTabSettings("VariableLength", Type_1_GetVirtualRegistry<bool>("VariableLength"), Type_1_GetVirtualRegistry<bool>("VariableLength"));
             }
             InterfaceLanguageSelectionBuilder(mnuSelectLanguage, Internationalization_Click);
             InterpreterLanguageSelectionBuilder(mnuRun, "mnuLanguage", MnuLanguage_Click);
@@ -158,7 +166,7 @@ namespace PelotonIDE.Presentation
 
             AfterTranslation = false;
 
-            SetVariableLengthModeInMenu(mnuVariableLength, Type_1_GetVirtualRegistry_Boolean("VariableLength"));
+            SetVariableLengthModeInMenu(mnuVariableLength, Type_1_GetVirtualRegistry<bool>("VariableLength"));
             UpdateLanguageNameInStatusBar(navigationViewItem.TabSettingsDict);
 
             UpdateCommandLineInStatusBar();
@@ -228,6 +236,18 @@ namespace PelotonIDE.Presentation
             {
                 languageName.Text = currentLanguageName;
             }
+        }
+
+        private void IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<T>(string name, Dictionary<string, object>? factory, T defaultValue)
+        {
+            if (LocalSettings.Values.ContainsKey(name)) return;
+            if (factory.TryGetValue(name, out object? factoryValue))
+            {
+                LocalSettings.Values[name] = (T)factoryValue;
+                return;
+            }
+            LocalSettings.Values[name] = (defaultValue.GetType().BaseType.Name == "Enum") ? defaultValue.ToString() : defaultValue;
+            return;
         }
 
         private void UpdateTabDocumentNameIfOnlyOneAndFirst(NavigationView tabControl, string? interfaceLanguageName)

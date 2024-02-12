@@ -52,103 +52,104 @@ namespace PelotonIDE.Presentation
             ToolTipService.SetToolTip(butGo, selectedLanguage["run.Tip"]);
         }
 
-        private void HandleOutputPanelChange(OutputPanelPosition panelPos)
+        private void HandleOutputPanelChange(string pos)
         {
-            if (panelPos == OutputPanelPosition.Left)
+            var outputPanelPosition = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), pos);
+            switch (outputPanelPosition)
             {
-                outputPanelPosition = OutputPanelPosition.Left;
+                case OutputPanelPosition.Left:
+                    //outputPanelPosition = OutputPanelPosition.Left;
 
-                RelativePanel.SetAlignLeftWithPanel(outputPanel, true);
-                RelativePanel.SetAlignRightWithPanel(outputPanel, false);
-                RelativePanel.SetBelow(outputPanel, mnuNew);
-                outputPanel.Width = 200;
-                outputPanel.MinWidth = 175;
-                outputPanel.MaxWidth = 700;
-                outputPanel.ClearValue(HeightProperty);
-                outputPanel.ClearValue(MaxHeightProperty);
+                    RelativePanel.SetAlignLeftWithPanel(outputPanel, true);
+                    RelativePanel.SetAlignRightWithPanel(outputPanel, false);
+                    RelativePanel.SetBelow(outputPanel, mnuNew);
+                    outputPanel.Width = 200;
+                    outputPanel.MinWidth = 175;
+                    outputPanel.MaxWidth = 700;
+                    outputPanel.ClearValue(HeightProperty);
+                    outputPanel.ClearValue(MaxHeightProperty);
 
-                RelativePanel.SetAbove(tabControl, statusBar);
-                RelativePanel.SetRightOf(tabControl, outputPanel);
-                RelativePanel.SetAlignLeftWithPanel(tabControl, false);
-                RelativePanel.SetAlignRightWithPanel(tabControl, true);
+                    RelativePanel.SetAbove(tabControl, statusBar);
+                    RelativePanel.SetRightOf(tabControl, outputPanel);
+                    RelativePanel.SetAlignLeftWithPanel(tabControl, false);
+                    RelativePanel.SetAlignRightWithPanel(tabControl, true);
 
-                outputLeftButton.BorderBrush = new SolidColorBrush(Colors.DodgerBlue);
-                outputBottomButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
-                outputRightButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
+                    outputLeftButton.BorderBrush = new SolidColorBrush(Colors.DodgerBlue);
+                    outputBottomButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
+                    outputRightButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
 
-                outputLeftButton.Background = new SolidColorBrush(Colors.DeepSkyBlue);
-                outputBottomButton.Background = new SolidColorBrush(Colors.Transparent);
-                outputRightButton.Background = new SolidColorBrush(Colors.Transparent);
+                    outputLeftButton.Background = new SolidColorBrush(Colors.DeepSkyBlue);
+                    outputBottomButton.Background = new SolidColorBrush(Colors.Transparent);
+                    outputRightButton.Background = new SolidColorBrush(Colors.Transparent);
 
-                Canvas.SetLeft(outputThumb, outputPanel.Width - 1);
-                Canvas.SetTop(outputThumb, 0);
+                    Canvas.SetLeft(outputThumb, outputPanel.Width - 1);
+                    Canvas.SetTop(outputThumb, 0);
 
-                outputDockingFlyout.Hide();
-            }
-            else if (panelPos == OutputPanelPosition.Bottom)
-            {
-                outputPanelPosition = OutputPanelPosition.Bottom;
+                    outputDockingFlyout.Hide();
+                    break;
+                case OutputPanelPosition.Bottom:
+                    //outputPanelPosition = OutputPanelPosition.Bottom;
 
-                RelativePanel.SetAlignLeftWithPanel(tabControl, true);
-                RelativePanel.SetAlignRightWithPanel(tabControl, true);
-                RelativePanel.SetRightOf(tabControl, null);
-                RelativePanel.SetAbove(tabControl, outputPanel);
+                    RelativePanel.SetAlignLeftWithPanel(tabControl, true);
+                    RelativePanel.SetAlignRightWithPanel(tabControl, true);
+                    RelativePanel.SetRightOf(tabControl, null);
+                    RelativePanel.SetAbove(tabControl, outputPanel);
 
-                RelativePanel.SetAlignLeftWithPanel(outputPanel, true);
-                RelativePanel.SetAlignRightWithPanel(outputPanel, true);
-                RelativePanel.SetBelow(outputPanel, null);
-                outputPanel.Height = 200;
-                outputPanel.MaxHeight = 500;
-                outputPanel.ClearValue(WidthProperty);
-                outputPanel.ClearValue(MaxWidthProperty);
+                    RelativePanel.SetAlignLeftWithPanel(outputPanel, true);
+                    RelativePanel.SetAlignRightWithPanel(outputPanel, true);
+                    RelativePanel.SetBelow(outputPanel, null);
+                    outputPanel.Height = 200;
+                    outputPanel.MaxHeight = 500;
+                    outputPanel.ClearValue(WidthProperty);
+                    outputPanel.ClearValue(MaxWidthProperty);
 
-                outputBottomButton.BorderBrush = new SolidColorBrush(Colors.DodgerBlue);
-                outputLeftButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
-                outputRightButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
+                    outputBottomButton.BorderBrush = new SolidColorBrush(Colors.DodgerBlue);
+                    outputLeftButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
+                    outputRightButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
 
-                outputBottomButton.Background = new SolidColorBrush(Colors.DeepSkyBlue);
-                outputLeftButton.Background = new SolidColorBrush(Colors.Transparent);
-                outputRightButton.Background = new SolidColorBrush(Colors.Transparent);
+                    outputBottomButton.Background = new SolidColorBrush(Colors.DeepSkyBlue);
+                    outputLeftButton.Background = new SolidColorBrush(Colors.Transparent);
+                    outputRightButton.Background = new SolidColorBrush(Colors.Transparent);
 
-                Canvas.SetLeft(outputThumb, 0);
-                Canvas.SetTop(outputThumb, -4);
+                    Canvas.SetLeft(outputThumb, 0);
+                    Canvas.SetTop(outputThumb, -4);
 
-                outputDockingFlyout.Hide();
-            }
-            else if (panelPos == OutputPanelPosition.Right)
-            {
-                outputPanelPosition = OutputPanelPosition.Right;
+                    outputDockingFlyout.Hide();
+                    break;
+                case OutputPanelPosition.Right:
+                    //outputPanelPosition = OutputPanelPosition.Right;
 
-                RelativePanel.SetAlignLeftWithPanel(outputPanel, false);
-                RelativePanel.SetAlignRightWithPanel(outputPanel, true);
-                RelativePanel.SetBelow(outputPanel, mnuNew);
-                outputPanel.Width = 200;
-                outputPanel.MinWidth = 175;
-                outputPanel.MaxWidth = 700;
-                outputPanel.ClearValue(HeightProperty);
-                outputPanel.ClearValue(MaxHeightProperty);
+                    RelativePanel.SetAlignLeftWithPanel(outputPanel, false);
+                    RelativePanel.SetAlignRightWithPanel(outputPanel, true);
+                    RelativePanel.SetBelow(outputPanel, mnuNew);
+                    outputPanel.Width = 200;
+                    outputPanel.MinWidth = 175;
+                    outputPanel.MaxWidth = 700;
+                    outputPanel.ClearValue(HeightProperty);
+                    outputPanel.ClearValue(MaxHeightProperty);
 
-                RelativePanel.SetAbove(tabControl, statusBar);
-                RelativePanel.SetLeftOf(tabControl, outputPanel);
-                RelativePanel.SetAlignLeftWithPanel(tabControl, true);
-                RelativePanel.SetAlignRightWithPanel(tabControl, false);
+                    RelativePanel.SetAbove(tabControl, statusBar);
+                    RelativePanel.SetLeftOf(tabControl, outputPanel);
+                    RelativePanel.SetAlignLeftWithPanel(tabControl, true);
+                    RelativePanel.SetAlignRightWithPanel(tabControl, false);
 
-                outputRightButton.BorderBrush = new SolidColorBrush(Colors.DodgerBlue);
-                outputBottomButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
-                outputLeftButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
+                    outputRightButton.BorderBrush = new SolidColorBrush(Colors.DodgerBlue);
+                    outputBottomButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
+                    outputLeftButton.BorderBrush = new SolidColorBrush(Colors.LightGray);
 
-                outputRightButton.Background = new SolidColorBrush(Colors.DeepSkyBlue);
-                outputBottomButton.Background = new SolidColorBrush(Colors.Transparent);
-                outputLeftButton.Background = new SolidColorBrush(Colors.Transparent);
+                    outputRightButton.Background = new SolidColorBrush(Colors.DeepSkyBlue);
+                    outputBottomButton.Background = new SolidColorBrush(Colors.Transparent);
+                    outputLeftButton.Background = new SolidColorBrush(Colors.Transparent);
 
-                Canvas.SetLeft(outputThumb, -4);
-                Canvas.SetTop(outputThumb, 0);
+                    Canvas.SetLeft(outputThumb, -4);
+                    Canvas.SetTop(outputThumb, 0);
 
-                outputDockingFlyout.Hide();
+                    outputDockingFlyout.Hide();
+                    break;
             }
         }
 
-        private void UpdateLanguageInInterpreterMenu(MenuBarItem mnuRun, string InterpreterLanguageName)
+        private void ChangeHighlightOfMenuBarForLanguage(MenuBarItem mnuRun, string InterpreterLanguageName)
         {
             IEnumerable<MenuFlyoutItemBase> subMenus = from menu in mnuRun.Items where menu.Name == "mnuLanguage" select menu;
             if (subMenus != null)

@@ -1,10 +1,5 @@
-﻿using DocumentFormat.OpenXml.Wordprocessing;
-
-using Microsoft.UI;
+﻿using Microsoft.UI;
 using Microsoft.UI.Text;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
 
 using Newtonsoft.Json;
@@ -14,11 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
-using Windows.ApplicationModel.DataTransfer;
-
 using Windows.Storage;
-using Windows.Storage.Pickers;
-using Windows.Storage.Provider;
 using Windows.System;
 
 
@@ -38,23 +29,23 @@ namespace PelotonIDE.Presentation
         private static partial Regex CustomRTFRegex();
         private Object rtbLock = new();
         readonly Dictionary<object, CustomRichEditBox> _richEditBoxes = [];
-        bool outputPanelShowing = true;
+        // bool outputPanelShowing = true;
         enum OutputPanelPosition
         {
             Left,
             Bottom,
             Right
         }
-        string? InterfaceLanguageName = "English";
-        long InterfaceLanguageID = 0;
+        //string? InterfaceLanguageName = "English";
+        //long InterfaceLanguageID = 0;
 
-        string? InterpreterLanguageName;
-        long InterpreterLanguageID;
+        //string? InterpreterLanguageName;
+        //long InterpreterLanguageID;
 
         //bool VariableLength;
-        long Quietude = 2;
+        //long Quietude = 2;
 
-        OutputPanelPosition outputPanelPosition = OutputPanelPosition.Bottom;
+        //OutputPanelPosition outputPanelPosition = OutputPanelPosition.Bottom;
         string? Engine = string.Empty;
         string? Scripts = string.Empty;
         string? InterpreterP2 = string.Empty;
@@ -114,13 +105,16 @@ namespace PelotonIDE.Presentation
 
         private async void InterfaceLanguageSelectionBuilder(MenuFlyoutSubItem menuBarItem, RoutedEventHandler routedEventHandler)
         {
-            if (InterfaceLanguageName == null || !LanguageSettings.ContainsKey(InterfaceLanguageName))
+            string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+            if (interfaceLanguageName == null || !LanguageSettings.ContainsKey(interfaceLanguageName))
             {
                 return;
             }
 
+            menuBarItem.Items.Clear();
+
             // what is current language?
-            Dictionary<string, string> globals = LanguageSettings[InterfaceLanguageName]["GLOBAL"];
+            Dictionary<string, string> globals = LanguageSettings[interfaceLanguageName]["GLOBAL"];
             int count = LanguageSettings.Keys.Count;
             for (int i = 0; i < count; i++)
             {
@@ -134,8 +128,8 @@ namespace PelotonIDE.Presentation
                     {
                         Text = globals[$"{100 + i + 1}"],
                         Name = names.First(),
-                        Foreground = names.First() == InterfaceLanguageName ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
-                        Background = names.First() == InterfaceLanguageName ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
+                        Foreground = names.First() == Type_1_GetVirtualRegistry<string>("InterfaceLanguageName") ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
+                        Background = names.First() == Type_1_GetVirtualRegistry<string>("InterfaceLanguageName") ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
                     };
                     menuFlyoutItem.Click += routedEventHandler; //  Internationalization_Click;
                     menuBarItem.Items.Add(menuFlyoutItem);
@@ -146,29 +140,26 @@ namespace PelotonIDE.Presentation
         private async void InterpreterLanguageSelectionBuilder(MenuBarItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
         {
             LanguageSettings = await GetLanguageConfiguration();
+            string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
 
-            if (InterfaceLanguageName == null || !LanguageSettings.ContainsKey(InterfaceLanguageName))
+            if (interfaceLanguageName == null || !LanguageSettings.ContainsKey(interfaceLanguageName))
             {
                 return;
             }
 
-            IEnumerable<MenuFlyoutItemBase> foo = from item in menuBarItem.Items where item.GetType().Name == "MenuFlyoutSubItem" && item.Name == menuLabel select item;
-            if (foo.Any())
-            {
-                return;
-            }
+            menuBarItem.Items.Remove(item => item.Name == menuLabel && item.GetType().Name == "MenuFlyoutSubItem");
 
             MenuFlyoutSubItem sub = new()
             {
                 // <!--<MenuFlyoutSubItem Text="Choose interface language" BorderBrush="LightGray" BorderThickness="1" names:Name="SettingsBar_InterfaceLanguage" />-->
-                Text = LanguageSettings[InterfaceLanguageName]["frmMain"][menuLabel],
+                Text = LanguageSettings[interfaceLanguageName]["frmMain"][menuLabel],
                 BorderThickness = new Thickness(1, 1, 1, 1),
                 BorderBrush = new SolidColorBrush() { Color = Colors.LightGray },
                 Name = menuLabel
             };
 
             // what is current language?
-            Dictionary<string, string> globals = LanguageSettings[InterfaceLanguageName]["GLOBAL"];
+            Dictionary<string, string> globals = LanguageSettings[interfaceLanguageName]["GLOBAL"];
             int count = LanguageSettings.Keys.Count;
             for (int i = 0; i < count; i++)
             {
@@ -182,8 +173,8 @@ namespace PelotonIDE.Presentation
                     {
                         Text = globals[$"{100 + i + 1}"],
                         Name = names.First(),
-                        Foreground = names.First() == InterpreterLanguageName ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
-                        Background = names.First() == InterpreterLanguageName ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
+                        Foreground = names.First() == Type_1_GetVirtualRegistry<string>("InterpreterLanguageName") ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
+                        Background = names.First() == Type_1_GetVirtualRegistry<string>("InterpreterLanguageName") ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
                     };
                     menuFlyoutItem.Click += routedEventHandler;
                     sub.Items.Add(menuFlyoutItem);
@@ -293,7 +284,7 @@ namespace PelotonIDE.Presentation
 
         public string GetLanguageNameOfCurrentTab(InterpreterParametersStructure? tabSettingJson)
         {
-            long langValue = InterfaceLanguageID;
+            long langValue = Type_1_GetVirtualRegistry<long>("InterfaceLanguageID");
             string langName = string.Empty;
 
             IEnumerable<Dictionary<string, Dictionary<string, string>>> languages = from lang in LanguageSettings.Keys
@@ -304,8 +295,8 @@ namespace PelotonIDE.Presentation
             {
                 Dictionary<string, Dictionary<string, string>> first = languages.First();
                 long value = (long)tabSettingJson["Language"]["Value"];
-                string type = value.GetType().Name;
                 long i = 0;
+                string type = value.GetType().Name;
                 if (type == "Int32")
                 {
                     i = (int)value;
@@ -316,8 +307,7 @@ namespace PelotonIDE.Presentation
                     i = (long)value;
                 }
 
-                string nameName = $"{101 + i}";
-                langName = first["GLOBAL"][nameName];
+                langName = first["GLOBAL"][$"{101 + i}"];
             }
             return langName;
         }
@@ -325,10 +315,8 @@ namespace PelotonIDE.Presentation
         private void UpdateLanguageNameInStatusBar(InterpreterParametersStructure? tabSettingJson)
         {
             languageName.Text = GetLanguageNameOfCurrentTab(tabSettingJson);
-            InterpreterLanguageID = (long)tabSettingJson["Language"]["Value"];
-            InterpreterLanguageName = GetLanguageNameFromID(InterpreterLanguageID); // languageName.Text;
-            //Type_1_UpdateVirtualRegistry("InterpreterLanguageName", InterpreterLanguageName);
-            //Type_1_UpdateVirtualRegistry("InterpreterLanguageID", InterpreterLanguageID);
+            //InterpreterLanguageID = (long)tabSettingJson["Language"]["Value"];
+            //InterpreterLanguageName = GetLanguageNameFromID(InterpreterLanguageID);
         }
 
         private string? GetLanguageNameFromID(long interpreterLanguageID) => (from lang
@@ -466,7 +454,7 @@ namespace PelotonIDE.Presentation
                     }
                 }
             }
-            return (long.Parse(LanguageSettings["English"]["GLOBAL"]["ID"]), LanguageSettings["English"]["GLOBAL"]["TextOrientation"]);
+            return (long.Parse(LanguageSettings["English"]["GLOBAL"]["ID"]), LanguageSettings["English"]["GLOBAL"]["TextOrientation"]); // default
         }
 
         private static void HandlePossibleAmpersandInMenuItem(string name, MenuFlyoutItemBase mfib)
@@ -570,13 +558,6 @@ namespace PelotonIDE.Presentation
 
 
         #region Getters
-        private object Type_1_GetVirtualRegistry(string name)
-        {
-            object result = ApplicationData.Current.LocalSettings.Values[name];
-            Track(name, result);
-            return result;
-        }
-
         private T Type_1_GetVirtualRegistry<T>(string name)
         {
             object result = ApplicationData.Current.LocalSettings.Values[name];
@@ -584,12 +565,6 @@ namespace PelotonIDE.Presentation
             return (T)result;
         }
 
-        private bool Type_1_GetVirtualRegistry_Boolean(string name)
-        {
-            object result = ApplicationData.Current.LocalSettings.Values[name];
-            Track(name, result);
-            return (bool)result;
-        }
         #endregion
 
         #region Setters

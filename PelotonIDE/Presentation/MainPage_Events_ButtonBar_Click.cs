@@ -30,9 +30,9 @@ namespace PelotonIDE.Presentation
             IEnumerable<string> tabLangName = from lang in LanguageSettings where long.Parse(lang.Value["GLOBAL"]["ID"]) == tabLangId select lang.Key;
             string? savedFilePath = navigationViewItem.SavedFilePath != null ? Path.GetDirectoryName(navigationViewItem.SavedFilePath.Path) : null;
             string? mostRecentPickedFilePath;
-            if (Type_1_GetVirtualRegistry("MostRecentPickedFilePath") != null)
+            if (Type_1_GetVirtualRegistry<string>("MostRecentPickedFilePath") != null)
             {
-                mostRecentPickedFilePath = Type_1_GetVirtualRegistry("MostRecentPickedFilePath").ToString();
+                mostRecentPickedFilePath = Type_1_GetVirtualRegistry<string>("MostRecentPickedFilePath").ToString();
             }
             else
             {
@@ -48,9 +48,9 @@ namespace PelotonIDE.Presentation
                     { "TabLanguageID",tabLangId },
                     { "TabLanguageName", tabLangName.First() },
                     { "TabVariableLength", text.Contains("<# ") && text.Contains("</#>") },
-                    { "InterpreterLanguage",  InterpreterLanguageID},
-                    { "InterfaceLanguageID", InterfaceLanguageID},
-                    { "InterfaceLanguageName",InterfaceLanguageName! },
+                    { "InterpreterLanguage",  Type_1_GetVirtualRegistry<string>("InterpreterLanguageID")},
+                    { "InterfaceLanguageID", Type_1_GetVirtualRegistry<long>("InterfaceLanguageID")},
+                    { "InterfaceLanguageName",Type_1_GetVirtualRegistry<string>("InterfaceLanguageName") },
                     { "Languages", LanguageSettings! },
                     { "SourceSpec", navigationViewItem.SavedFilePath == null ? navigationViewItem.Content : navigationViewItem.SavedFilePath.Path},
                     { "SourcePath", $"{savedFilePath ?? mostRecentPickedFilePath ?? Scripts}" },
@@ -63,8 +63,9 @@ namespace PelotonIDE.Presentation
 
         private void ToggleOutputButton_Click(object sender, RoutedEventArgs e)
         {
+            var outputPanelShowing = Type_1_GetVirtualRegistry<bool>("OutputPanelShowing");
             outputPanel.Visibility = outputPanelShowing ? Visibility.Collapsed : Visibility.Visible;
-            outputPanelShowing = !outputPanelShowing;
+            //outputPanelShowing = !outputPanelShowing;
         }
 
         private void RunCodeButton_Click(object sender, RoutedEventArgs e)

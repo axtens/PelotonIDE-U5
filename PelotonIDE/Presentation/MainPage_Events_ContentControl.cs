@@ -19,7 +19,8 @@ namespace PelotonIDE.Presentation
 
             MenuFlyout mf = new();
 
-            Dictionary<string, string> globals = LanguageSettings[InterpreterLanguageName!]["GLOBAL"];
+            string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+            Dictionary<string, string> globals = LanguageSettings[Type_1_GetVirtualRegistry<string>("InterfaceLanguageName")]["GLOBAL"];
             int count = LanguageSettings.Keys.Count;
             for (int i = 0; i < count; i++)
             {
@@ -33,8 +34,8 @@ namespace PelotonIDE.Presentation
                     {
                         Text = globals[$"{100 + i + 1}"],
                         Name = names.First(),
-                        Foreground = names.First() == InterpreterLanguageName ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
-                        Background = names.First() == InterpreterLanguageName ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
+                        Foreground = names.First() ==Type_1_GetVirtualRegistry<string>("InterpreterLanguageName") ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
+                        Background = names.First() == Type_1_GetVirtualRegistry<string>("InterpreterLanguageName") ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
                         Tag = new Dictionary<string, object>()
                         {
                             {"MenuFlyout",mf },
@@ -59,7 +60,7 @@ namespace PelotonIDE.Presentation
         {
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
             string name = me.Name;
-            languageName.Text = name;
+            languageName.Text = me.Text;
             // change the current tab to that lang but don't change the pertab settings
             Dictionary<string, string> globals = LanguageSettings[name]["GLOBAL"];
             string id = globals["ID"];
@@ -71,8 +72,8 @@ namespace PelotonIDE.Presentation
             currentTabSettings["Language"]["Defined"] = true;
             currentTabSettings["Language"]["Value"] = long.Parse(id);
 
-            //UpdateLanguageInInterpreterMenu((MenuBarItem)me, name);
-            UpdateLanguageInContextualMenu(me, name);
+            //ChangeHighlightOfMenuBarForLanguage((MenuBarItem)me, name);
+            UpdateLanguageInContextualMenu(me, me.Text, name);
             if (me.Tag is Dictionary<string, object> parent)
             {
                 if (parent.ContainsKey("ContentControl") && parent.ContainsKey("ContentControlPreviousContent"))
@@ -82,7 +83,7 @@ namespace PelotonIDE.Presentation
             UpdateCommandLineInStatusBar();
         }
 
-        private void UpdateLanguageInContextualMenu(MenuFlyoutItem me, string name)
+        private void UpdateLanguageInContextualMenu(MenuFlyoutItem me, string internationalizedName, string name)
         {
             if (me.Tag is Dictionary<string, object> parent)
             {

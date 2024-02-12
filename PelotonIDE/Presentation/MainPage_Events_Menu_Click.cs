@@ -1,6 +1,7 @@
 ﻿using EncodingChecker;
 
 using Microsoft.UI.Text;
+using Microsoft.UI.Xaml.Controls;
 
 using Newtonsoft.Json;
 
@@ -29,7 +30,6 @@ namespace PelotonIDE.Presentation
             {
                 MenuItemHighlightController((MenuFlyoutItem)item, item.Name == name);
             }
-
             HandleInterfaceLanguageChange(name);
         }
 
@@ -37,12 +37,16 @@ namespace PelotonIDE.Presentation
         {
             Dictionary<string, Dictionary<string, string>> selectedLanguage = LanguageSettings[langName];
             SetMenuText(selectedLanguage["frmMain"]);
-            //var selLang = selectedLanguage["GLOBAL"]["153"];
-            InterfaceLanguageName = langName;
-            InterfaceLanguageID = long.Parse(selectedLanguage["GLOBAL"]["ID"]);
-            Type_1_UpdateVirtualRegistry("InterfaceLanguageName", InterfaceLanguageName);
-            Type_1_UpdateVirtualRegistry("InterfaceLanguageID", InterfaceLanguageID);
+            Type_1_UpdateVirtualRegistry("InterfaceLanguageName", langName);
+            Type_1_UpdateVirtualRegistry("InterfaceLanguageID", long.Parse(selectedLanguage["GLOBAL"]["ID"]));
             // languageName.Text = LanguageSettings[InterfaceLanguageName]["GLOBAL"][$"{100 + InterpreterLanguageID + 1}"]; // current tab's language displayed in the interface language's way
+            InterfaceLanguageSelectionBuilder(mnuSelectLanguage, Internationalization_Click);
+            InterpreterLanguageSelectionBuilder(mnuRun, "mnuLanguage", MnuLanguage_Click);
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            if (navigationViewItem.TabSettingsDict != null)
+            {
+                UpdateLanguageNameInStatusBar(navigationViewItem.TabSettingsDict);
+            }
         }
 
         private void MnuLanguage_Click(object sender, RoutedEventArgs e)
@@ -61,16 +65,13 @@ namespace PelotonIDE.Presentation
 
             Type_3_UpdateInFocusTabSettings("Language", true, long.Parse(id));
 
-            InterpreterLanguageName = lang;
-            InterpreterLanguageID = long.Parse(id);
-
-            Type_1_UpdateVirtualRegistry("InterpreterLanguageName", InterpreterLanguageName);
-            Type_1_UpdateVirtualRegistry("InterpreterLanguageID", InterpreterLanguageID);
+            Type_1_UpdateVirtualRegistry("InterpreterLanguageName", lang);
+            Type_1_UpdateVirtualRegistry("InterpreterLanguageID", long.Parse(id));
             //Type_1_UpdateVirtualRegistry("VariableLength", VariableLength);
 
             Type_2_UpdatePerTabSettings("Language", true, long.Parse(id));
 
-            UpdateLanguageInInterpreterMenu(mnuRun, InterpreterLanguageName);
+            ChangeHighlightOfMenuBarForLanguage(mnuRun, Type_1_GetVirtualRegistry<string>("InterpreterLanguageName"));
             UpdateLanguageNameInStatusBar(navigationViewItem.TabSettingsDict);
             UpdateCommandLineInStatusBar();
         }
@@ -511,6 +512,7 @@ namespace PelotonIDE.Presentation
 
         private void InterpretBar_RunningMode_Click(object sender, RoutedEventArgs e)
         {
+            long quietude = 0;
             foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit" }
                                                  let items = from item in mnuRunningMode.Items where item.Name == key select item
                                                  from item in items
@@ -526,24 +528,24 @@ namespace PelotonIDE.Presentation
             {
                 case "mnuQuiet":
                     MenuItemHighlightController(me, true);
-                    Quietude = 0;
+                    quietude = 0;
                     break;
                 case "mnuVerbose":
                     MenuItemHighlightController(me, true);
-                    Quietude = 1;
+                    quietude = 1;
                     break;
                 case "mnuVerbosePauseOnExit":
                     MenuItemHighlightController(me, true);
-                    Quietude = 2;
+                    quietude = 2;
                     break;
             }
 
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
 
-            Type_3_UpdateInFocusTabSettings("Quietude", true, Quietude);
-            Type_2_UpdatePerTabSettings("Quietude", true, Quietude);
-            Type_1_UpdateVirtualRegistry("Quietude", Quietude);
+            Type_3_UpdateInFocusTabSettings("quietude", true, quietude);
+            Type_2_UpdatePerTabSettings("quietude", true, quietude);
+            Type_1_UpdateVirtualRegistry("quietude", quietude);
             UpdateCommandLineInStatusBar();
         }
 
@@ -569,7 +571,7 @@ namespace PelotonIDE.Presentation
 
         private void VariableLength_Click(object sender, RoutedEventArgs e)
         {
-            bool varlen = Type_1_GetVirtualRegistry_Boolean("VariableLength");
+            bool varlen = Type_1_GetVirtualRegistry<bool>("VariableLength");
             bool VariableLength;
             if (!varlen)
             {
@@ -597,7 +599,7 @@ namespace PelotonIDE.Presentation
 
         private void InsertCodeTemplate_Click(object sender, RoutedEventArgs e)
         {
-            bool VariableLength = Type_1_GetVirtualRegistry_Boolean("VariableLength");
+            bool VariableLength = Type_1_GetVirtualRegistry<bool>("VariableLength");
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
             ITextSelection selection = currentRichEditBox.Document.Selection;
@@ -658,7 +660,7 @@ namespace PelotonIDE.Presentation
                 {
                     { "Interpreter", interp!},
                     { "Scripts",  Scripts!},
-                    { "Language", LanguageSettings[InterfaceLanguageName!] }
+                    { "Language", LanguageSettings[Type_1_GetVirtualRegistry<string>("InterfaceLanguageName")] }
                 }
             });
         }

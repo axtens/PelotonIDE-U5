@@ -50,34 +50,34 @@ namespace PelotonIDE.Presentation
             return result;
         }
 
-        private T? GetFactorySettingsWithLocalSettingsOverrideOrDefault<T>(string name, FactorySettingsStructure? factory, ApplicationDataContainer? container, T otherwise)
-        {
-            T? result = default;
-            bool noFactory = false;
-            bool noContainer = false;
-            if (factory.TryGetValue(name, out object? value1))
-            {
-                result = (T)value1;
-            }
-            else
-            {
-                noFactory = true;
-            }
-            if (container.Values.TryGetValue(name, out object? value2))
-            {
-                result = (T)value2;
-            }
-            else
-            {
-                noContainer = true;
-            }
-            if (noFactory && noContainer)
-            {
-                result = otherwise;
-            }
-            container.Values[name] = result;
-            return result;
-        }
+        //private T? GetFactorySettingsWithLocalSettingsOverrideOrDefault<T>(string name, FactorySettingsStructure? factory, ApplicationDataContainer? container, T otherwise)
+        //{
+        //    T? result = default;
+        //    bool noFactory = false;
+        //    bool noContainer = false;
+        //    if (factory.TryGetValue(name, out object? value1))
+        //    {
+        //        result = (T)value1;
+        //    }
+        //    else
+        //    {
+        //        noFactory = true;
+        //    }
+        //    if (container.Values.TryGetValue(name, out object? value2))
+        //    {
+        //        result = (T)value2;
+        //    }
+        //    else
+        //    {
+        //        noContainer = true;
+        //    }
+        //    if (noFactory && noContainer)
+        //    {
+        //        result = otherwise;
+        //    }
+        //    container.Values[name] = result;
+        //    return result;
+        //}
 
         //private int GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, int otherwise, FactorySettingsStructure? factory, ApplicationDataContainer? container)
         //{
