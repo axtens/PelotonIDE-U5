@@ -2,8 +2,17 @@
 
 using Microsoft.UI;
 using Microsoft.UI.Input;
+using Microsoft.UI.Text;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+
+using Newtonsoft.Json;
+
+using System.Diagnostics;
+
+using Uno.Extensions;
+
+
 
 // using Uno.Extensions.Authentication.WinUI;
 
@@ -28,20 +37,99 @@ namespace PelotonIDE.Presentation
             TextAlignment = TextAlignment.DetectFromContent;
             FlowDirection = FlowDirection.LeftToRight;
             FontFamily = new FontFamily("Lucida Sans Unicode,Tahoma");
-            
+            PointerReleased += CustomRichEditBox_PointerReleased;
+            SelectionChanged += CustomRichEditBox_SelectionChanged;
+            //KeyDown += CustomRichEditBox_KeyDown;
+            //KeyUp += CustomRichEditBox_KeyUp;
+            //PreviewKeyDown += CustomRichEditBox_PreviewKeyDown;
             // https://stackoverflow.com/ai/search/16916
             //Background = new SolidColorBrush(Color.FromArgb(255,0xF9,0xF8, 0xbd)); // "#F9F8BD"
             //PointerEntered += (sender, e) => e.Handled = true;
             //Style = (Style)Application.Current.Resources["CustomRichEditBoxStyle"];
         }
 
-        protected override void OnKeyDown(KeyRoutedEventArgs e)
+        private void CustomRichEditBox_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
         {
             CoreVirtualKeyStates ctrlState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
+            CoreVirtualKeyStates shiftState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift);
             bool isCtrlPressed = ctrlState.HasFlag(CoreVirtualKeyStates.Down);
+            bool isShiftPressed = shiftState.HasFlag(CoreVirtualKeyStates.Locked);
 
-            MainPage.Track("ctrlState=", ctrlState, "isCtrlPressed", isCtrlPressed, "e.Key=", e.Key);
+            CustomRichEditBox me = (CustomRichEditBox)sender;
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            telem.Transmit("e.Key=", e.Key, "e.KeyStatus.ScanCode=", e.KeyStatus.ScanCode, "ctrlState=", ctrlState, "shiftState=", shiftState);
+            base.OnPreviewKeyDown(e);
+        }
+
+        private void CustomRichEditBox_KeyUp(object sender, KeyRoutedEventArgs e)
+        {
+            CoreVirtualKeyStates ctrlState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
+            CoreVirtualKeyStates shiftState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift);
+            bool isCtrlPressed = ctrlState.HasFlag(CoreVirtualKeyStates.Down);
+            bool isShiftPressed = shiftState.HasFlag(CoreVirtualKeyStates.Locked);
+
+            CustomRichEditBox me = (CustomRichEditBox)sender;
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            telem.Transmit("e.Key=", e.Key, "e.KeyStatus.ScanCode=", e.KeyStatus.ScanCode, "ctrlState=", ctrlState, "shiftState=", shiftState);
+            base.OnKeyUp(e);
+        }
+
+        private void CustomRichEditBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            CoreVirtualKeyStates ctrlState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
+            CoreVirtualKeyStates shiftState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift);
+            bool isCtrlPressed = ctrlState.HasFlag(CoreVirtualKeyStates.Down);
+            bool isShiftPressed = shiftState.HasFlag(CoreVirtualKeyStates.Locked);
+
+            //Window curWin = Window.Current;
+            //CoreWindow corWin = curWin.CoreWindow;
+            //CoreVirtualKeyStates insertState = corWin.GetKeyState(VirtualKey.Insert);
+
+            var insertState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Insert);
+            var overwriteMode = insertState.HasFlag(CoreVirtualKeyStates.Locked);
+
+            CustomRichEditBox me = (CustomRichEditBox)sender;
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            telem.Transmit("e.Key=", e.Key, "e.KeyStatus.ScanCode=", e.KeyStatus.ScanCode, "ctrlState=", ctrlState, "shiftState=", shiftState, "insertState=", insertState, "overwriteMode=", overwriteMode);
+            //base.OnKeyDown(e);
+        }
+
+        private void CustomRichEditBox_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            CustomRichEditBox me = ((CustomRichEditBox)sender);
+            ITextSelection selection = me.Document.Selection;
+            selection.GetText(TextGetOptions.None, out string text);
+            telem.Transmit(text);
+            selection.SelectOrDefault(x => x);
+            int caretPosition = selection.StartPosition;
+            int start = selection.StartPosition;
+            int end = selection.EndPosition;
+            telem.Transmit("start=", start, "end=", end);
             
+        }
+
+        private void CustomRichEditBox_PointerReleased(object sender, PointerRoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            telem.Transmit(((RichEditBox)sender).Name, e.GetType().FullName);
+            base.OnPointerReleased(e);
+        }
+
+        protected override void OnKeyDown(KeyRoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            CoreVirtualKeyStates ctrlState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
+            CoreVirtualKeyStates shiftState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift);
+            bool isCtrlPressed = ctrlState.HasFlag(CoreVirtualKeyStates.Down);
+            bool isShiftPressed = shiftState.HasFlag(CoreVirtualKeyStates.Locked);
+
             if (e.Key == VirtualKey.X && isCtrlPressed)
             {
                 Cut();
@@ -62,9 +150,18 @@ namespace PelotonIDE.Presentation
                 SelectAll();
                 return;
             }
+            if (e.Key == VirtualKey.Tab && isCtrlPressed)
+            {
+                int direction = ctrlState.ToString().Contains("Locked") ? -1 : 1;
+                telem.Transmit("e.Key=", e.Key, "ctrlState=", ctrlState, "shiftState=", shiftState, "isCtrlPressed=", isCtrlPressed, "isShiftPressed=", isShiftPressed);
+                e.Handled = true;
+                return;
+            }
             if (e.Key == VirtualKey.Tab)
             {
-                Document.Selection.TypeText("\t");
+                telem.Transmit("e.Key=", e.Key, "ctrlState=", ctrlState, "shiftState=", shiftState, "isCtrlPressed=", isCtrlPressed, "isShiftPressed=", isShiftPressed);
+                if (!isShiftPressed)
+                    Document.Selection.TypeText("\t");
                 e.Handled = true;
                 return;
             }

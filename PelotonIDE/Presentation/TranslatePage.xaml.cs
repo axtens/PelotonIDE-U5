@@ -83,7 +83,9 @@ namespace PelotonIDE.Presentation
 
                 CustomRichEditBox rtb = ((CustomRichEditBox)parameters.KVPs["RichEditBox"]);
                 rtb.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string selectedText);
+                while (selectedText.EndsWith('\r')) selectedText = selectedText.Remove(selectedText.Length - 1);
                 sourceText.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, selectedText);
+
                 if (selectedText.Contains("</#>"))
                 {
                     chkVarLengthFrom.IsChecked = true;
@@ -94,26 +96,12 @@ namespace PelotonIDE.Presentation
                     chkSpaceIn.IsChecked = true;
                 }
 
-                //var index = (int)(long)parameters.KVPs["InterpreterLanguage"];
                 sourceLanguageList.SelectedIndex = tabLanguageId;
-                //sourceLanguageList.Focus(FocusState.Keyboard);
+                sourceLanguageList.ScrollIntoView(sourceLanguageList.SelectedItem);
                 (sourceLanguageList.ItemContainerGenerator.ContainerFromIndex(tabLanguageId) as ListBoxItem)?.Focus(FocusState.Programmatic);
-                // Plexes = GetAllPlexes();
-                // this.OldPlexes = GetAllOldPlexes();
+
             }
         }
-
-        //private List<PropertyBag> GetAllOldPlexes()
-        //{
-        //    List<PropertyBag> result = [];
-        //    foreach (string file in Directory.GetFiles(@"c:\protium\bin\lexers", "*.plx"))
-        //    {
-        //        PropertyBag pb = new();
-        //        pb.LoadBagFromFile(file);
-        //        result.Add(pb);
-        //    }
-        //    return result;
-        //}
 
         private bool ProbablySpacedInstructions(string selectedText)
         {
@@ -167,7 +155,10 @@ namespace PelotonIDE.Presentation
 
         private string TranslateCode(string code, string sourceLanguageName, string targetLanguageName)
         {
-            MainPage.Track("TranslateCode", "code=", code, "sourceLanguageName=", sourceLanguageName, "targetLanguageName=", targetLanguageName);
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+
+            telem.Transmit("TranslateCode", "code=", code, "sourceLanguageName=", sourceLanguageName, "targetLanguageName=", targetLanguageName);
 
             bool variableTarget = chkVarLengthTo.IsChecked ?? false;
             bool variableSource = chkVarLengthFrom.IsChecked ?? false;
@@ -175,33 +166,8 @@ namespace PelotonIDE.Presentation
             bool fixedSource = chkVarLengthFrom.IsChecked == false;
             bool spaced = chkSpaceOut.IsChecked ?? false;
 
-            //PropertyBag englishPBFixed = (from bag 
-            //                              in this.OldPlexes 
-            //                              where bag.Name == "ENGLISH" && bag.ReadValueAsString("variable") == "False" 
-            //                              select bag).First();
-
             string? sourceName = (sourceLanguageName).Replace(" ", "").ToUpperInvariant();
             string? targetName = (targetLanguageName).Replace(" ", "").ToUpperInvariant();
-
-            
-            /*
-             * IEnumerable<PropertyBag> sourcePBVariable = from bag
-                                                        in this.OldPlexes
-                                                        where bag.Name == sourceName + "FULL" 
-                                                        select bag;
-            IEnumerable<PropertyBag> targetPBVariable = from bag
-                                                        in this.OldPlexes
-                                                        where bag.Name == targetName + "FULL"
-                                                        select bag;
-            IEnumerable<PropertyBag> sourcePBFixed = from bag
-                                                        in this.OldPlexes
-                                                        where bag.Name == sourceName 
-                                                        select bag;
-            IEnumerable<PropertyBag> targetPBFixed = from bag
-                                                        in this.OldPlexes
-                                                        where bag.Name == targetName
-                                                        select bag;
-            */
 
             Plex englishFixed = (from plex in Plexes where plex.Meta.Language == "English" && !plex.Meta.Variable select plex).First();
 
@@ -212,16 +178,10 @@ namespace PelotonIDE.Presentation
             IEnumerable<Plex> targetPlexFixed = from plex in Plexes where plex.Meta.Language == targetLanguageName.Replace(" ", "") && !plex.Meta.Variable select plex;
 
 
-            MainPage.Track("TranslateCode", "variableTarget=", variableTarget, "variableSource=", variableSource, "fixedTarget=", fixedTarget, "fixedSource=", fixedSource, "spaced=", spaced);
-
-            //PropertyBag sourcePB = new();
-            //PropertyBag targetPB = new();
+            telem.Transmit("TranslateCode", "variableTarget=", variableTarget, "variableSource=", variableSource, "fixedTarget=", fixedTarget, "fixedSource=", fixedSource, "spaced=", spaced);
 
             Plex source = new();
             Plex target = new();
-
-            //sourcePB = variableSource && sourcePBVariable.Any() ? sourcePBVariable.First() : sourcePBFixed.First();
-            //targetPB = variableTarget && targetPBVariable.Any() ? targetPBVariable.First() : targetPBFixed.First();
 
             source = variableSource && sourcePlexVariable.Any() ? sourcePlexVariable.First() : sourcePlexFixed.First();
             target = variableTarget && targetPlexVariable.Any() ? targetPlexVariable.First() : targetPlexFixed.First();
@@ -230,15 +190,11 @@ namespace PelotonIDE.Presentation
                 ? ProcessVariableToFixedOrVariable(code, source, target, spaced, variableTarget)
                 : ProcessFixedToFixedOrVariableWithOrWithoutSpace(code, source, target, spaced, variableTarget);
 
-            //string result = variableSource && sourcePBVariable.Any()
-            //    ? ProcessVariableToFixedOrVariablePB(code, sourcePB, targetPB, spaced, variableTarget)
-            //    : ProcessFixedToFixedOrVariableWithOrWithoutSpacePB(code, sourcePB, targetPB, spaced, variableTarget);
-
             string? pathToSource = SourcePath; // Path.GetDirectoryName(SourceSpec);
             string? nameOfSource = Path.GetFileNameWithoutExtension(SourceSpec);
             string? xlsxPath = Path.Combine(pathToSource ?? ".", "p.xlsx");
 
-            MainPage.Track("TranslateCode", "pathToSource=", pathToSource, "nameOfSource=", nameOfSource, "xlsxPath=", xlsxPath);
+            telem.Transmit("TranslateCode", "pathToSource=", pathToSource, "nameOfSource=", nameOfSource, "xlsxPath=", xlsxPath);
 
             bool ok = false;
 
@@ -253,7 +209,6 @@ namespace PelotonIDE.Presentation
             }
 
             (ok, int sourceCol, int targetCol) = GetSourceAndTargetColumnsFromWorksheet(worksheet, source.Meta.LanguageId, target.Meta.LanguageId);
-            //(ok, int sourceCol, int targetCol) = GetSourceAndTargetColumnsFromWorksheet(worksheet, sourceIdx, targetIdx);
             if (!ok) return result;
 
             // iterate thru strings in source language, building dictionary of replacements ordered by length of sourceText
@@ -261,14 +216,14 @@ namespace PelotonIDE.Presentation
             (ok, SortedDictionary<string, (double _typeCode, string _text)> dict) = FillSortedDictionaryFromWorksheet(sortedDictionary, worksheet, sourceCol, targetCol);
             if (!ok) return result;
 
-            long DEF_opcode = englishFixed.OpcodesByKey["DEF"]; //englishPBFixed.Keywords["DEF"];// englishFixed.OpcodesByKey["DEF"];
-            long KOP_opcode = englishFixed.OpcodesByKey["KOP"]; //englishPBFixed.Keywords["KOP"];// englishFixed.OpcodesByKey["KOP"];
-            long RST_opcode = englishFixed.OpcodesByKey["RST"]; //englishPBFixed.Keywords["RST"];// englishFixed.OpcodesByKey["RST"];
+            long DEF_opcode = englishFixed.OpcodesByKey["DEF"]; 
+            long KOP_opcode = englishFixed.OpcodesByKey["KOP"]; 
+            long RST_opcode = englishFixed.OpcodesByKey["RST"]; 
 
             
             foreach (string key in dict.Keys)
             {
-                MainPage.Track("TranslateCode", "key=", key, "dict[key]._typeCode=", dict[key]._typeCode, "dict[key]._text=", dict[key]._text);
+                telem.Transmit("TranslateCode", "key=", key, "dict[key]._typeCode=", dict[key]._typeCode, "dict[key]._text=", dict[key]._text);
 
                 //result = UpdateInLabelSpace(result, key, sortedDictionary[key]); // smartness:1
                 //bool srcVariable;
@@ -313,82 +268,8 @@ namespace PelotonIDE.Presentation
                         break;
                 }
             }
+            while (result.EndsWith('\r')) result = result.Remove(result.Length - 1);
             return result;
-        }
-
-        private string ProcessFixedToFixedOrVariableWithOrWithoutSpacePB(string buff, PropertyBag source, PropertyBag target, bool spaced, bool variableTarget)
-        {
-            var pattern = PelotonFixedSpacedPattern();
-            MatchCollection matches = pattern.Matches(buff);
-            for (int mi = matches.Count - 1; mi >= 0; mi--)
-            {
-                //var max = kopMatches[mi].Groups[2].Captures.Count - 1;
-                for (int i = matches[mi].Groups[1].Captures.Count - 1; i >= 0; i--)
-                {
-                    var capture = matches[mi].Groups[1].Captures[i];
-                    var key = capture.Value.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim();
-                    if (source.Keywords.TryGetValue(key, out long opcode))
-                    {
-                        if (target.Identifiers.TryGetValue(opcode, out string? value))
-                        {
-                            var newKey = value;
-                            var next = buff.Substring(capture.Index + capture.Length, 1);
-                            buff = buff.Remove(capture.Index, capture.Length)
-                                .Insert(capture.Index, newKey + ((spaced && next != ">") ? " " : ""));
-                        }
-                    }
-                }
-                // var tag = kopMatches[mi].Groups[1].Captures[0];
-            }
-            return target.ReadValueAsString("variable") == "True" ? buff.Replace("<@ ", "<# ").Replace("</@>", "</#>") : buff;
-        }
-
-        private string ProcessVariableToFixedOrVariablePB(string code, PropertyBag source, PropertyBag target, bool spaced, bool variableTarget)
-        {
-            var variableLengthWords = from variableLengthWord in source.Keywords.Keys orderby -variableLengthWord.Length select variableLengthWord;
-
-            var fixedLengthEquivalents = (from word in variableLengthWords
-                                          let sourceop = source.Keywords[word]
-                                          let targetword = target.Identifiers[sourceop]
-                                          select (word, targetword)).ToDictionary(x => x.word, x => x.targetword);
-
-            var codeBlocks = GetCodeBlocks(code); // in reverse order
-
-            foreach (var block in codeBlocks)
-            {
-                var codeChunk = block.Value;
-                foreach (var vlw in variableLengthWords)
-                {
-                    var spacedVlw = vlw + " ";
-
-                    if (codeChunk.Contains(spacedVlw, StringComparison.CurrentCulture))
-                    {
-                        if (spaced)
-                        {
-                            codeChunk = codeChunk.Replace(spacedVlw, fixedLengthEquivalents[vlw] + " ").Trim();
-                        }
-                        else
-                        {
-                            codeChunk = codeChunk.Replace(spacedVlw, fixedLengthEquivalents[vlw]).Trim();
-                        }
-                        continue;
-                    }
-                    if (codeChunk.Contains(vlw, StringComparison.CurrentCulture))
-                    {
-                        if (spaced)
-                        {
-                            codeChunk = codeChunk.Replace(vlw, fixedLengthEquivalents[vlw] + " ").Trim();
-                        }
-                        else
-                        {
-                            codeChunk = codeChunk.Replace(vlw, fixedLengthEquivalents[vlw]).Trim();
-                        }
-                    }
-                }
-                code = code.Remove(block.Index, block.Length)
-                    .Insert(block.Index, codeChunk);
-            }
-            return variableTarget ? code.Replace("<@", "<#").Replace("</@>", "</#>") : code.Replace("<#", "<@").Replace("</#>", "</@>");
         }
 
         private string UpdateInLabelSpace(string result, string sourceText, string targetText)

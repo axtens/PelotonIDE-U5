@@ -1,21 +1,21 @@
 using DocumentFormat.OpenXml.Wordprocessing;
 
 using Microsoft.UI;
+using Microsoft.UI.Input;
 using Microsoft.UI.Text;
 
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Timers;
+
+using Windows.System;
+using Windows.UI.Core;
 
 namespace PelotonIDE.Presentation
 {
     public sealed partial class MainPage : Page
     {
-        public void TimerTick(object? source, ElapsedEventArgs e)
-        {
-            TIME.Text = DateTime.Now.ToString("HH':'mm':'ss");
-        }
-
-
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -48,7 +48,7 @@ namespace PelotonIDE.Presentation
 
                     string? langname = LocalSettings.Values["InterfaceLanguageName"].ToString();
                     long quietude = (long)parameters.KVPs["Quietude"];
-                    Type_2_UpdatePerTabSettings("Quietude", true, quietude);
+                    //Type_2_UpdatePerTabSettings("Quietude", true, virtRegQuietude);
 
                     CustomTabItem navigationViewItem = new()
                     {
@@ -63,6 +63,7 @@ namespace PelotonIDE.Presentation
                     TabControlCounter += 1;
 
                     richEditBox.Tag = navigationViewItem.Tag;
+                    //richEditBox.Language = LanguageSettings[langname!]["GLOBAL"]["Locale"];
 
                     _richEditBoxes[richEditBox.Tag] = richEditBox;
                     tabControl.MenuItems.Add(navigationViewItem);
@@ -96,13 +97,19 @@ namespace PelotonIDE.Presentation
 
             LanguageSettings ??= await GetLanguageConfiguration();
 
+            if (LangLangs.Count == 0)
+                LangLangs = GetLangLangs(LanguageSettings);
+
             SetKeyboardFlags();
 
             FactorySettings ??= await GetFactorySettings();
 
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<long>("Timeout", FactorySettings, 1);
+            UpdateTimeoutInMenu();
+
             IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<bool>("OutputPanelShowing", FactorySettings, true);
             IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<OutputPanelPosition>("OutputPanelPosition", FactorySettings, (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), "Bottom"));
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<long>("OutputPanelHeight", FactorySettings, 200);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<double>("OutputPanelHeight", FactorySettings, 200);
             HandleOutputPanelChange(Type_1_GetVirtualRegistry<string>("OutputPanelPosition"));
 
             outputPanel.Height = Type_1_GetVirtualRegistry<double>("OutputPanelHeight");
@@ -127,21 +134,19 @@ namespace PelotonIDE.Presentation
             SetInterpreterNew();
             SetInterpreterOld();
 
-            PerTabInterpreterParameters = await MainPage.GetPerTabInterpreterParameters();
+            PerTabInterpreterParameters ??= await MainPage.GetPerTabInterpreterParameters();
 
             if (!AfterTranslation)
             {
 
-                //bool VariableLength = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("VariableLength", FactorySettings, LocalSettings, false);
                 IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<bool>("VariableLength", FactorySettings, false);
-                //Type_1_UpdateVirtualRegistry("VariableLength", VariableLength);
-                //long Quietude = GetFactorySettingsWithLocalSettingsOverrideOrDefault<long>("Quietude", FactorySettings, LocalSettings, 2);
                 IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<long>("Quietude", FactorySettings, 2);
-                //Type_1_UpdateVirtualRegistry("Quietude", Quietude);
 
-                Type_2_UpdatePerTabSettings("Language", true,Type_1_GetVirtualRegistry<long>("InterpreterLanguageID"));
+                Type_2_UpdatePerTabSettings("Language", true, Type_1_GetVirtualRegistry<long>("InterpreterLanguageID"));
                 Type_2_UpdatePerTabSettings("VariableLength", Type_1_GetVirtualRegistry<bool>("VariableLength"), Type_1_GetVirtualRegistry<bool>("VariableLength"));
                 Type_2_UpdatePerTabSettings("Quietude", true, Type_1_GetVirtualRegistry<long>("Quietude"));
+                Type_2_UpdatePerTabSettings("Timeout", true, Type_1_GetVirtualRegistry<long>("Timeout"));
+
             }
 
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
@@ -151,30 +156,38 @@ namespace PelotonIDE.Presentation
 
             if (!AfterTranslation)
             {
-                Type_3_UpdateInFocusTabSettings("Language", true, Type_1_GetVirtualRegistry<long>("InterpreterLanguageID"));
+                // So what to we do 
+                //Type_3_UpdateInFocusTabSettings("Language", true, Type_1_GetVirtualRegistry<long>("InterpreterLanguageID"));
                 // Do we also set the VariableLength of the inFocusTab?
                 //bool VariableLength = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("VariableLength", FactorySettings, LocalSettings, false);
                 IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault("VariableLength", FactorySettings, false);
                 Type_3_UpdateInFocusTabSettings("VariableLength", Type_1_GetVirtualRegistry<bool>("VariableLength"), Type_1_GetVirtualRegistry<bool>("VariableLength"));
+                UpdateStatusBarFromInFocusTab();
             }
             InterfaceLanguageSelectionBuilder(mnuSelectLanguage, Internationalization_Click);
             InterpreterLanguageSelectionBuilder(mnuRun, "mnuLanguage", MnuLanguage_Click);
             UpdateEngineSelectionFromFactorySettingsInMenu();
 
             if (!AfterTranslation)
+            {
                 UpdateMenuRunningModeInMenu(PerTabInterpreterParameters["Quietude"]);
-
+            }
             AfterTranslation = false;
 
             SetVariableLengthModeInMenu(mnuVariableLength, Type_1_GetVirtualRegistry<bool>("VariableLength"));
+
             UpdateLanguageNameInStatusBar(navigationViewItem.TabSettingsDict);
 
+            UpdateStatusBarFromVirtualRegistry();
             UpdateCommandLineInStatusBar();
 
             void SetKeyboardFlags()
             {
-                CAPS.Foreground = Console.CapsLock ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.LightGray);
-                NUM.Foreground = Console.NumberLock ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.LightGray);
+                var lightGrey = new SolidColorBrush(Colors.LightGray);
+                var black = new SolidColorBrush(Colors.Black);
+                CAPS.Foreground = Console.CapsLock ? black : lightGrey;
+                NUM.Foreground = Console.NumberLock ? black : lightGrey;
+                //INS.Foreground = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Insert).HasFlag(CoreVirtualKeyStates.Locked) ? black : lightGrey;
             }
 
             void SetEngine()
@@ -238,16 +251,69 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        private void IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<T>(string name, Dictionary<string, object>? factory, T defaultValue)
+        private Dictionary<string, List<string>> GetLangLangs(Dictionary<string, Dictionary<string, Dictionary<string, string>>>? languageSettings)
         {
-            if (LocalSettings.Values.ContainsKey(name)) return;
-            if (factory.TryGetValue(name, out object? factoryValue))
+            Dictionary<string, List<string>> dict = [];
+            List<string> kees = [.. languageSettings.Keys];
+            kees.Sort(CompareLanguagesById);
+
+            foreach (string key in kees)
             {
-                LocalSettings.Values[name] = (T)factoryValue;
-                return;
+                long myid = long.Parse(LanguageSettings[key]["GLOBAL"]["ID"]);
+                var myLanguageInMyLanguage = LanguageSettings[key]["GLOBAL"]["153"];
+                List<string> strings = [];
+
+                foreach (var kee in kees)
+                {
+                    long theirId = long.Parse(LanguageSettings[kee]["GLOBAL"]["ID"]);
+                    string theirLanguageInTheirLanguage = LanguageSettings[kee]["GLOBAL"]["153"];
+                    string theirLanguageInMyLanguage = LanguageSettings[key]["GLOBAL"][$"{125 + theirId}"];
+                    strings.Add(myLanguageInMyLanguage == theirLanguageInTheirLanguage ? myLanguageInMyLanguage : $"{theirLanguageInMyLanguage} - {theirLanguageInTheirLanguage}");
+                }
+                dict[key] = strings;
             }
-            LocalSettings.Values[name] = (defaultValue.GetType().BaseType.Name == "Enum") ? defaultValue.ToString() : defaultValue;
-            return;
+            return dict;
+
+            int CompareLanguagesById(string x, string y)
+            {
+                var xid = long.Parse(languageSettings[x]["GLOBAL"]["ID"]);
+                var yid = long.Parse(languageSettings[y]["GLOBAL"]["ID"]);
+                if (xid < yid) { return -1; }
+                if (xid > yid) { return 1; }
+                return 0;
+            }
+        }
+
+        private void UpdateStatusBarFromVirtualRegistry()
+        {
+            string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+
+            bool isVariableLength = Type_1_GetVirtualRegistry<bool>("VariableLength");
+            fixedVariableStatus.Text = (isVariableLength ? "#" : "@") + LanguageSettings[interfaceLanguageName]["GLOBAL"][isVariableLength ? "variableLength" : "fixedLength"];
+
+            string[] quietudes = ["mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit"];
+            long quietude = Type_1_GetVirtualRegistry<long>("Quietude");
+            quietudeStatus.Text = LanguageSettings[interfaceLanguageName]["frmMain"][quietudes.ElementAt((int)quietude)];
+
+            string[] timeouts = ["mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite"];
+            long timeout = Type_1_GetVirtualRegistry<long>("Timeout");
+            timeoutStatus.Text = $"{LanguageSettings[interfaceLanguageName]["frmMain"]["mnuTimeout"]}: {LanguageSettings[interfaceLanguageName]["frmMain"][timeouts.ElementAt((int)timeout)]}";
+        }
+
+        private void UpdateStatusBarFromInFocusTab()
+        {
+            string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+
+            bool isVariableLength = Type_3_GetInFocusTab<bool>("VariableLength");
+            fixedVariableStatus.Text = (isVariableLength ? "#" : "@") + LanguageSettings[interfaceLanguageName]["GLOBAL"][isVariableLength ? "variableLength" : "fixedLength"];
+
+            string[] quietudes = ["mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit"];
+            long quietude = Type_3_GetInFocusTab<long>("Quietude");
+            quietudeStatus.Text = LanguageSettings[interfaceLanguageName]["frmMain"][quietudes.ElementAt((int)quietude)];
+
+            string[] timeouts = ["mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite"];
+            long timeout = Type_3_GetInFocusTab<long>("Timeout");
+            timeoutStatus.Text = $"{LanguageSettings[interfaceLanguageName]["frmMain"]["mnuTimeout"]}: {LanguageSettings[interfaceLanguageName]["frmMain"][timeouts.ElementAt((int)timeout)]}";
         }
 
         private void UpdateTabDocumentNameIfOnlyOneAndFirst(NavigationView tabControl, string? interfaceLanguageName)
@@ -273,6 +339,34 @@ namespace PelotonIDE.Presentation
                 MenuItemHighlightController(mnuNewEngine, true);
                 MenuItemHighlightController(mnuOldEngine, false);
                 interpreter.Text = "P3";
+            }
+        }
+
+        /// <summary>
+        /// Save current editor settings
+        /// </summary>
+        private void MainWindow_Closed(object sender, object e)
+        {
+            if (_richEditBoxes.Count > 0)
+            {
+                foreach (KeyValuePair<object, CustomRichEditBox> _reb in _richEditBoxes)
+                {
+                    if (_reb.Value.IsDirty)
+                    {
+                        object key = _reb.Key;
+                        CustomRichEditBox aRichEditBox = _richEditBoxes[key];
+                        foreach (object? item in tabControl.MenuItems)
+                        {
+                            CustomTabItem? cti = item as CustomTabItem;
+                            string content = cti.Content.ToString().Replace(" ", "");
+                            if (content == key as string)
+                            {
+                                Debug.WriteLine(cti.Content);
+                                cti.Focus(FocusState.Keyboard); // was Pointer
+                            }
+                        }
+                    }
+                }
             }
         }
     }

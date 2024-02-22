@@ -1,10 +1,14 @@
-﻿using Microsoft.UI.Text;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+
+using Microsoft.UI.Text;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+using Style = Microsoft.UI.Xaml.Style;
 
 namespace PelotonIDE.Presentation
 {
@@ -27,6 +31,8 @@ namespace PelotonIDE.Presentation
             else
             {
                 targetText.Document.GetText(TextGetOptions.None, out string txt);
+                while (txt.EndsWith('\r')) txt = txt.Remove(txt.Length - 1);
+
                 Frame.Navigate(typeof(MainPage), new NavigationData()
                 {
                     Source = "TranslatePage",

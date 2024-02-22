@@ -122,7 +122,7 @@
   "Override": {
     "Defined": true,
     "Key": "O",
-    "Value": true
+    "Value": false
   },
   "PreventUnicode": {
     "Defined": false,
@@ -188,5 +188,10 @@
     "Defined": false,
     "Key": "Z",
     "Value": ""
+  },
+  "Timeout": {
+    "Defined": true,
+    "Key": "~",
+    "Value": 0
   }
 }

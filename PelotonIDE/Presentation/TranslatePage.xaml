@@ -48,11 +48,11 @@
             </utu:NavigationBar.MainCommand>
         </utu:NavigationBar>-->
 
-        <ListBox x:Name="sourceLanguageList" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" ScrollViewer.VerticalScrollMode="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="10" BorderBrush="LightGray" BorderThickness="3" SelectionChanged="SourceLanguageList_SelectionChanged"/>
+        <ListBox x:Name="sourceLanguageList" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Visible" Margin="10" BorderBrush="LightGray" BorderThickness="3" SelectionChanged="SourceLanguageList_SelectionChanged"/>
         <CheckBox x:Name="chkVarLengthFrom" Grid.Column="0" Grid.Row="2" Content="Variable Length"  IsEnabled="True" Click="ChkVarLengthFrom_Click"/>
         <CheckBox x:Name="chkSpaceIn" Grid.Column="1" Grid.Row="2" Content="Padded"  IsEnabled="True" Click="ChkSpaceIn_Click"/>
 
-        <ListBox x:Name="targetLanguageList" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" ScrollViewer.VerticalScrollMode="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="10" BorderBrush="LightGray" BorderThickness="3" SelectionChanged="TargetLanguageList_SelectionChanged"/>
+        <ListBox x:Name="targetLanguageList" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Visible" Margin="10" BorderBrush="LightGray" BorderThickness="3" SelectionChanged="TargetLanguageList_SelectionChanged"/>
         <CheckBox x:Name="chkVarLengthTo" Grid.Column="0" Grid.Row="4" Content="Variable Length" IsEnabled="True" Click="ChkVarLengthTo_Click"/>
         <CheckBox x:Name="chkSpaceOut" Grid.Column="1" Grid.Row="4" Content="Pad Out Code"  IsEnabled="True" Click="ChkSpaceOut_Click"/>
 

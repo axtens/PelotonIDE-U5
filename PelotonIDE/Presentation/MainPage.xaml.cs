@@ -1,6 +1,10 @@
-﻿using Microsoft.UI;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+
+using Microsoft.UI;
 using Microsoft.UI.Text;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.VisualBasic;
 
 using Newtonsoft.Json;
 
@@ -20,6 +24,7 @@ using InterpreterParameterStructure = System.Collections.Generic.Dictionary<stri
 using LanguageConfigurationStructure = System.Collections.Generic.Dictionary<string,
     System.Collections.Generic.Dictionary<string,
         System.Collections.Generic.Dictionary<string, string>>>;
+using Style = Microsoft.UI.Xaml.Style;
 
 namespace PelotonIDE.Presentation
 {
@@ -27,7 +32,6 @@ namespace PelotonIDE.Presentation
     {
         [GeneratedRegex("\\{\\*?\\\\[^{}]+}|[{}]|\\\\\\n?[A-Za-z]+\\n?(?:-?\\d+)?[ ]?", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-AU")]
         private static partial Regex CustomRTFRegex();
-        private Object rtbLock = new();
         readonly Dictionary<object, CustomRichEditBox> _richEditBoxes = [];
         // bool outputPanelShowing = true;
         enum OutputPanelPosition
@@ -53,17 +57,19 @@ namespace PelotonIDE.Presentation
 
         int TabControlCounter = 2; // Because the XAML defines the first tab
 
-        InterpreterParametersStructure? PerTabInterpreterParameters = [];
+        InterpreterParametersStructure? PerTabInterpreterParameters;
 
         /// <summary>
         /// does not change
         /// </summary>
         LanguageConfigurationStructure? LanguageSettings;
-        FactorySettingsStructure? FactorySettings = [];
+        FactorySettingsStructure? FactorySettings;
         readonly ApplicationDataContainer LocalSettings = ApplicationData.Current.LocalSettings;
 
         // public LanguageConfigurationStructure? LanguageSettings1 { get => LanguageSettings; set => LanguageSettings = value; }
-        List<Plex>? Plexes = GetAllPlexes();
+        readonly List<Plex>? Plexes = GetAllPlexes();
+
+        Dictionary<string, List<string>> LangLangs = [];
 
         bool AfterTranslation = false;
 
@@ -139,7 +145,10 @@ namespace PelotonIDE.Presentation
 
         private async void InterpreterLanguageSelectionBuilder(MenuBarItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
         {
-            LanguageSettings = await GetLanguageConfiguration();
+            Telemetry telem = new();
+            telem.SetEnabled(false);
+
+            LanguageSettings ??= await GetLanguageConfiguration();
             string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
 
             if (interfaceLanguageName == null || !LanguageSettings.ContainsKey(interfaceLanguageName))
@@ -167,6 +176,9 @@ namespace PelotonIDE.Presentation
                                             where LanguageSettings.ContainsKey(lang) && LanguageSettings[lang]["GLOBAL"]["ID"] == i.ToString()
                                             let name = LanguageSettings[lang]["GLOBAL"]["Name"]
                                             select name;
+
+                telem.Transmit("names.Any=", names.Any());
+
                 if (names.Any())
                 {
                     MenuFlyoutItem menuFlyoutItem = new()
@@ -184,6 +196,10 @@ namespace PelotonIDE.Presentation
         }
         private static void MenuItemHighlightController(MenuFlyoutItem? menuFlyoutItem, bool onish)
         {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+
+            telem.Transmit("menuFlyoutItem.Name=", menuFlyoutItem.Name, "onish=", onish);
             if (onish)
             {
                 menuFlyoutItem.Background = new SolidColorBrush(Colors.Black);
@@ -198,6 +214,9 @@ namespace PelotonIDE.Presentation
         // private void ToggleVariableLengthModeInMenu(InterpreterParameterStructure variableLength) => MenuItemHighlightController(mnuVariableLength, (bool)variableLength["Defined"]);
         private void SetVariableLengthModeInMenu(MenuFlyoutItem? menuFlyoutItem, bool showEnabled)
         {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            telem.Transmit("menuFlyoutItem.Name=", menuFlyoutItem.Name, "showEnabled=", showEnabled);
             if (showEnabled)
             {
                 menuFlyoutItem.Background = new SolidColorBrush(Colors.Black);
@@ -211,6 +230,41 @@ namespace PelotonIDE.Presentation
         }
         private void ToggleVariableLengthModeInMenu(bool flag) => MenuItemHighlightController(mnuVariableLength, flag);
 
+        private void UpdateTimeoutInMenu()
+        {
+            long currTimeout = Type_1_GetVirtualRegistry<long>("Timeout");
+            foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite" }
+                                                 let items = from item in mnuTimeout.Items where item.Name == key select item
+                                                 from item in items
+                                                 select item)
+            {
+                MenuItemHighlightController((MenuFlyoutItem)item!, false);
+            }
+
+            switch (currTimeout)
+            {
+                case 0:
+                    MenuItemHighlightController(mnu20Seconds, true);
+                    break;
+
+                case 1:
+                    MenuItemHighlightController(mnu100Seconds, true);
+                    break;
+
+                case 2:
+                    MenuItemHighlightController(mnu200Seconds, true);
+                    break;
+
+                case 3:
+                    MenuItemHighlightController(mnu1000Seconds, true);
+                    break;
+
+                case 4:
+                    MenuItemHighlightController(mnuInfinite, true);
+                    break;
+
+            }
+        }
         private void UpdateMenuRunningModeInMenu(InterpreterParameterStructure quietude)
         {
             if ((bool)quietude["Defined"])
@@ -235,34 +289,7 @@ namespace PelotonIDE.Presentation
                         MenuItemHighlightController(mnuVerbosePauseOnExit, true);
                         break;
                 }
-            }
-        }
 
-        /// <summary>
-        /// Save current editor settings
-        /// </summary>
-        private void MainWindow_Closed(object sender, object e)
-        {
-            if (_richEditBoxes.Count > 0)
-            {
-                foreach (KeyValuePair<object, CustomRichEditBox> _reb in _richEditBoxes)
-                {
-                    if (_reb.Value.IsDirty)
-                    {
-                        object key = _reb.Key;
-                        CustomRichEditBox aRichEditBox = _richEditBoxes[key];
-                        foreach (object? item in tabControl.MenuItems)
-                        {
-                            CustomTabItem? cti = item as CustomTabItem;
-                            string content = cti.Content.ToString().Replace(" ", "");
-                            if (content == key as string)
-                            {
-                                Debug.WriteLine(cti.Content);
-                                cti.Focus(FocusState.Keyboard); // was Pointer
-                            }
-                        }
-                    }
-                }
             }
         }
 
@@ -284,39 +311,28 @@ namespace PelotonIDE.Presentation
 
         public string GetLanguageNameOfCurrentTab(InterpreterParametersStructure? tabSettingJson)
         {
-            long langValue = Type_1_GetVirtualRegistry<long>("InterfaceLanguageID");
-            string langName = string.Empty;
+            Telemetry telem = new();
+            telem.SetEnabled(true);
 
-            IEnumerable<Dictionary<string, Dictionary<string, string>>> languages = from lang in LanguageSettings.Keys
-                                                                                    where long.Parse(LanguageSettings[lang]["GLOBAL"]["ID"]) == langValue
-                                                                                    select LanguageSettings[lang];
-
-            if (languages.Any())
+            long langValue;
+            string langName;
+            if (AnInFocusTabExists())
             {
-                Dictionary<string, Dictionary<string, string>> first = languages.First();
-                long value = (long)tabSettingJson["Language"]["Value"];
-                long i = 0;
-                string type = value.GetType().Name;
-                if (type == "Int32")
-                {
-                    i = (int)value;
-                }
-
-                if (type == "Int64")
-                {
-                    i = (long)value;
-                }
-
-                langName = first["GLOBAL"][$"{101 + i}"];
+                langValue = Type_3_GetInFocusTab<long>("Language");
+                langName = LanguageSettings[Type_1_GetVirtualRegistry<string>("InterfaceLanguageName")]["GLOBAL"][$"{101 + langValue}"];
             }
+            else
+            {
+                langValue = Type_2_GetPerTabSettings<long>("Language");
+                langName = LanguageSettings[Type_1_GetVirtualRegistry<string>("InterfaceLanguageName")]["GLOBAL"][$"{101 + langValue}"];
+            }
+            telem.Transmit("langValue=", langValue, "langName=", langName);
             return langName;
         }
 
         private void UpdateLanguageNameInStatusBar(InterpreterParametersStructure? tabSettingJson)
         {
             languageName.Text = GetLanguageNameOfCurrentTab(tabSettingJson);
-            //InterpreterLanguageID = (long)tabSettingJson["Language"]["Value"];
-            //InterpreterLanguageName = GetLanguageNameFromID(InterpreterLanguageID);
         }
 
         private string? GetLanguageNameFromID(long interpreterLanguageID) => (from lang
@@ -328,15 +344,19 @@ namespace PelotonIDE.Presentation
 
         public void HandleCustomPropertySaving(StorageFile file, CustomTabItem navigationViewItem)
         {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+
             string rtfContent = File.ReadAllText(file.Path);
             StringBuilder rtfBuilder = new(rtfContent);
 
             Regex ques = new(Regex.Escape("?"));
-            string info = @"{\info {\*\ilang ?} {\*\ilength ?} }"; // {\*\ipadout ?}
+            string info = @"{\info {\*\ilang ?} {\*\ilength ?} {\*\itimeout ?}  }"; // {\*\ipadout ?}
             info = ques.Replace(info, $"{navigationViewItem.TabSettingsDict["Language"]["Value"]}", 1);
             info = ques.Replace(info, (bool)navigationViewItem.TabSettingsDict["VariableLength"]["Value"] ? "1" : "0", 1);
+            info = ques.Replace(info, $"{(long)navigationViewItem.TabSettingsDict["Timeout"]["Value"]}",1);
 
-            MainPage.Track("info=", info);
+            telem.Transmit("info=", info);
 
             Regex regex = CustomRTFRegex();
 
@@ -357,9 +377,12 @@ namespace PelotonIDE.Presentation
                 rtfBuilder.Insert(j, info);
             }
 
-            MainPage.Track("rtfBuilder=", rtfBuilder.ToString());
+            telem.Transmit("rtfBuilder=", rtfBuilder.ToString());
 
-            File.WriteAllText(file.Path, rtfBuilder.ToString(), Encoding.ASCII);
+            string? text = rtfBuilder.ToString();
+            if (text.EndsWith((char)0x0)) text = text.Remove(text.Length - 1);
+            while (text.LastIndexOf("\\par\r\n}") > -1) text = text.Remove(text.LastIndexOf("\\par\r\n}"), 6);
+            File.WriteAllText(file.Path, text, Encoding.ASCII);
         }
 
         public void HandleCustomPropertyLoading(StorageFile file, CustomRichEditBox customRichEditBox)
@@ -398,6 +421,16 @@ namespace PelotonIDE.Presentation
                         {
                             Type_3_UpdateInFocusTabSettings("VariableLength", true, true);
                         }
+                    }
+                }
+                IEnumerable<Match> itimeout = from match in matches where match.Value.Contains(@"\itimeout") select match;
+                if (itimeout.Any())
+                {
+                    string[] items = itimeout.First().Value.Split(' ');
+                    if (items.Any())
+                    {
+                        string num = items[1].Replace("}", "");
+                        Type_3_UpdateInFocusTabSettings<long>("Timeout", true, long.Parse(num));
                     }
                 }
             }
@@ -488,11 +521,20 @@ namespace PelotonIDE.Presentation
             if (name.Contains('&'))
             {
                 string accel = name.Substring(name.IndexOf("&") + 1, 1);
-                mbi.KeyboardAccelerators.Add(new KeyboardAccelerator()
+                try
                 {
-                    Key = Enum.Parse<VirtualKey>(accel.ToUpperInvariant()),
-                    Modifiers = VirtualKeyModifiers.Menu
-                });
+                    mbi.KeyboardAccelerators.Add(new KeyboardAccelerator()
+                    {
+                        Key = Enum.Parse<VirtualKey>(accel.ToUpperInvariant()),
+                        Modifiers = VirtualKeyModifiers.Menu
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Telemetry telem = new();
+                    telem.SetEnabled(true);
+                    telem.Transmit(ex.Message, accel);
+                }
                 name = name.Replace("&", "");
             }
             mbi.Title = name;
@@ -553,45 +595,55 @@ namespace PelotonIDE.Presentation
 
         private void UpdateCommandLineInStatusBar()
         {
-            tabCommandLine.Text = BuildTabCommandLine(); ;
+            tabCommandLine.Text = BuildTabCommandLine();
         }
 
-
-        #region Getters
-        private T Type_1_GetVirtualRegistry<T>(string name)
+        private void InterpretMenu_Timeout_Click(object sender, RoutedEventArgs e)
         {
-            object result = ApplicationData.Current.LocalSettings.Values[name];
-            Track(name, result);
-            return (T)result;
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+
+            foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite" }
+                                                 let items = from item in mnuTimeout.Items where item.Name == key select item
+                                                 from item in items
+                                                 select item)
+            {
+                MenuItemHighlightController((MenuFlyoutItem)item!, false);
+            }
+
+            var me = (MenuFlyoutItem)sender;
+            long timeout = 0;
+            telem.Transmit(me.Name, me.Tag);
+            switch (me.Name)
+            {
+                case "mnu20Seconds":
+                    MenuItemHighlightController(mnu20Seconds, true);
+                    timeout = 0;
+                    break;
+
+                case "mnu100Seconds":
+                    MenuItemHighlightController(mnu100Seconds, true);
+                    timeout = 1;
+                    break;
+
+                case "mnu200Seconds":
+                    MenuItemHighlightController(mnu200Seconds, true);
+                    timeout = 2;
+                    break;
+
+                case "mnu1000Seconds":
+                    MenuItemHighlightController(mnu1000Seconds, true);
+                    timeout = 3;
+                    break;
+
+                case "mnuInfinite":
+                    MenuItemHighlightController(mnuInfinite, true);
+                    timeout = 4;
+                    break;
+            }
+            Type_3_UpdateInFocusTabSettings<long>("Timeout", true, timeout);
+            Type_2_UpdatePerTabSettings<long>("Timeout", true, timeout);
+            Type_1_UpdateVirtualRegistry<long>("Timeout", timeout);
         }
-
-        #endregion
-
-        #region Setters
-
-        // 1. virt reg
-        private void Type_1_UpdateVirtualRegistry<T>(string name, T value)
-        {
-            Track(name, value);
-            ApplicationData.Current.LocalSettings.Values[name] = value;
-        }
-
-        // 2. pertab
-        private void Type_2_UpdatePerTabSettings<T>(string name, bool enabled, T value)
-        {
-            Track(name, enabled, value);
-            PerTabInterpreterParameters[name]["Defined"] = enabled;
-            PerTabInterpreterParameters[name]["Value"] = value!;
-        }
-
-        // 3. currtab
-        private void Type_3_UpdateInFocusTabSettings<T>(string name, bool enabled, T value)
-        {
-            Track(name, enabled, value);
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            navigationViewItem.TabSettingsDict[name]["Defined"] = enabled;
-            navigationViewItem.TabSettingsDict[name]["Value"] = value!;
-        }
-        #endregion
     }
 }

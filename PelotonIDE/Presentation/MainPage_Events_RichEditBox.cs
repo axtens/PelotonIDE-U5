@@ -1,4 +1,5 @@
 ﻿using Microsoft.UI;
+using Microsoft.UI.Input;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml.Input;
 
@@ -10,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Windows.System;
+using Windows.UI.Core;
 
 namespace PelotonIDE.Presentation
 {
@@ -17,61 +19,46 @@ namespace PelotonIDE.Presentation
     {
         private void RichEditBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
+            var me = (RichEditBox)sender;
             SolidColorBrush Black = new(Colors.Black);
             SolidColorBrush LightGrey = new(Colors.LightGray);
+
+
+            var insertState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Insert);
 
             Debug.WriteLine($"{e.Key}");
             if (e.Key == VirtualKey.CapitalLock)
             {
-                CAPS.Text = "CAPS";
-                CAPS.Foreground = Console.CapsLock ? Black : (Brush)LightGrey;
+                //CAPS.Text = "CAPS";
+                CAPS.Foreground = Console.CapsLock ? Black : LightGrey;
             }
             if (e.Key == VirtualKey.NumberKeyLock)
             {
-                NUM.Text = "NUM";
-                NUM.Foreground = Console.NumberLock ? Black : (Brush)LightGrey;
+                //NUM.Text = "NUM";
+                NUM.Foreground = Console.NumberLock ? Black : LightGrey;
             }
+            //if (insertState.HasFlag(CoreVirtualKeyStates.Locked))
+            //{
+            //    //INS.Text = "INS";
+            //    INS.Foreground = LightGrey;
+            //}
+            //else
+            //{
+            //    //INS.Text = "INS";
+            //    INS.Foreground = Black;
+            //}
+
             if (e.Key == VirtualKey.Scroll)
             {
             }
-            if (e.Key == VirtualKey.Insert)
+            if (!e.KeyStatus.IsMenuKeyDown && !e.KeyStatus.IsExtendedKey && e.Key != VirtualKey.Control)
             {
-            }
-            if (tabControl.Content is CustomRichEditBox currentRichEditBox && !e.KeyStatus.IsExtendedKey && e.Key != VirtualKey.Control)
-            {
-                currentRichEditBox.IsDirty = true;
+                ((CustomRichEditBox)me).IsDirty = true;
             }
         }
 
         private void CustomREBox_SelectionChanged(object sender, RoutedEventArgs e)
         {
-            if (tabControl.Content is CustomRichEditBox currentRichEditBox)
-            {
-                currentRichEditBox.Document.GetText(TextGetOptions.None, out string text);
-                //wordCount.Text = text.Split(' ').Length - 1 + " words";
-                int caretPosition = currentRichEditBox.Document.Selection.StartPosition;
-                int lineNumber = 1;
-                int charNumber = 0;
-                for (int i = 0; i < caretPosition; i++)
-                {
-                    charNumber++;
-                    if (text[i] == '\v' || text[i] == '\r')
-                    {
-                        lineNumber++;
-                        charNumber = 0;
-                    }
-                }
-                int charsSinceLastLineBreak = 1;
-                for (int i = caretPosition - 1; i >= 0; i--)
-                {
-                    if (text[i] == '\v' || text[i] == '\r')
-                    {
-                        break;
-                    }
-                    charsSinceLastLineBreak++;
-                }
-                cursorPosition.Text = "Line " + lineNumber + ", Char " + charNumber;
-            }
         }
     }
 }

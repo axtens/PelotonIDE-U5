@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+﻿using DocumentFormat.OpenXml.Drawing;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 using Microsoft.UI.Dispatching;
@@ -9,6 +10,7 @@ using System.Text;
 
 using Uno.Extensions;
 
+using Windows.Devices.PointOfService;
 using Windows.Storage;
 using Windows.UI.Core;
 
@@ -19,12 +21,33 @@ namespace PelotonIDE.Presentation
 {
     public sealed partial class MainPage : Page
     {
-        private void ExecuteInterpreter(string selectedText)
+        private async void ExecuteInterpreter(string selectedText)
         {
-            Track("selectedText=", selectedText);
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+
+            DispatcherQueue dispatcher = DispatcherQueue.GetForCurrentThread();
+
+            if (Type_3_GetInFocusTab<long>("Quietude") == 0 && Type_3_GetInFocusTab<long>("Timeout") > 0 )
+            {
+                // Yes, No, Cancel
+
+                //Task<int> sure = AreYouSureYouWantToRunALongTimeSilently();
+                //sure.ContinueWith(t => t);
+                //if (sure.Result == 2) return;
+                //if (sure.Result == 1)
+                //    Type_3_UpdateInFocusTabSettings<long>("Quietude", true, 1);
+                // Task<ContentDialogResult> task = AreYouSureYouWantToRunALongTimeSilently();
+                // task.Wait();
+                if (!await AreYouSureYouWantToRunALongTimeSilently())
+                {
+                    return;
+                }
+            }
+
+            telem.Transmit("selectedText=", selectedText);
             // load tab settings
 
-            DispatcherQueue dispatcher = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
 
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             long quietude = (long)navigationViewItem.TabSettingsDict["Quietude"]["Value"];
@@ -43,7 +66,7 @@ namespace PelotonIDE.Presentation
                 (stdOut, stdErr) = RunProtium(engineArguments, selectedText, quietude);
             }
 
-            Track("stdOut=", stdOut, "stdErr=", stdErr);
+            telem.Transmit("stdOut=", stdOut, "stdErr=", stdErr);
 
             if (!string.IsNullOrEmpty(stdErr))
             {
@@ -67,16 +90,18 @@ namespace PelotonIDE.Presentation
 
         private static void AddInsertParagraph(RichEditBox reb, string text, bool addInsert = true, bool withPrefix = true)
         {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
             if (string.IsNullOrEmpty(text))
             {
                 return;
             }
-            Track("text=", text, "addInsert=", addInsert, "withPrefix=", withPrefix);
+            telem.Transmit("text=", text, "addInsert=", addInsert, "withPrefix=", withPrefix);
             const string stamp = "> ";
             if (withPrefix)
                 text = text.Insert(0, stamp);
 
-            reb.IsReadOnly = false;
+            //reb.IsReadOnly = false;
             reb.Document.GetText(Microsoft.UI.Text.TextGetOptions.UseLf, out string? t);
             if (addInsert)
             {
@@ -89,20 +114,22 @@ namespace PelotonIDE.Presentation
                 reb.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, text + "\n" + t);
             }
             reb.Focus(FocusState.Programmatic);
-            reb.IsReadOnly = true;
+            //reb.IsReadOnly = true;
         }
 
         public (string StdOut, string StdErr) RunProtium(string args, string buff, long quietude)
         {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
             string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.P2"].ToString();
-            string temp = Path.GetTempFileName();
+            string temp = System.IO.Path.GetTempFileName();
             File.WriteAllText(temp, buff, Encoding.Unicode);
 
             args = args.Replace(":", "=");
 
             args += $" /F:\"{temp}\"";
 
-            Track("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
+            telem.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
 
             ProcessStartInfo info = new()
             {
@@ -113,21 +140,24 @@ namespace PelotonIDE.Presentation
             };
 
             Process? proc = Process.Start(info);
-            proc.WaitForExit();
+            proc.WaitForExit(GetTimeoutInMilliseconds());
             proc.Dispose();
 
-            return (StdOut: File.ReadAllText(Path.ChangeExtension(temp, "out")), StdErr: string.Empty);
+            return (StdOut: File.ReadAllText(System.IO.Path.ChangeExtension(temp, "out")), StdErr: string.Empty);
         }
 
         public (string StdOut, string StdErr) RunPeloton(string args, string buff, long quietude)
         {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+
             string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.P3"].ToString();
 
-            Track("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
+            telem.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
 
-            string t_in = Path.GetTempFileName();
-            string t_out = Path.ChangeExtension(t_in, "out");
-            string t_err = Path.ChangeExtension(t_in, "err");
+            string t_in = System.IO.Path.GetTempFileName();
+            string t_out = System.IO.Path.ChangeExtension(t_in, "out");
+            string t_err = System.IO.Path.ChangeExtension(t_in, "err");
 
             File.WriteAllText(t_in, buff);
 
@@ -135,7 +165,7 @@ namespace PelotonIDE.Presentation
 
             args += $" /F:\"{t_in}\""; // 1>\"{t_out}\" 2>\"{t_err}\"";
 
-            Track(args, buff);
+            telem.Transmit(args, buff);
 
             ProcessStartInfo info = new()
             {
@@ -152,11 +182,26 @@ namespace PelotonIDE.Presentation
             return (StdOut: File.Exists(t_out) ? File.ReadAllText(t_out) : string.Empty, StdErr: File.Exists(t_err) ? File.ReadAllText(t_err) : string.Empty);
         }
 
+        public void Inject(string? arg)
+        {
+            //outputText.IsReadOnly = false;
+            outputText.Document.GetText(Microsoft.UI.Text.TextGetOptions.AdjustCrlf, out string? value);
+            outputText.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, $"{value}{arg}");
+            //outputText.IsReadOnly = true;
+        }
         public (string StdOut, string StdErr) RunPeloton2(string args, string buff, long quietude, DispatcherQueue dispatcher)
         {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+
+            string temp = System.IO.Path.GetTempFileName();
+            File.WriteAllText(temp, buff, Encoding.Unicode);
+
+            telem.Transmit("temp=", temp);
+
             string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.P3"].ToString();
 
-            Track("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
+            telem.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
 
             ProcessStartInfo info = new()
             {
@@ -170,6 +215,7 @@ namespace PelotonIDE.Presentation
                 WindowStyle = ProcessWindowStyle.Hidden
             };
 
+            //inject($"{DateTime.Now:o}(\r");
             Process? proc = Process.Start(info);
             StringBuilder stdout = new();
             StringBuilder stderr = new();
@@ -180,32 +226,64 @@ namespace PelotonIDE.Presentation
 
             proc.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
             {
-                if (quietude == 0)
-                {
-                    stdout.AppendLine(e.Data);
-                }
-                else
+                //if (quietude == 0)
+                //{
+                //    stdout.AppendLine(e.Data!);
+                //}
+                //else
+                //{
+                if (e.Data != null)
                 {
                     dispatcher.TryEnqueue(() =>
                     {
-                        Track("stdout e.Data=", e.Data!);
-                        AddOutput(e.Data!);
+                        //Inject($"{DateTime.Now:o}> {e.Data}\r");
+                        Inject($"> {e.Data}\r");
                     });
                 }
+                //}
             };
             proc.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
             {
+                Telemetry telem = new();
+                telem.SetEnabled(true);
+                telem.Transmit(e.Data);
                 stderr.AppendLine(e.Data);
             };
 
             proc.BeginErrorReadLine();
             proc.BeginOutputReadLine();
 
-            proc.WaitForExit();
+            proc.WaitForExit(GetTimeoutInMilliseconds());
             proc.Dispose();
+
+            //inject($"){DateTime.Now:o}\r");
 
             return (StdOut: stdout.ToString().Trim(), StdErr: stderr.ToString().Trim());
         }
 
+        private int GetTimeoutInMilliseconds()
+        {
+            long timeout = Type_1_GetVirtualRegistry<long>("Timeout");
+            int timeoutInMilliseconds = -1;
+            switch (timeout)
+            {
+                case 0:
+                    timeoutInMilliseconds = 20 * 1000; 
+                    break;
+                case 1:
+                    timeoutInMilliseconds = 100 * 1000; 
+                    break;
+                case 2:
+                    timeoutInMilliseconds = 200 * 1000; 
+                    break;
+                case 3:
+                    timeoutInMilliseconds = 1000 * 1000; 
+                    break;
+                case 4:
+                    timeoutInMilliseconds = -1;
+                    break;
+            }
+            return timeoutInMilliseconds;
+        }
     }
 }

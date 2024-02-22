@@ -88,9 +88,9 @@ namespace PelotonIDE.Presentation
 
         private void ClearOutputButton_Click(object sender, RoutedEventArgs e)
         {
-            outputText.IsReadOnly = false;
+            //outputText.IsReadOnly = false;
             outputText.Document.SetText(TextSetOptions.None, null);
-            outputText.IsReadOnly = true;
+            //outputText.IsReadOnly = true;
         }
 
         private async void FileCopyErrorButton_Click(object sender, RoutedEventArgs e)
@@ -152,9 +152,9 @@ namespace PelotonIDE.Presentation
 
         private void ClearErrorButton_Click(object sender, RoutedEventArgs e)
         {
-            errorText.IsReadOnly = false;
+            //errorText.IsReadOnly = false;
             errorText.Document.SetText(TextSetOptions.None, null);
-            errorText.IsReadOnly = true;
+            //errorText.IsReadOnly = true;
         }
 
 

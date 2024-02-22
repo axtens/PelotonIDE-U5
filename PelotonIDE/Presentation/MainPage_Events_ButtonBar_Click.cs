@@ -15,18 +15,7 @@ namespace PelotonIDE.Presentation
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
             currentRichEditBox.Document.GetText(TextGetOptions.None, out string? text);
-            if (!navigationViewItem.TabSettingsDict.TryGetValue("Language", out Dictionary<string, object>? ldict))
-            {
-                return;
-            }
-            long tabLangId = (long)ldict["Value"];
-
-            if (!navigationViewItem.TabSettingsDict.TryGetValue("Quietude", out Dictionary<string, object>? qdict))
-            {
-                return;
-            }
-            long quietude = (long)qdict["Value"];
-
+            long tabLangId = Type_3_GetInFocusTab<long>("Language");
             IEnumerable<string> tabLangName = from lang in LanguageSettings where long.Parse(lang.Value["GLOBAL"]["ID"]) == tabLangId select lang.Key;
             string? savedFilePath = navigationViewItem.SavedFilePath != null ? Path.GetDirectoryName(navigationViewItem.SavedFilePath.Path) : null;
             string? mostRecentPickedFilePath;
@@ -48,13 +37,13 @@ namespace PelotonIDE.Presentation
                     { "TabLanguageID",tabLangId },
                     { "TabLanguageName", tabLangName.First() },
                     { "TabVariableLength", text.Contains("<# ") && text.Contains("</#>") },
-                    { "InterpreterLanguage",  Type_1_GetVirtualRegistry<string>("InterpreterLanguageID")},
+                    { "InterpreterLanguage",  Type_1_GetVirtualRegistry<long>("InterpreterLanguageID")},
                     { "InterfaceLanguageID", Type_1_GetVirtualRegistry<long>("InterfaceLanguageID")},
                     { "InterfaceLanguageName",Type_1_GetVirtualRegistry<string>("InterfaceLanguageName") },
                     { "Languages", LanguageSettings! },
                     { "SourceSpec", navigationViewItem.SavedFilePath == null ? navigationViewItem.Content : navigationViewItem.SavedFilePath.Path},
                     { "SourcePath", $"{savedFilePath ?? mostRecentPickedFilePath ?? Scripts}" },
-                    { "Quietude", quietude },
+                    { "Quietude", Type_3_GetInFocusTab<long>("Quietude") },
                     { "Plexes", Plexes! }
                 }
             });
@@ -65,7 +54,8 @@ namespace PelotonIDE.Presentation
         {
             var outputPanelShowing = Type_1_GetVirtualRegistry<bool>("OutputPanelShowing");
             outputPanel.Visibility = outputPanelShowing ? Visibility.Collapsed : Visibility.Visible;
-            //outputPanelShowing = !outputPanelShowing;
+            outputPanelShowing = !outputPanelShowing;
+            Type_1_UpdateVirtualRegistry<bool>("OutputPanelShowing", outputPanelShowing);
         }
 
         private void RunCodeButton_Click(object sender, RoutedEventArgs e)
@@ -91,6 +81,7 @@ namespace PelotonIDE.Presentation
             {
                 ExecuteInterpreter(selectedText.Replace("\r", "\r\n")); // FIXME pass in some kind of identifier to connect to the tab
             }
+            selection.SelectOrDefault(x => x);
         }
     }
 }

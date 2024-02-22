@@ -11,6 +11,6 @@
   "Interpreter.P3": "c:\\peloton\\bin\\P3.exe",
   "Scripts": "c:\\peloton\\code",
   "Quietude": 2,
-  "Timeout": 100,
+  "Timeout": 1,
   "VariableLength": false
 }
