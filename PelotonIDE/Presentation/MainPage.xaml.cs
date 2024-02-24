@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Wordprocessing;
+﻿using DocumentFormat.OpenXml.EMMA;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 using Microsoft.UI;
 using Microsoft.UI.Text;
@@ -9,6 +10,7 @@ using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -350,11 +352,15 @@ namespace PelotonIDE.Presentation
             string rtfContent = File.ReadAllText(file.Path);
             StringBuilder rtfBuilder = new(rtfContent);
 
+            const int ONCE = 1;
+
+            var inFocusTab = navigationViewItem.TabSettingsDict;
             Regex ques = new(Regex.Escape("?"));
-            string info = @"{\info {\*\ilang ?} {\*\ilength ?} {\*\itimeout ?}  }"; // {\*\ipadout ?}
-            info = ques.Replace(info, $"{navigationViewItem.TabSettingsDict["Language"]["Value"]}", 1);
-            info = ques.Replace(info, (bool)navigationViewItem.TabSettingsDict["VariableLength"]["Value"] ? "1" : "0", 1);
-            info = ques.Replace(info, $"{(long)navigationViewItem.TabSettingsDict["Timeout"]["Value"]}",1);
+            string info = @"{\info {\*\ilang ?} {\*\ilength ?} {\*\itimeout ?} {\*\iquietude ?} }"; // {\*\ipadout ?}
+            info = ques.Replace(info, $"{inFocusTab["Language"]["Value"]}", ONCE);
+            info = ques.Replace(info, (bool)inFocusTab["VariableLength"]["Value"] ? "1" : "0", ONCE);
+            info = ques.Replace(info, $"{(long)inFocusTab["Timeout"]["Value"]}", ONCE);
+            info = ques.Replace(info, $"{(long)inFocusTab["Quietude"]["Value"]}", ONCE);
 
             telem.Transmit("info=", info);
 
@@ -431,6 +437,16 @@ namespace PelotonIDE.Presentation
                     {
                         string num = items[1].Replace("}", "");
                         Type_3_UpdateInFocusTabSettings<long>("Timeout", true, long.Parse(num));
+                    }
+                }
+                IEnumerable<Match> iquietude = from match in matches where match.Value.Contains(@"\iquietude") select match;
+                if (iquietude.Any())
+                {
+                    string[] quietudes = iquietude.First().Value.Split(' ');
+                    if (quietudes.Any())
+                    {
+                        string num = quietudes[1].Replace("}", "");
+                        Type_3_UpdateInFocusTabSettings<long>("Quietude", true, long.Parse(num));
                     }
                 }
             }
@@ -600,6 +616,11 @@ namespace PelotonIDE.Presentation
 
         private void InterpretMenu_Timeout_Click(object sender, RoutedEventArgs e)
         {
+            string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+            Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
+            Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
+            CultureInfo cultureInfo = new CultureInfo(global["Locale"]); 
+            
             Telemetry telem = new();
             telem.SetEnabled(true);
 
@@ -641,9 +662,9 @@ namespace PelotonIDE.Presentation
                     timeout = 4;
                     break;
             }
-            Type_3_UpdateInFocusTabSettings<long>("Timeout", true, timeout);
-            Type_2_UpdatePerTabSettings<long>("Timeout", true, timeout);
             Type_1_UpdateVirtualRegistry<long>("Timeout", timeout);
-        }
+            Type_2_UpdatePerTabSettings<long>("Timeout", true, timeout);
+            _ = Type_3_UpdateInFocusTabSettingsIfPermittedAsync<long>("Timeout", true, timeout, $"{frmMain["mnuUpdate"]} {frmMain["mnuTimeout"].ToLower(cultureInfo)} = '{frmMain[me.Name].ToLower(cultureInfo)}'");
+            }
     }
 }

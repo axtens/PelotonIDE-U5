@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Windows.Storage;
@@ -16,6 +17,20 @@ namespace PelotonIDE.Presentation
 {
     public sealed partial class MainPage : Page
     {
+        private bool InFocusTabIsPrFile()
+        {
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+            if (navigationViewItem.IsNewFile) return false;
+            return navigationViewItem.SavedFilePath.Path.ToUpperInvariant().EndsWith(".PR");
+        }
+
+        private bool InFocusTabSettingIsDifferent<T>(string setting, T value)
+        {
+            T? lhs = Type_3_GetInFocusTab<T>(setting);
+            return $"{lhs}" != $"{value}";
+        }
+
         private void SetMenuText(Dictionary<string, string> selectedLanguage)
         {
             foreach (MenuBarItem? mi in menuBar.Items)
@@ -45,20 +60,6 @@ namespace PelotonIDE.Presentation
             {
                 HandlePossibleAmpersandInMenuItem(selectedLanguage[keyControl.key], keyControl.opt);
             }
-
-            //HandlePossibleAmpersandInMenuItem(selectedLanguage["mnuQuiet"], mnuQuiet);
-            //HandlePossibleAmpersandInMenuItem(selectedLanguage["mnuVerbose"], mnuVerbose);
-            //HandlePossibleAmpersandInMenuItem(selectedLanguage["mnuVerbosePauseOnExit"], mnuVerbosePauseOnExit);
-
-            //HandlePossibleAmpersandInMenuItem(selectedLanguage["mnu20Seconds"], mnu20Seconds);
-            //HandlePossibleAmpersandInMenuItem(selectedLanguage["mnu100Seconds"], mnu100Seconds);
-            //HandlePossibleAmpersandInMenuItem(selectedLanguage["mnu200Seconds"], mnu200Seconds);
-            //HandlePossibleAmpersandInMenuItem(selectedLanguage["mnu1000Seconds"], mnu1000Seconds);
-            //HandlePossibleAmpersandInMenuItem(selectedLanguage["mnuInfinite"], mnuInfinite);
-
-
-            // HandlePossibleAmpersandInMenuItem(selectedLanguage["chkSpaceOut"], mnuSpaced);
-            // HandlePossibleAmpersandInMenuItem(selectedLanguage["cmdClearAll"], mnuReset);
 
             ToolTipService.SetToolTip(butNew, selectedLanguage["new.Tip"]);
             ToolTipService.SetToolTip(butOpen, selectedLanguage["open.Tip"]);
@@ -286,6 +287,46 @@ namespace PelotonIDE.Presentation
             navigationViewItem.TabSettingsDict[name]["Defined"] = enabled;
             navigationViewItem.TabSettingsDict[name]["Value"] = value!;
         }
+
+        private async Task Type_3_UpdateInFocusTabSettingsIfPermittedAsync<T>(string name, bool defined, T value, string prompt)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            telem.Transmit(name, defined, value);
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            var currentDefined = (bool)navigationViewItem.TabSettingsDict[name]["Defined"];
+            var currentValue = (T)navigationViewItem.TabSettingsDict[name]["Value"];
+            if (currentDefined == defined && $"{currentValue}" == $"{value}")
+            {
+                return;
+            }
+            if (await ChangingSettingsAllowed(prompt))
+            {
+                navigationViewItem.TabSettingsDict[name]["Defined"] = defined;
+                navigationViewItem.TabSettingsDict[name]["Value"] = value!;
+
+            }
+        }
+
+        private async Task<bool> ChangingSettingsAllowed(string prompt)
+        {
+            string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+            Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
+
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = prompt,
+                PrimaryButtonText = global["1209"],
+                SecondaryButtonText = global["1207"]
+            };
+            ContentDialogResult result = await dialog.ShowAsync();
+            if (result == ContentDialogResult.Secondary) { return true; }
+            if (result == ContentDialogResult.Primary) { return false; }
+            return false;
+        }
+
         #endregion
         private void IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<T>(string name, Dictionary<string, object>? factory, T defaultValue)
         {

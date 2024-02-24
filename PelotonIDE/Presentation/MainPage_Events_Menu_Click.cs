@@ -7,9 +7,11 @@ using Newtonsoft.Json;
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Windows.ApplicationModel.DataTransfer;
@@ -57,8 +59,13 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        private void MnuLanguage_Click(object sender, RoutedEventArgs e)
+        private async void MnuLanguage_Click(object sender, RoutedEventArgs e)
         {
+            string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+            Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
+            Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
+            CultureInfo cultureInfo = new CultureInfo(global["Locale"]);
+
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
             string lang = me.Name;
 
@@ -71,13 +78,15 @@ namespace PelotonIDE.Presentation
 
             string id = LanguageSettings[lang]["GLOBAL"]["ID"];
 
-            Type_3_UpdateInFocusTabSettings("Language", true, long.Parse(id));
-
             Type_1_UpdateVirtualRegistry("InterpreterLanguageName", lang);
             Type_1_UpdateVirtualRegistry("InterpreterLanguageID", long.Parse(id));
             //Type_1_UpdateVirtualRegistry("VariableLength", VariableLength);
 
             Type_2_UpdatePerTabSettings("Language", true, long.Parse(id));
+
+            string message = $"{frmMain["mnuUpdate"]} {frmMain["mnuLanguage"].ToLower(cultureInfo)} = '{LanguageSettings[lang]["GLOBAL"]["153"].Substring(0, 1).ToUpper(cultureInfo)}{LanguageSettings[lang]["GLOBAL"]["153"].Substring(1).ToLower(cultureInfo)}'";
+            await Type_3_UpdateInFocusTabSettingsIfPermittedAsync("Language", true, long.Parse(id), message);
+            //Type_3_UpdateInFocusTabSettings("Language", true, long.Parse(id));
 
             ChangeHighlightOfMenuBarForLanguage(mnuRun, Type_1_GetVirtualRegistry<string>("InterpreterLanguageName"));
             UpdateLanguageNameInStatusBar(navigationViewItem.TabSettingsDict);
@@ -179,6 +188,9 @@ namespace PelotonIDE.Presentation
                 UpdateLanguageNameInStatusBar(navigationViewItem.TabSettingsDict);
                 UpdateStatusBarFromInFocusTab();
                 UpdateCommandLineInStatusBar();
+
+                var flag = InFocusTabIsPrFile();
+
             }
         }
 
@@ -445,10 +457,11 @@ namespace PelotonIDE.Presentation
             string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
             Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
             Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
+            CultureInfo cultureInfo = new CultureInfo(global["Locale"]);
 
             var tag = new string[] { "mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite" }[Type_3_GetInFocusTab<long>("Timeout")];
 
-            string title = $"{frmMain["mnuGo"]} '{frmMain[tag]}' {frmMain["mnuTimeout"]}, '{frmMain["mnuQuiet"]}' {frmMain["mnuRunningMode"]}?";
+            string title = $"{frmMain["mnuGo"]} '{frmMain[tag]}' {frmMain["mnuTimeout"].ToLower()}, '{frmMain["mnuQuiet"].ToLower(cultureInfo)}' {frmMain["mnuRunningMode"].ToLower(cultureInfo)}?";
             string secondary = $"'{frmMain["mnuVerbose"]}' {frmMain["mnuTimeout"]}";
 
             ContentDialog dialog = new()
@@ -560,6 +573,11 @@ namespace PelotonIDE.Presentation
 
         private void InterpretMenu_Quietude_Click(object sender, RoutedEventArgs e)
         {
+            string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+            Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
+            Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
+            CultureInfo cultureInfo = new CultureInfo(global["Locale"]);
+
             long quietude = 0;
             foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit" }
                                                  let items = from item in mnuRunningMode.Items where item.Name == key select item
@@ -591,9 +609,10 @@ namespace PelotonIDE.Presentation
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
 
-            Type_3_UpdateInFocusTabSettings("Quietude", true, quietude);
-            Type_2_UpdatePerTabSettings("Quietude", true, quietude);
             Type_1_UpdateVirtualRegistry("Quietude", quietude);
+            Type_2_UpdatePerTabSettings("Quietude", true, quietude);
+            _ = Type_3_UpdateInFocusTabSettingsIfPermittedAsync<long>("Quietude", true, quietude, $"{frmMain["mnuUpdate"]} {frmMain["mnuRunningMode"].ToLower(cultureInfo)} = '{frmMain[me.Name].ToLower(cultureInfo)}'");
+            //Type_3_UpdateInFocusTabSettings("Quietude", true, quietude);
             UpdateCommandLineInStatusBar();
         }
 
@@ -619,6 +638,11 @@ namespace PelotonIDE.Presentation
 
         private void VariableLength_Click(object sender, RoutedEventArgs e)
         {
+            string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+            Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
+            Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
+            CultureInfo cultureInfo = new CultureInfo(global["Locale"]);
+
             bool varlen = Type_1_GetVirtualRegistry<bool>("VariableLength");
             bool VariableLength;
             if (!varlen)
@@ -633,7 +657,8 @@ namespace PelotonIDE.Presentation
             }
             Type_1_UpdateVirtualRegistry("VariableLength", VariableLength);
             Type_2_UpdatePerTabSettings("VariableLength", VariableLength, VariableLength);
-            Type_3_UpdateInFocusTabSettings("VariableLength", VariableLength, VariableLength);
+            string message = VariableLength ? global["fixedLength"].ToLower(cultureInfo) : global["variableLength"].ToLower(cultureInfo);
+            _ = Type_3_UpdateInFocusTabSettingsIfPermittedAsync<bool>("VariableLength", VariableLength, VariableLength, $"{frmMain["mnuUpdate"]} = {message}?"); // mnuUpdate 
 
             SwapCodeTemplatesLabels(VariableLength);
 
