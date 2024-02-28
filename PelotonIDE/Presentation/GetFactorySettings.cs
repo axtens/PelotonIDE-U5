@@ -23,7 +23,7 @@ namespace PelotonIDE.Presentation
 
         private OutputPanelPosition GetFactorySettingsWithLocalSettingsOverrideOrDefault(string name, OutputPanelPosition otherwise, FactorySettingsStructure? factory, ApplicationDataContainer? container)
         {
-            OutputPanelPosition result = default;
+            OutputPanelPosition result = OutputPanelPosition.Bottom;
             bool noFactory = false;
             bool noContainer = false;
             if (factory.TryGetValue(name, out object? value1))

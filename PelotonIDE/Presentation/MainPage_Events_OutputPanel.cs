@@ -16,7 +16,7 @@ namespace PelotonIDE.Presentation
     {
         private void OutputPanel_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            string pos = Type_1_GetVirtualRegistry<string>("OutputPanelPosition") ?? "Bottom";
+            string pos = Type_1_GetVirtualRegistry<string>("OutputPanelPosition") ?? "Right";
             OutputPanelPosition outputPanelPosition = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), pos);
             switch (outputPanelPosition)
             {

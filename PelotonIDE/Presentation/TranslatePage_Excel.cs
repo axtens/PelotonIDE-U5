@@ -15,14 +15,14 @@ namespace PelotonIDE.Presentation
             IXLRows rows = worksheet.Rows();
             for (int i = 2; i <= rows.Count(); i++)
             {
-                //IXLCell typeCodeCell = worksheet.Cell(i, 1);
-                //double typeCode = typeCodeCell.GetDouble();
+                IXLCell typeCodeCell = worksheet.Cell(i, 1);
+                double typeCode = typeCodeCell.GetDouble();
                 IXLCell sourceCell = worksheet.Cell(i, sourceCol + 1);
                 string sourceText = sourceCell.GetString().Trim();
                 IXLCell targetCell = worksheet.Cell(i, targetCol + 1);
                 string targetText = targetCell.GetString();
                 if (sourceText.Length > 0 && targetText.Length > 0)
-                    sortedDictionary[sourceText] = (11 /*typeCode*/, targetText); // smartness: 0
+                    sortedDictionary[sourceText] = (typeCode, targetText); // smartness: 0
             }
             if (sortedDictionary.Count == 0) return (false, sortedDictionary);
             return (true, sortedDictionary);

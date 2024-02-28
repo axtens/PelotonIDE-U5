@@ -22,7 +22,7 @@ namespace PelotonIDE
                         logBuilder.SetMinimumLevel(
                             context.HostingEnvironment.IsDevelopment() ?
                                 LogLevel.Information :
-                                LogLevel.Warning);
+                                LogLevel.Trace);
                     }, enableUnoLogging: true)
                     .UseConfiguration(configure: configBuilder =>
                         configBuilder
@@ -50,6 +50,10 @@ namespace PelotonIDE
                     })
                     .UseNavigation(RegisterRoutes)
                 );
+            //builder.App.DebugSettings.IsTextPerformanceVisualizationEnabled = true;
+            //builder.App.DebugSettings.IsXamlResourceReferenceTracingEnabled = true;
+            //builder.App.DebugSettings.EnableFrameRateCounter = true;
+            //builder.App.DebugSettings.FailFastOnErrors = true;
             _window = builder.Window;
             _window.Title = "Peloton IDE";
 

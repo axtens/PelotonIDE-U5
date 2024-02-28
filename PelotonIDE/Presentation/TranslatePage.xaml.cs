@@ -22,6 +22,8 @@ using LanguageConfigurationStructure = System.Collections.Generic.Dictionary<str
 using LanguageConfigurationStructureSelection =
     System.Collections.Generic.Dictionary<string,
         System.Collections.Generic.Dictionary<string, string>>;
+using System.Linq;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace PelotonIDE.Presentation
 {
@@ -139,11 +141,11 @@ namespace PelotonIDE.Presentation
                 {
                     string name = names.First();
                     bool present = LanguageIsPresentInPlexes(name);
-                    
+
                     ListBoxItem listBoxItem = new()
                     {
                         Content = globals[$"{100 + i + 1}"],
-                        Name = name,  
+                        Name = name,
                         IsEnabled = present
                     };
                     listBox.Items.Add(listBoxItem);
@@ -186,7 +188,13 @@ namespace PelotonIDE.Presentation
             source = variableSource && sourcePlexVariable.Any() ? sourcePlexVariable.First() : sourcePlexFixed.First();
             target = variableTarget && targetPlexVariable.Any() ? targetPlexVariable.First() : targetPlexFixed.First();
 
-            string result = variableSource && sourcePlexVariable.Any()
+            List<KeyValuePair<string, string>> kvpList =
+            [
+                .. from long key in englishFixed.OpcodesByValue.Keys
+                                 select new KeyValuePair<string, string>($"{key:00000000}", target.OpcodesByValue[key]),
+            ];
+
+            string translatedCode = variableSource && sourcePlexVariable.Any()
                 ? ProcessVariableToFixedOrVariable(code, source, target, spaced, variableTarget)
                 : ProcessFixedToFixedOrVariableWithOrWithoutSpace(code, source, target, spaced, variableTarget);
 
@@ -199,54 +207,54 @@ namespace PelotonIDE.Presentation
             bool ok = false;
 
             (ok, XLWorkbook? workbook) = GetNamedExcelWorkbook(xlsxPath);
-            if (!ok) return result;
+            if (!ok) return translatedCode;
 
             (ok, IXLWorksheet? worksheet) = GetNamedWorksheetInExcelWorkbook(workbook, nameOfSource);
             if (!ok)
             {
                 (ok, worksheet) = GetNamedWorksheetInExcelWorkbook(workbook, "Document#");
-                if (!ok) return result;
+                if (!ok) return translatedCode;
             }
 
             (ok, int sourceCol, int targetCol) = GetSourceAndTargetColumnsFromWorksheet(worksheet, source.Meta.LanguageId, target.Meta.LanguageId);
-            if (!ok) return result;
+            if (!ok) return translatedCode;
 
             // iterate thru strings in source language, building dictionary of replacements ordered by length of sourceText
             SortedDictionary<string, (double _typeCode, string _text)> sortedDictionary = new(new LongestToShortestLengthComparer());
             (ok, SortedDictionary<string, (double _typeCode, string _text)> dict) = FillSortedDictionaryFromWorksheet(sortedDictionary, worksheet, sourceCol, targetCol);
-            if (!ok) return result;
+            if (!ok) return translatedCode;
 
-            long DEF_opcode = englishFixed.OpcodesByKey["DEF"]; 
-            long KOP_opcode = englishFixed.OpcodesByKey["KOP"]; 
-            long RST_opcode = englishFixed.OpcodesByKey["RST"]; 
+            long DEF_opcode = englishFixed.OpcodesByKey["DEF"];
+            long KOP_opcode = englishFixed.OpcodesByKey["KOP"];
+            long RST_opcode = englishFixed.OpcodesByKey["RST"];
+            long SAY_opcode = englishFixed.OpcodesByKey["SAY"];
+            long GET_opcode = englishFixed.OpcodesByKey["GET"];
+            long UDR_opcode = englishFixed.OpcodesByKey["UDR"];
+            long UDO_opcode = englishFixed.OpcodesByKey["UDO"];
+            long KEY_opcode = englishFixed.OpcodesByKey["KEY"];
 
-            
             foreach (string key in dict.Keys)
             {
                 telem.Transmit("TranslateCode", "key=", key, "dict[key]._typeCode=", dict[key]._typeCode, "dict[key]._text=", dict[key]._text);
 
-                //result = UpdateInLabelSpace(result, key, sortedDictionary[key]); // smartness:1
-                //bool srcVariable;
                 switch (dict[key]._typeCode)
                 {
                     case 1: // undefined
                         break;
                     case 2: // KOP
-                        //srcVariable = sourcePB.ReadValueAsString("variable") == "True";
-                        string kopPattern = $"<{(source.Meta.Variable ? "#" : "@")} {source.OpcodesByValue[DEF_opcode]}{source.OpcodesByValue[KOP_opcode]}.*?>([^|<]+)";
-                        //string kopPattern = $"<{(srcVariable ? "#":"@")} {sourcePB.Identifiers[DEF_opcode]}{sourcePB.Identifiers[KOP_opcode]}.*?>([^|<]+)";
-                        Regex kopRegex = new(kopPattern, RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
-                        MatchCollection kopMatches = kopRegex.Matches(result);
+                        string kopPattern = $"<{(source.Meta.Variable ? "#" : "@")} {target.OpcodesByValue[DEF_opcode]}{source.OpcodesByValue[KOP_opcode]}.*?>(.*?{Regex.Escape(key)}[^<]*)";
+                        translatedCode = MorphTranslatedCodeUsingPattern(translatedCode, dict, key, kopPattern);
 
                         break;
                     case 3: // Code Block 
+                        string defudrPattern = $"<{(source.Meta.Variable ? "#" : "@")} {target.OpcodesByValue[DEF_opcode]}{target.OpcodesByValue[UDR_opcode]}.*?>(.*?{Regex.Escape(key)}[^<]*)";
+                        translatedCode = MorphTranslatedCodeUsingPattern(translatedCode, dict, key, defudrPattern);
+                        string defudoPattern = $"<{(source.Meta.Variable ? "#" : "@")} {target.OpcodesByValue[DEF_opcode]}{target.OpcodesByValue[UDO_opcode]}.*?>(.*?{Regex.Escape(key)}[^<]*)";
+                        translatedCode = MorphTranslatedCodeUsingPattern(translatedCode, dict, key, defudoPattern);
                         break;
                     case 4: // SQL
-                        //srcVariable = sourcePB.ReadValueAsString("variable") == "True";
-                        string rstPattern = $"<{(source.Meta.Variable ? "#" : "@")} {source.OpcodesByValue[RST_opcode]}.*?>([^<]+)";
-                        //string rstPattern = $"<{(srcVariable ? "#" : "@")} {sourcePB.Identifiers[RST_opcode]}.*?>([^<]+)";
-                        Regex rstRegex = new(rstPattern, RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
-                        MatchCollection rstMatches = rstRegex.Matches(result);
+                        string rstPattern = $"<{(source.Meta.Variable ? "#" : "@")} {target.OpcodesByValue[RST_opcode]}.*?>(.*?{Regex.Escape(key)}[^<]*)";
+                        translatedCode = MorphTranslatedCodeUsingPattern(translatedCode, dict, key, rstPattern);
 
                         break;
                     case 5: // undefind
@@ -256,20 +264,51 @@ namespace PelotonIDE.Presentation
                     case 7: // Pattern
                         break;
                     case 8: // Syskey
+                        string keyPattern = $"<{(source.Meta.Variable ? "#" : "@")} .*?{target.OpcodesByValue[KEY_opcode]}>(.*?{Regex.Escape(key)}[^<]*)";
+                        translatedCode = MorphTranslatedCodeUsingPattern(translatedCode, dict, key, keyPattern);
                         break;
                     case 9: // Protium symbol
                         break;
                     case 10: // Wildcard
                         break;
                     case 11: // String Literal
-                        result = result.Replace(key, dict[key]._text, StringComparison.CurrentCultureIgnoreCase); // smartness:0
+                        string sayPattern = $"<{(source.Meta.Variable ? "#" : "@")} {target.OpcodesByValue[SAY_opcode]}.*?>(.*?{Regex.Escape(key)}[^<]*)";
+                        translatedCode = MorphTranslatedCodeUsingPattern(translatedCode, dict, key, sayPattern);
+                        string getPattern = $"<{(source.Meta.Variable ? "#" : "@")} {target.OpcodesByValue[GET_opcode]}.*?>(.*?{Regex.Escape(key)}[^<]*)";
+                        translatedCode = MorphTranslatedCodeUsingPattern(translatedCode, dict, key, getPattern);
                         break;
                     default:
                         break;
                 }
             }
-            while (result.EndsWith('\r')) result = result.Remove(result.Length - 1);
-            return result;
+            while (translatedCode.EndsWith('\r')) translatedCode = translatedCode.Remove(translatedCode.Length - 1);
+            return translatedCode;
+
+            static string MorphTranslatedCodeUsingPattern(string translatedCode, SortedDictionary<string, (double _typeCode, string _text)> dict, string key, string regexPattern)
+            {
+                Regex sayRegex = new(regexPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.RightToLeft);
+                MatchCollection regexMatches = sayRegex.Matches(translatedCode);
+                if (regexMatches != null)
+                {
+                    for (int matchNo = 0; matchNo < regexMatches.Count; matchNo++)
+                    {
+                        Match regexMatch = regexMatches[matchNo];
+                        if (regexMatch.Groups.Count > 1)
+                        {
+                            Group secondGroup = regexMatch.Groups[1];
+                            string value = secondGroup.Value;
+                            if (value != null)
+                            {
+                                value = value.Replace(key, dict[key]._text, StringComparison.InvariantCultureIgnoreCase);
+                                translatedCode = translatedCode.Remove(secondGroup.Index, secondGroup.Length);
+                                translatedCode = translatedCode.Insert(secondGroup.Index, value);
+                            }
+                        }
+                    }
+                }
+
+                return translatedCode;
+            }
         }
 
         private string UpdateInLabelSpace(string result, string sourceText, string targetText)
