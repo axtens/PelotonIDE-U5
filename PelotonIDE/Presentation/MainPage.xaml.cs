@@ -1,16 +1,9 @@
-﻿using DocumentFormat.OpenXml.EMMA;
-using DocumentFormat.OpenXml.Wordprocessing;
-
-using Microsoft.UI;
-using Microsoft.UI.Text;
-using Microsoft.UI.Xaml.Controls;
+﻿using Microsoft.UI.Text;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.VisualBasic;
 
 using Newtonsoft.Json;
 
 using System.Diagnostics;
-using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -18,7 +11,7 @@ using System.Xml.Linq;
 using Windows.Storage;
 using Windows.System;
 
-
+using Colors = Microsoft.UI.Colors;
 using FactorySettingsStructure = System.Collections.Generic.Dictionary<string, object>;
 using InterpreterParametersStructure = System.Collections.Generic.Dictionary<string,
     System.Collections.Generic.Dictionary<string, object>>;
@@ -26,11 +19,12 @@ using InterpreterParameterStructure = System.Collections.Generic.Dictionary<stri
 using LanguageConfigurationStructure = System.Collections.Generic.Dictionary<string,
     System.Collections.Generic.Dictionary<string,
         System.Collections.Generic.Dictionary<string, string>>>;
-using Style = Microsoft.UI.Xaml.Style;
+using RenderingConstantsStructure = System.Collections.Generic.Dictionary<string,
+        System.Collections.Generic.Dictionary<string, object>>;
 
 namespace PelotonIDE.Presentation
 {
-    public sealed partial class MainPage : Page
+    public sealed partial class MainPage : Microsoft.UI.Xaml.Controls.Page
     {
         [GeneratedRegex("\\{\\*?\\\\[^{}]+}|[{}]|\\\\\\n?[A-Za-z]+\\n?(?:-?\\d+)?[ ]?", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-AU")]
         private static partial Regex CustomRTFRegex();
@@ -60,6 +54,7 @@ namespace PelotonIDE.Presentation
         int TabControlCounter = 2; // Because the XAML defines the first tab
 
         InterpreterParametersStructure? PerTabInterpreterParameters;
+        RenderingConstantsStructure? RenderingConstants = null;
 
         /// <summary>
         /// does not change
@@ -95,6 +90,15 @@ namespace PelotonIDE.Presentation
             customREBox.Document.Selection.SetIndex(TextRangeUnit.Character, 1, false);
         }
 
+
+        /*
+        public static async Task<RenderingConstantsStructure?> GetJSONRenderingConstants()
+        {
+            StorageFile renderingConstantsStorage = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\RenderingConstants.json")); // \Presentation\RenderingConstants.json
+            string renderingConstantsJson = File.ReadAllText(renderingConstantsStorage.Path);
+            return JsonConvert.DeserializeObject<RenderingConstantsStructure>(renderingConstantsJson);
+        }
+        */
         public static async Task<InterpreterParametersStructure?> GetPerTabInterpreterParameters()
         {
             StorageFile tabSettingStorage = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\PerTabInterpreterParameters.json"));
@@ -234,14 +238,11 @@ namespace PelotonIDE.Presentation
 
         private void UpdateTimeoutInMenu()
         {
-            long currTimeout = Type_1_GetVirtualRegistry<long>("Timeout");
-            foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite" }
-                                                 let items = from item in mnuTimeout.Items where item.Name == key select item
-                                                 from item in items
-                                                 select item)
+            foreach (var item in mnuTimeout.Items)
             {
                 MenuItemHighlightController((MenuFlyoutItem)item!, false);
             }
+            long currTimeout = Type_1_GetVirtualRegistry<long>("Timeout");
 
             switch (currTimeout)
             {
@@ -271,27 +272,14 @@ namespace PelotonIDE.Presentation
         {
             if ((bool)quietude["Defined"])
             {
-                foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit" }
-                                                     let items = from item in mnuRunningMode.Items where item.Name == key select item
-                                                     from item in items
-                                                     select item)
+                mnuRunningMode.Items.ForEach(item =>
                 {
-                    MenuItemHighlightController((MenuFlyoutItem)item!, false);
-                }
-
-                switch ((long)quietude["Value"])
-                {
-                    case 0:
-                        MenuItemHighlightController(mnuQuiet, true);
-                        break;
-                    case 1:
-                        MenuItemHighlightController(mnuVerbose, true);
-                        break;
-                    case 2:
-                        MenuItemHighlightController(mnuVerbosePauseOnExit, true);
-                        break;
-                }
-
+                    MenuItemHighlightController((MenuFlyoutItem)item, false);
+                    if ((long)quietude["Value"] == long.Parse((string)item.Tag))
+                    {
+                        MenuItemHighlightController((MenuFlyoutItem)item, true);
+                    }
+                });
             }
         }
 
@@ -356,11 +344,12 @@ namespace PelotonIDE.Presentation
 
             var inFocusTab = navigationViewItem.TabSettingsDict;
             Regex ques = new(Regex.Escape("?"));
-            string info = @"{\info {\*\ilang ?} {\*\ilength ?} {\*\itimeout ?} {\*\iquietude ?} }"; // {\*\ipadout ?}
+            string info = @"{\info {\*\ilang ?} {\*\ilength ?} {\*\itimeout ?} {\*\iquietude ?} {\*\itransput ?} }"; // {\*\ipadout ?}
             info = ques.Replace(info, $"{inFocusTab["Language"]["Value"]}", ONCE);
             info = ques.Replace(info, (bool)inFocusTab["VariableLength"]["Value"] ? "1" : "0", ONCE);
             info = ques.Replace(info, $"{(long)inFocusTab["Timeout"]["Value"]}", ONCE);
             info = ques.Replace(info, $"{(long)inFocusTab["Quietude"]["Value"]}", ONCE);
+            info = ques.Replace(info, $"{(long)inFocusTab["Transput"]["Value"]}", ONCE);
 
             telem.Transmit("info=", info);
 
@@ -429,26 +418,10 @@ namespace PelotonIDE.Presentation
                         }
                     }
                 }
-                IEnumerable<Match> itimeout = from match in matches where match.Value.Contains(@"\itimeout") select match;
-                if (itimeout.Any())
-                {
-                    string[] items = itimeout.First().Value.Split(' ');
-                    if (items.Any())
-                    {
-                        string num = items[1].Replace("}", "");
-                        Type_3_UpdateInFocusTabSettings<long>("Timeout", true, long.Parse(num));
-                    }
-                }
-                IEnumerable<Match> iquietude = from match in matches where match.Value.Contains(@"\iquietude") select match;
-                if (iquietude.Any())
-                {
-                    string[] quietudes = iquietude.First().Value.Split(' ');
-                    if (quietudes.Any())
-                    {
-                        string num = quietudes[1].Replace("}", "");
-                        Type_3_UpdateInFocusTabSettings<long>("Quietude", true, long.Parse(num));
-                    }
-                }
+
+                MarkupToInFocusSetting(matches, @"\itimeout", "Timeout");
+                MarkupToInFocusSetting(matches, @"\iquietude", "Quietude");
+                MarkupToInFocusSetting(matches, @"\itransput", "Transput");
             }
             else
             {
@@ -483,6 +456,20 @@ namespace PelotonIDE.Presentation
             if (orientation[1] == '1')
             {
                 customRichEditBox.FlowDirection = FlowDirection.RightToLeft;
+            }
+        }
+
+        private void MarkupToInFocusSetting(MatchCollection matches, string markup, string setting)
+        {
+            IEnumerable<Match> itransput = from match in matches where match.Value.Contains(markup) select match;
+            if (itransput.Any())
+            {
+                string[] transputs = itransput.First().Value.Split(' ');
+                if (transputs.Any())
+                {
+                    string num = transputs[1].Replace("}", "");
+                    Type_3_UpdateInFocusTabSettings<long>(setting, true, long.Parse(num));
+                }
             }
         }
 
@@ -581,7 +568,7 @@ namespace PelotonIDE.Presentation
                 {
                     foreach (string key in interpreterParametersStructure.Keys)
                     {
-                        if ((bool)interpreterParametersStructure[key]["Defined"])
+                        if ((bool)interpreterParametersStructure[key]["Defined"] && !(bool)interpreterParametersStructure[key]["Internal"])
                         {
                             string entry = $"/{interpreterParametersStructure[key]["Key"]}";
                             object value = interpreterParametersStructure[key]["Value"];
@@ -614,57 +601,257 @@ namespace PelotonIDE.Presentation
             tabCommandLine.Text = BuildTabCommandLine();
         }
 
-        private void InterpretMenu_Timeout_Click(object sender, RoutedEventArgs e)
+
+        private void FormatMenu_FontSize_Click(object sender, RoutedEventArgs e)
         {
-            string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
-            Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
-            Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
-            CultureInfo cultureInfo = new CultureInfo(global["Locale"]); 
-            
             Telemetry telem = new();
             telem.SetEnabled(true);
 
-            foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite" }
-                                                 let items = from item in mnuTimeout.Items where item.Name == key select item
-                                                 from item in items
-                                                 select item)
-            {
-                MenuItemHighlightController((MenuFlyoutItem)item!, false);
-            }
-
             var me = (MenuFlyoutItem)sender;
-            long timeout = 0;
-            telem.Transmit(me.Name, me.Tag);
-            switch (me.Name)
+            telem.Transmit(me.Name);
+
+            CustomRichEditBox currentRichEditBox = _richEditBoxes[((CustomTabItem)tabControl.SelectedItem).Tag];
+
+            currentRichEditBox.Document.Selection.CharacterFormat.Size = long.Parse((string)me.Tag);
+            currentRichEditBox.Document.Selection.SelectOrDefault(x => x);
+        }
+
+        private void TabViewItem_Html_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            var me = (TabViewItem)sender;
+            telem.Transmit(me.Name);
+        }
+
+        private void FileCopyHtmlButton_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            var me = (TabViewItem)sender;
+            telem.Transmit(me.Name);
+        }
+
+        private void ClipboardCopyHtmlButton_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            var me = (TabViewItem)sender;
+            telem.Transmit(me.Name);
+        }
+
+        private void ClearHtmlButton_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            var me = (TabViewItem)sender;
+            telem.Transmit(me.Name);
+        }
+
+        private void TabViewItem_Html_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            var me = (TabViewItem)sender;
+            telem.Transmit(me.Name);
+        }
+
+        private void TabViewItem_Error_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            var me = (TabViewItem)sender;
+            telem.Transmit(me.Name);
+        }
+
+        private void TabViewItem_Output_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            var me = (TabViewItem)sender;
+            telem.Transmit(me.Name);
+        }
+
+        private void TabViewItem_Logo_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            var me = (TabViewItem)sender;
+            telem.Transmit(me.Name);
+
+        }
+
+        private void TabViewItem_Logo_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            var me = (TabViewItem)sender;
+            telem.Transmit(me.Name);
+
+        }
+
+        private void FileCopyLogoButton_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            var me = (MenuFlyoutItem)sender;
+            telem.Transmit(me.Name);
+
+        }
+
+        private void ClipboardCopyLogoButton_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            var me = (MenuFlyoutItem)sender;
+            telem.Transmit(me.Name);
+
+        }
+
+        private void ClearLogoButton_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            var me = (MenuFlyoutItem)sender;
+            telem.Transmit(me.Name);
+        }
+
+        private void ContentControl_Rendering_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+
+            ContentControl me = (ContentControl)sender;
+
+            object prevContent = me.Content;
+
+            MenuFlyout mf = new();
+
+            string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+
+            if (!AnInFocusTabExists()) return;
+
+            string? inFocusRendering = Type_3_GetInFocusTab<string>("Rendering");
+            telem.Transmit("inFocusRendering=", inFocusRendering);
+
+            Dictionary<string, string> frmMain = LanguageSettings[interfaceLanguageName]["frmMain"];
+
+            foreach (string key in new string[] { "Output", "Error", "Html", "Logo", "RTF" })
             {
-                case "mnu20Seconds":
-                    MenuItemHighlightController(mnu20Seconds, true);
-                    timeout = 0;
-                    break;
-
-                case "mnu100Seconds":
-                    MenuItemHighlightController(mnu100Seconds, true);
-                    timeout = 1;
-                    break;
-
-                case "mnu200Seconds":
-                    MenuItemHighlightController(mnu200Seconds, true);
-                    timeout = 2;
-                    break;
-
-                case "mnu1000Seconds":
-                    MenuItemHighlightController(mnu1000Seconds, true);
-                    timeout = 3;
-                    break;
-
-                case "mnuInfinite":
-                    MenuItemHighlightController(mnuInfinite, true);
-                    timeout = 4;
-                    break;
+                long renderNumber = (long)RenderingConstants["Rendering"][key];
+                MenuFlyoutItem menuFlyoutItem = new()
+                {
+                    Name = key,
+                    Text = frmMain[$"tab{key}"],
+                    Foreground = inFocusRendering.Contains(renderNumber.ToString()) ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
+                    Background = inFocusRendering.Contains(renderNumber.ToString()) ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
+                    Tag = new Dictionary<string, object>()
+                        {
+                            { "Globals", frmMain },
+                            { "CurrentValue", inFocusRendering }
+                        }
+                };
+                menuFlyoutItem.Click += ContentControl_Rendering_MenuFlyoutItem_Click; // this has to reset the cell to its original value
+                telem.Transmit(menuFlyoutItem.Text, menuFlyoutItem.Name, menuFlyoutItem.Foreground.ToString(), menuFlyoutItem.Background.ToString());
+                mf.Items.Add(menuFlyoutItem);
             }
-            Type_1_UpdateVirtualRegistry<long>("Timeout", timeout);
-            Type_2_UpdatePerTabSettings<long>("Timeout", true, timeout);
-            _ = Type_3_UpdateInFocusTabSettingsIfPermittedAsync<long>("Timeout", true, timeout, $"{frmMain["mnuUpdate"]} {frmMain["mnuTimeout"].ToLower(cultureInfo)} = '{frmMain[me.Name].ToLower(cultureInfo)}'");
+
+            FrameworkElement? senderElement = sender as FrameworkElement;
+
+            mf.ShowAt(sender as UIElement, e.GetPosition(sender as UIElement));
+        }
+
+        private void ContentControl_Rendering_MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+
+            MenuFlyoutItem me = (MenuFlyoutItem)sender;
+            string meName = me.Name.Replace("tab", "");
+
+            string render = ((long)RenderingConstants["Rendering"][meName]).ToString();
+
+            if (AnInFocusTabExists())
+            {
+                List<string> keys = [.. Type_3_GetInFocusTab<string>("Rendering").Split(',')];
+                if (keys.Contains(render))
+                {
+                    keys.Remove(render);
+                }
+                else
+                {
+                    keys.Add(render);
+                }
+                Type_3_UpdateInFocusTabSettings<string>("Rendering", true, string.Join(",", keys));
             }
+            UpdateCommandLineInStatusBar();
+        }
+
+        private void TabViewItem_RTF_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+
+        }
+
+        private void FileCopyRTFButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ClipboardCopyRTFButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ClearRTFButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void TabViewItem_RTF_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+
+        }
+
+        private void InterpretMenu_Transput_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+
+            MenuFlyoutItem me = (MenuFlyoutItem)sender;
+            foreach (var mfi in from MenuFlyoutSubItem mfsi in mnuTransput.Items.Cast<MenuFlyoutSubItem>()
+                                where mfsi != null
+                                where mfsi.Items.Count > 0
+                                from MenuFlyoutItem mfi in mfsi.Items.Cast<MenuFlyoutItem>()
+                                select mfi)
+            {
+                MenuItemHighlightController((MenuFlyoutItem)mfi, false);
+                if ((string)me.Tag == (string)mfi.Tag)
+                {
+                    MenuItemHighlightController((MenuFlyoutItem)mfi, true);
+                }
+            }
+            Type_2_UpdatePerTabSettings("Transput", true, long.Parse((string)me.Tag));
+            Type_3_UpdateInFocusTabSettings("Transput", true, long.Parse((string)me.Tag));
+            UpdateCommandLineInStatusBar();
+        }
+
+        private void Help_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            MenuFlyoutItem me = (MenuFlyoutItem)sender;
+            telem.Transmit(me.Name);
+
+            ProcessStartInfo startInfo = new ProcessStartInfo()
+            {
+                UseShellExecute = true,
+                Verb = "open",
+                FileName = @"c:\protium\bin\help\protium.chm",
+                WindowStyle = ProcessWindowStyle.Normal
+            };
+            // startInfo.Verbs.ToList().ForEach(V => telem.Transmit(V));
+            Process.Start(startInfo);
+            
+        }
     }
 }

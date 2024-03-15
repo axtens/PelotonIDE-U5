@@ -1,5 +1,6 @@
 ﻿using EncodingChecker;
 
+using Microsoft.UI;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml.Controls;
 
@@ -28,11 +29,10 @@ namespace PelotonIDE.Presentation
         {
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
             string name = me.Name;
-
-            foreach (MenuFlyoutItemBase? item in mnuSelectLanguage.Items)
+            mnuSelectLanguage.Items.ForEach(item =>
             {
                 MenuItemHighlightController((MenuFlyoutItem)item, item.Name == name);
-            }
+            });
             HandleInterfaceLanguageChange(name);
         }
 
@@ -64,7 +64,7 @@ namespace PelotonIDE.Presentation
             string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
             Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
             Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
-            CultureInfo cultureInfo = new CultureInfo(global["Locale"]);
+            CultureInfo cultureInfo = new(global["Locale"]);
 
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
             string lang = me.Name;
@@ -84,7 +84,7 @@ namespace PelotonIDE.Presentation
 
             Type_2_UpdatePerTabSettings("Language", true, long.Parse(id));
 
-            string message = $"{frmMain["mnuUpdate"]} {frmMain["mnuLanguage"].ToLower(cultureInfo)} = '{LanguageSettings[lang]["GLOBAL"]["153"].Substring(0, 1).ToUpper(cultureInfo)}{LanguageSettings[lang]["GLOBAL"]["153"].Substring(1).ToLower(cultureInfo)}'";
+            string message = $"{frmMain["mnuUpdate"]} {frmMain["mnuLanguage"].ToLower(cultureInfo)} = '{LanguageSettings[lang]["GLOBAL"]["153"][..1].ToUpper(cultureInfo)}{LanguageSettings[lang]["GLOBAL"]["153"][1..].ToLower(cultureInfo)}'";
             await Type_3_UpdateInFocusTabSettingsIfPermittedAsync("Language", true, long.Parse(id), message);
             //Type_3_UpdateInFocusTabSettings("Language", true, long.Parse(id));
 
@@ -189,7 +189,7 @@ namespace PelotonIDE.Presentation
                 UpdateStatusBarFromInFocusTab();
                 UpdateCommandLineInStatusBar();
 
-                var flag = InFocusTabIsPrFile();
+                var flag = InFocusTabIsPrFile(); // FIXME What's this for??
 
             }
         }
@@ -457,7 +457,7 @@ namespace PelotonIDE.Presentation
             string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
             Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
             Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
-            CultureInfo cultureInfo = new CultureInfo(global["Locale"]);
+            CultureInfo cultureInfo = new(global["Locale"]);
 
             var tag = new string[] { "mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite" }[Type_3_GetInFocusTab<long>("Timeout")];
 
@@ -576,7 +576,7 @@ namespace PelotonIDE.Presentation
             string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
             Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
             Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
-            CultureInfo cultureInfo = new CultureInfo(global["Locale"]);
+            CultureInfo cultureInfo = new(global["Locale"]);
 
             long quietude = 0;
             foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit" }
@@ -641,7 +641,7 @@ namespace PelotonIDE.Presentation
             string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
             Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
             Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
-            CultureInfo cultureInfo = new CultureInfo(global["Locale"]);
+            CultureInfo cultureInfo = new(global["Locale"]);
 
             bool varlen = Type_1_GetVirtualRegistry<bool>("VariableLength");
             bool VariableLength;
@@ -785,8 +785,16 @@ namespace PelotonIDE.Presentation
             {
                 ApplicationData.Current.LocalSettings.DeleteContainer(setting.Key);
             }
-            await ApplicationData.Current.ClearAsync();
-
+            try
+            {
+                await ApplicationData.Current.ClearAsync();
+            }
+            catch (Exception er)
+            {
+                Telemetry telem = new();
+                telem.SetEnabled(true);
+                telem.Transmit(er.Message, er.StackTrace);
+            }
             Environment.Exit(0);
         }
 
@@ -829,6 +837,99 @@ namespace PelotonIDE.Presentation
                 CanBeScrollAnchor = true,
             };
             _ = await dialog.ShowAsync();
+        }
+
+        private void InterpretMenu_Timeout_Click(object sender, RoutedEventArgs e)
+        {
+            string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+            Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
+            Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
+            CultureInfo cultureInfo = new(global["Locale"]);
+
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+
+            foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite" }
+                                                 let items = from item in mnuTimeout.Items where item.Name == key select item
+                                                 from item in items
+                                                 select item)
+            {
+                MenuItemHighlightController((MenuFlyoutItem)item!, false);
+            }
+
+            var me = (MenuFlyoutItem)sender;
+            long timeout = 0;
+            telem.Transmit(me.Name, me.Tag);
+            switch (me.Name)
+            {
+                case "mnu20Seconds":
+                    MenuItemHighlightController(mnu20Seconds, true);
+                    timeout = 0;
+                    break;
+
+                case "mnu100Seconds":
+                    MenuItemHighlightController(mnu100Seconds, true);
+                    timeout = 1;
+                    break;
+
+                case "mnu200Seconds":
+                    MenuItemHighlightController(mnu200Seconds, true);
+                    timeout = 2;
+                    break;
+
+                case "mnu1000Seconds":
+                    MenuItemHighlightController(mnu1000Seconds, true);
+                    timeout = 3;
+                    break;
+
+                case "mnuInfinite":
+                    MenuItemHighlightController(mnuInfinite, true);
+                    timeout = 4;
+                    break;
+            }
+            Type_1_UpdateVirtualRegistry<long>("Timeout", timeout);
+            Type_2_UpdatePerTabSettings<long>("Timeout", true, timeout);
+            _ = Type_3_UpdateInFocusTabSettingsIfPermittedAsync<long>("Timeout", true, timeout, $"{frmMain["mnuUpdate"]} {frmMain["mnuTimeout"].ToLower(cultureInfo)} = '{frmMain[me.Name].ToLower(cultureInfo)}'");
+        }
+
+        private void InterpretMenu_Rendering_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+            MenuFlyoutItem me = (MenuFlyoutItem)sender;
+
+            var black = new SolidColorBrush(Colors.Black);
+            var white = new SolidColorBrush(Colors.White);
+
+            mnuRendering.Items.ForEach(item => MenuItemHighlightController((MenuFlyoutItem)item!, false));
+
+            string render = (string)me.Tag; 
+
+            List<string> renderers = [.. Type_1_GetVirtualRegistry<string>("Rendering").Split(',')];
+            if (renderers.Contains(render))
+            {
+                renderers.Remove(render);
+            }
+            else
+            {
+                renderers.Add(render);
+            }
+
+            renderers.ForEach(renderer =>
+            {
+                mnuRendering.Items.ForEach(item =>
+                {
+                    if ((string)item.Tag == renderer)
+                    {
+                        item.Background = black;
+                        item.Foreground = white;
+                    }
+                });
+            });
+
+            Type_1_UpdateVirtualRegistry<string>("Rendering", renderers.JoinBy(","));
+            Type_2_UpdatePerTabSettings<string>("Rendering", true, renderers.JoinBy(","));
+            Type_3_UpdateInFocusTabSettings<string>("Rendering", true, renderers.JoinBy(","));
         }
     }
 }

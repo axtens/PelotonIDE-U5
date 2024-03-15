@@ -16,6 +16,7 @@ using Windows.UI.Core;
 
 using Paragraph = Microsoft.UI.Xaml.Documents.Paragraph;
 using Run = Microsoft.UI.Xaml.Documents.Run;
+using System.Linq;
 
 namespace PelotonIDE.Presentation
 {
@@ -28,7 +29,7 @@ namespace PelotonIDE.Presentation
 
             DispatcherQueue dispatcher = DispatcherQueue.GetForCurrentThread();
 
-            if (Type_3_GetInFocusTab<long>("Quietude") == 0 && Type_3_GetInFocusTab<long>("Timeout") > 0 )
+            if (Type_3_GetInFocusTab<long>("Quietude") == 0 && Type_3_GetInFocusTab<long>("Timeout") > 0)
             {
                 // Yes, No, Cancel
 
@@ -53,6 +54,12 @@ namespace PelotonIDE.Presentation
             long quietude = (long)navigationViewItem.TabSettingsDict["Quietude"]["Value"];
             string engineArguments = BuildTabCommandLine();
 
+            string output_Text = string.Empty,
+                error_Text = string.Empty,
+                RTF_Text = string.Empty,
+                HTML_Text = string.Empty,
+                Logo_Text = string.Empty;
+
             // override with matching tab settings
             // generate arguments string
             string stdOut;
@@ -68,14 +75,64 @@ namespace PelotonIDE.Presentation
 
             telem.Transmit("stdOut=", stdOut, "stdErr=", stdErr);
 
-            if (!string.IsNullOrEmpty(stdErr))
+            IEnumerable<long> rendering = Type_3_GetInFocusTab<string>("Rendering").Split([',']).Select(e => long.Parse(e));
+
+            IEnumerable<string> list = (from item in RenderingConstants["Rendering"]
+                                        where rendering.Contains((long)item.Value)
+                                        select item.Key);
+
+            foreach (var item in list)
             {
-                AddInsertParagraph(errorText, stdErr, false);
+                switch (item)
+                {
+                    case "Output":
+                        if (!string.IsNullOrEmpty(stdOut))
+                        {
+                            AddInsertParagraph(outputText, stdOut, false);
+                        }
+                        break;
+                    case "Error":
+                        if (!string.IsNullOrEmpty(stdErr))
+                        {
+                            AddInsertParagraph(errorText, stdErr, false);
+                        }
+                        break;
+                    case "Html":
+                        if (!string.IsNullOrEmpty(stdOut))
+                        {
+                            if (stdOut.StartsWith("Status: 200 OK"))
+                            {
+                                StorageFolder folder = ApplicationData.Current.LocalFolder;
+                                StorageFile file = await folder.CreateFileAsync("temp.html", CreationCollisionOption.ReplaceExisting);
+                                List<string> lines = [.. stdOut.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)];
+                                lines.RemoveAt(0);
+                                lines.RemoveAt(0);
+                                await FileIO.WriteTextAsync(file, string.Join("\n", lines));
+                                HtmlText.Source = new Uri(file.Path);// "file://c|/temp/temp.html");
+                            }
+                        }
+                        break;
+                    case "RTF":
+                        if (!string.IsNullOrEmpty(stdOut))
+                        {
+                            //AddInsertParagraph(rtfText, stdOut, false);
+                            rtfText.Document.SetText(Microsoft.UI.Text.TextSetOptions.FormatRtf, stdOut);
+                        }
+                        break;
+                    case "Logo":
+                        if (!string.IsNullOrEmpty(stdOut))
+                        {
+                            StorageFolder folder = ApplicationData.Current.LocalFolder;
+                            StorageFile file = await folder.CreateFileAsync("temp.logo", CreationCollisionOption.ReplaceExisting);
+                            List<string> lines = [.. stdOut.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)];
+                            await FileIO.WriteTextAsync(file, string.Join("\n", lines));
+                            // LogoText.Source = new Uri(file.Path);
+                            
+                        }
+                        break;
+                }
             }
-            if (!string.IsNullOrEmpty(stdOut))
-            {
-                AddInsertParagraph(outputText, stdOut, false);
-            }
+
         }
 
         public void AddOutput(string text)
@@ -268,16 +325,16 @@ namespace PelotonIDE.Presentation
             switch (timeout)
             {
                 case 0:
-                    timeoutInMilliseconds = 20 * 1000; 
+                    timeoutInMilliseconds = 20 * 1000;
                     break;
                 case 1:
-                    timeoutInMilliseconds = 100 * 1000; 
+                    timeoutInMilliseconds = 100 * 1000;
                     break;
                 case 2:
-                    timeoutInMilliseconds = 200 * 1000; 
+                    timeoutInMilliseconds = 200 * 1000;
                     break;
                 case 3:
-                    timeoutInMilliseconds = 1000 * 1000; 
+                    timeoutInMilliseconds = 1000 * 1000;
                     break;
                 case 4:
                     timeoutInMilliseconds = -1;

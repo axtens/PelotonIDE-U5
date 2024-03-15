@@ -6,11 +6,13 @@
   "Engine": "Interpreter.P3",
   "OutputPanelHeight": 200.0,
   "OutputPanelShowing": true,
-  "OutputPanelPosition": "Right",
+  "OutputPanelPosition": "Bottom",
   "Interpreter.P2": "c:\\protium\\bin\\pdb.exe",
   "Interpreter.P3": "c:\\peloton\\bin\\P3.exe",
   "Scripts": "c:\\peloton\\code",
   "Quietude": 2,
   "Timeout": 1,
-  "VariableLength": false
+  "VariableLength": false,
+  "FontSize": 12.0,
+  "Rendering": "0,3"
 }

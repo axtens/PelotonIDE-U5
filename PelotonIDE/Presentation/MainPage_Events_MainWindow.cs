@@ -4,13 +4,17 @@ using Microsoft.UI;
 using Microsoft.UI.Input;
 using Microsoft.UI.Text;
 
+using Newtonsoft.Json;
+
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Timers;
 
+using Windows.Storage;
 using Windows.System;
 using Windows.UI.Core;
+using System.Linq;
 
 namespace PelotonIDE.Presentation
 {
@@ -90,12 +94,19 @@ namespace PelotonIDE.Presentation
         /// </summary>
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            /*    
-                        string? langname = LocalSettings.Values["InterfaceLanguageName"].ToString();
-                        tab1.Content = LanguageSettings[langname!]["GLOBAL"]["Document"] + " 1";
-             */
-
             LanguageSettings ??= await GetLanguageConfiguration();
+            RenderingConstants ??= new Dictionary<string, Dictionary<string, object>>()
+                    {
+                        { "Rendering", new Dictionary<string, object>()
+                        {
+                            { "Output", 3L },
+                            { "Error", 0L },
+                            { "RTF", 31L },
+                            { "Html", 21L },
+                            { "Logo", 42L }
+                        }
+                    }
+                };
 
             if (LangLangs.Count == 0)
                 LangLangs = GetLangLangs(LanguageSettings);
@@ -104,8 +115,15 @@ namespace PelotonIDE.Presentation
 
             FactorySettings ??= await GetFactorySettings();
 
+            // #MainPage-LoadingVirtReg
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<string>("Rendering", FactorySettings, "0,3");
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<long>("Transput", FactorySettings, 3);
+
             IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<long>("Timeout", FactorySettings, 1);
             UpdateTimeoutInMenu();
+            UpdateRenderingInMenu();
+            // UpdateFontSizeInMenu();
+            UpdateTransputInMenu();
 
             IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<bool>("OutputPanelShowing", FactorySettings, true);
             IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<OutputPanelPosition>("OutputPanelPosition", FactorySettings, (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), "Bottom"));
@@ -146,7 +164,7 @@ namespace PelotonIDE.Presentation
                 Type_2_UpdatePerTabSettings("VariableLength", Type_1_GetVirtualRegistry<bool>("VariableLength"), Type_1_GetVirtualRegistry<bool>("VariableLength"));
                 Type_2_UpdatePerTabSettings("Quietude", true, Type_1_GetVirtualRegistry<long>("Quietude"));
                 Type_2_UpdatePerTabSettings("Timeout", true, Type_1_GetVirtualRegistry<long>("Timeout"));
-
+                Type_2_UpdatePerTabSettings("Rendering", true, Type_1_GetVirtualRegistry<string>("Rendering"));
             }
 
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
@@ -180,6 +198,9 @@ namespace PelotonIDE.Presentation
 
             UpdateStatusBarFromVirtualRegistry();
             UpdateCommandLineInStatusBar();
+
+            spOutput.Visibility = Visibility.Visible;
+            //spOutput.Visibility
 
             void SetKeyboardFlags()
             {
@@ -249,6 +270,41 @@ namespace PelotonIDE.Presentation
             {
                 languageName.Text = currentLanguageName;
             }
+        }
+
+        private void UpdateTransputInMenu()
+        {
+            Telemetry telem = new();
+            telem.SetEnabled(true);
+
+            string transput = Type_1_GetVirtualRegistry<long>("Transput").ToString();
+            foreach (var mfi in from MenuFlyoutSubItem mfsi in mnuTransput.Items.Cast<MenuFlyoutSubItem>()
+                                where mfsi != null
+                                where mfsi.Items.Count > 0
+                                from MenuFlyoutItem mfi in mfsi.Items.Cast<MenuFlyoutItem>()
+                                select mfi)
+            {
+                MenuItemHighlightController((MenuFlyoutItem)mfi, false);
+                if (transput == (string)mfi.Tag)
+                {
+                    MenuItemHighlightController((MenuFlyoutItem)mfi, true);
+                }
+            }
+        }
+
+        private void UpdateRenderingInMenu()
+        {
+            List<string> renderers = Type_1_GetVirtualRegistry<string>("Rendering").Split(',').Select(x => x.Trim()).ToList();
+
+            mnuRendering.Items.ForEach(item =>
+            {
+                MenuItemHighlightController((MenuFlyoutItem)item, false);
+                if (renderers.Contains((string)item.Tag))
+                {
+                    MenuItemHighlightController((MenuFlyoutItem)item, true);
+                }
+
+            });
         }
 
         private Dictionary<string, List<string>> GetLangLangs(Dictionary<string, Dictionary<string, Dictionary<string, string>>>? languageSettings)

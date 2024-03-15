@@ -2,196 +2,241 @@
   "After": {
     "Defined": false,
     "Key": "+",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "Assert": {
     "Defined": false,
     "Key": "A",
-    "Value": false
+    "Value": false,
+    "Internal": false
   },
   "Base": {
     "Defined": false,
     "Key": "B",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "Before": {
     "Defined": false,
     "Key": "-",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "Brace": {
     "Defined": false,
     "Key": "{",
-    "Value": false
+    "Value": false,
+    "Internal": false
   },
   "Brackets": {
     "Defined": false,
     "Key": "(",
-    "Value": false
+    "Value": false,
+    "Internal": false
   },
   "Check": {
     "Defined": false,
     "Key": "C",
-    "Value": false
+    "Value": false,
+    "Internal": false
   },
   "Comma": {
     "Defined": false,
     "Key": ",",
-    "Value": false
+    "Value": false,
+    "Internal": false
   },
   "Debug": {
     "Defined": false,
     "Key": "D",
-    "Value": false
+    "Value": false,
+    "Internal": false
   },
   "Environment": {
     "Defined": false,
     "Key": "E",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "Exclaim": {
     "Defined": false,
     "Key": "!",
-    "Value": false
+    "Value": false,
+    "Internal": false
   },
   "eXecute": {
     "Defined": false,
     "Key": "X",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "Filespec": {
     "Defined": false,
     "Key": "F",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "Get": {
     "Defined": false,
     "Key": "G",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "Help": {
     "Defined": false,
     "Key": "?",
-    "Value": false
+    "Value": false,
+    "Internal": false
   },
   "Host": {
     "Defined": false,
     "Key": "H",
-    "Value": -1
+    "Value": -1,
+    "Internal": false
   },
   "Input": {
     "Defined": false,
     "Key": "I",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "Jump": {
     "Defined": false,
     "Key": "J",
-    "Value": -1
+    "Value": -1,
+    "Internal": false
   },
   "Keyword": {
     "Defined": false,
     "Key": "K",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "Language": {
     "Defined": true,
     "Key": "L",
-    "Value": 0
+    "Value": 0,
+    "Internal": false
   },
   "Listen": {
     "Defined": false,
     "Key": ".",
-    "Value": -1
+    "Value": -1,
+    "Internal": false
   },
   "Literate": {
     "Defined": false,
     "Key": "*",
-    "Value": false
+    "Value": false,
+    "Internal": false
   },
   "Memory": {
     "Defined": false,
     "Key": "M",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "Nanny": {
     "Defined": false,
     "Key": "N",
-    "Value": false
+    "Value": false,
+    "Internal": false
   },
   "Override": {
     "Defined": true,
     "Key": "O",
-    "Value": false
+    "Value": false,
+    "Internal": false
   },
   "PreventUnicode": {
     "Defined": false,
     "Key": "$",
-    "Value": false
+    "Value": false,
+    "Internal": false
   },
   "Project": {
     "Defined": false,
     "Key": "P",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "Quietude": {
     "Defined": true,
     "Key": "Q",
-    "Value": 2
+    "Value": 2,
+    "Internal": false
   },
   "Recordset": {
     "Defined": false,
     "Key": "R",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "Spaced": {
     "Defined": false,
     "Key": "_",
-    "Value": false
+    "Value": false,
+    "Internal": false
   },
   "Structure": {
     "Defined": false,
     "Key": "S",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "Transput": {
-    "Defined": false,
+    "Defined": true,
     "Key": "T",
-    "Value": 0
+    "Value": 3,
+    "Internal": false
   },
   "Use": {
     "Defined": false,
     "Key": "U",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "VariableLength": {
     "Defined": false,
     "Key": "#",
-    "Value": false
+    "Value": false,
+    "Internal": false
   },
   "Variables": {
     "Defined": false,
     "Key": "V",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "Workspace": {
     "Defined": false,
     "Key": "W",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "Yonder": {
     "Defined": false,
     "Key": "Y",
-    "Value": -1
+    "Value": -1,
+    "Internal": false
   },
   "Zone": {
     "Defined": false,
     "Key": "Z",
-    "Value": ""
+    "Value": "",
+    "Internal": false
   },
   "Timeout": {
     "Defined": true,
     "Key": "~",
-    "Value": 0
+    "Value": 0,
+    "Internal": true
+  },
+  "Rendering": {
+    "Defined": true,
+    "Key": "r",
+    "Value": "0,3",
+    "Internal": true
   }
 }

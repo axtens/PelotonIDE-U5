@@ -1,4 +1,5 @@
-﻿using Microsoft.UI.Text;
+﻿using Microsoft.UI;
+using Microsoft.UI.Text;
 
 using System;
 using System.Collections.Generic;
@@ -70,17 +71,23 @@ namespace PelotonIDE.Presentation
 
         private void RunSelectedCodeButton_Click(object sender, RoutedEventArgs e)
         {
+            var highlight = Windows.UI.Color.FromArgb(0x00,0x8d,0x6e, 0x5b);
+            var normal = Windows.UI.Color.FromArgb(0x00,0xf9,0xf8, 0xbd);
+
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
 
             ITextSelection selection = currentRichEditBox.Document.Selection;
 
+            selection.CharacterFormat.BackgroundColor = highlight;
             string selectedText = selection.Text;
             selectedText = selectedText.TrimEnd('\r');
             if (selectedText.Length > 0)
             {
                 ExecuteInterpreter(selectedText.Replace("\r", "\r\n")); // FIXME pass in some kind of identifier to connect to the tab
             }
+
+            selection.CharacterFormat.BackgroundColor = normal;
             selection.SelectOrDefault(x => x);
         }
     }

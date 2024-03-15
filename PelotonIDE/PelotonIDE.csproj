@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <PublishSelfContained>true</PublishSelfContained>
+        <SelfContained>true</SelfContained>
     </PropertyGroup>
     <PropertyGroup>
         <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows')) or '$(EnableWindowsTargeting)' == 'true'">$(TargetFrameworks);net7.0-windows10.0.19041</TargetFrameworks>
@@ -92,6 +93,7 @@
         <None Remove="Presentation\LanguageConfiguration.json" />
         <None Remove="Presentation\LanguageConfiguration.json.bak" />
         <None Remove="Presentation\PerTabInterpreterParameters.json" />
+        <None Remove="Presentation\RenderingConstants.json" />
         <None Remove="Presentation\rulesetrunner_repl_script.rr" />
         <None Remove="Presentation\TranslatePage.xaml" />
     </ItemGroup>

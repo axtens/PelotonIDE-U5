@@ -27,6 +27,7 @@ namespace PelotonIDE.Presentation
     {
         public bool IsRTF { get; set; }
         public bool IsDirty { get; set; }
+        //public string PreviousSelection { get; set; }
 
         public CustomRichEditBox()
         {
@@ -39,6 +40,8 @@ namespace PelotonIDE.Presentation
             FontFamily = new FontFamily("Lucida Sans Unicode,Tahoma");
             PointerReleased += CustomRichEditBox_PointerReleased;
             SelectionChanged += CustomRichEditBox_SelectionChanged;
+            //SelectionChanging += CustomRichEditBox_SelectionChanging;
+            //PreviousSelection = "0,0,";
             //KeyDown += CustomRichEditBox_KeyDown;
             //KeyUp += CustomRichEditBox_KeyUp;
             //PreviewKeyDown += CustomRichEditBox_PreviewKeyDown;
@@ -46,6 +49,30 @@ namespace PelotonIDE.Presentation
             //Background = new SolidColorBrush(Color.FromArgb(255,0xF9,0xF8, 0xbd)); // "#F9F8BD"
             //PointerEntered += (sender, e) => e.Handled = true;
             //Style = (Style)Application.Current.Resources["CustomRichEditBoxStyle"];
+        }
+
+        private void CustomRichEditBox_SelectionChanging(RichEditBox sender, RichEditBoxSelectionChangingEventArgs args)
+        {
+            //var blueback = Windows.UI.Color.FromArgb(0x00, 0x55, 0x76, 0xa2);
+            //var whitefront = Windows.UI.Color.FromArgb(0x00, 0xff, 0xff, 0xff);
+            //var normal = Windows.UI.Color.FromArgb(0x00, 0xf9, 0xf8, 0xbd);
+
+            //Telemetry telem = new();
+            //telem.SetEnabled(true);
+            //CustomRichEditBox me = ((CustomRichEditBox)sender);
+            //ITextSelection selection = me.Document.Selection;
+            //selection.GetText(TextGetOptions.None, out string text);
+            //telem.Transmit("me.Name=",me.Name,"Text=",text);
+            //selection.SelectOrDefault(x => x);
+            //int caretPosition = selection.StartPosition;
+            //int start = selection.StartPosition;
+            //int end = selection.EndPosition;
+            //if (end != start)
+            //{
+            //    var bc = selection.CharacterFormat.BackgroundColor;
+            //    me.PreviousSelection = $"{start},{end},{bc.A}-{bc.R}-{bc.G}-{bc.B}";
+            //    bc = blueback;
+            //}
         }
 
         private void CustomRichEditBox_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
@@ -99,6 +126,10 @@ namespace PelotonIDE.Presentation
 
         private void CustomRichEditBox_SelectionChanged(object sender, RoutedEventArgs e)
         {
+            var blueback = Windows.UI.Color.FromArgb(0x00,0x55,0x76,0xa2);
+            var whitefront = Windows.UI.Color.FromArgb(0x00, 0xff, 0xff, 0xff);
+            var normal = Windows.UI.Color.FromArgb(0x00, 0xf9, 0xf8, 0xbd);
+
             Telemetry telem = new();
             telem.SetEnabled(true);
             CustomRichEditBox me = ((CustomRichEditBox)sender);
@@ -110,7 +141,24 @@ namespace PelotonIDE.Presentation
             int start = selection.StartPosition;
             int end = selection.EndPosition;
             telem.Transmit("start=", start, "end=", end);
-            
+            if (start != end)
+            {
+                //if (me.PreviousSelection != "0,0," )
+                //{
+                //    var parts = me.PreviousSelection.Split([',']);
+                //    selection.StartPosition = int.Parse(parts[0]);
+                //    selection.EndPosition = int.Parse(parts[1]);
+                //    var argb = parts[2].Split(['-']).Select(e => byte.Parse(e)).ToArray();
+                //    selection.CharacterFormat.BackgroundColor = Color.FromArgb(argb[0], argb[1], argb[2], argb[3]);
+                //    me.PreviousSelection = "0,0,";
+                //}
+                //telem.Transmit("me.Tag=", me.PreviousSelection);
+                //var bc = selection.CharacterFormat.BackgroundColor;
+                //me.PreviousSelection = $"{start},{end},{bc.A}-{bc.R}-{bc.G}-{bc.B}";
+                //bc = blueback;
+                
+                // selection.CharacterFormat.BackgroundColor = highlight; // FIXME. Keep the last selection and reset it when here again. 
+            }
         }
 
         private void CustomRichEditBox_PointerReleased(object sender, PointerRoutedEventArgs e)

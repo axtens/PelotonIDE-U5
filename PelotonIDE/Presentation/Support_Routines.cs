@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Windows.Storage;
+using Windows.Web;
 
 namespace PelotonIDE.Presentation
 {
@@ -31,20 +32,18 @@ namespace PelotonIDE.Presentation
             return $"{lhs}" != $"{value}";
         }
 
-        private void SetMenuText(Dictionary<string, string> selectedLanguage)
+        private void SetMenuText(Dictionary<string, string> selectedLanguage) // #StatusBar #InterfaceLanguage
         {
-            foreach (MenuBarItem? mi in menuBar.Items)
+            menuBar.Items.ForEach(item =>
             {
-                //Debug.WriteLine($"mi {mi.Name}");
-                HandlePossibleAmpersandInMenuItem(selectedLanguage[mi.Name], mi);
-
-                foreach (MenuFlyoutItemBase? mii in mi.Items)
+                HandlePossibleAmpersandInMenuItem(selectedLanguage[item.Name], item);
+                item.Items.ForEach(subitem =>
                 {
-                    //Debug.WriteLine($"mii {mii.Name}");
-                    if (selectedLanguage.TryGetValue(mii.Name, out string? value))
-                        HandlePossibleAmpersandInMenuItem(value, mii);
-                }
-            }
+                    if (selectedLanguage.TryGetValue(subitem.Name, out string? value))
+                        HandlePossibleAmpersandInMenuItem(value, subitem);
+
+                });
+            });
 
             foreach ((string key, MenuFlyoutItem opt) keyControl in new List<(string, MenuFlyoutItem)>
             {
@@ -60,6 +59,33 @@ namespace PelotonIDE.Presentation
             {
                 HandlePossibleAmpersandInMenuItem(selectedLanguage[keyControl.key], keyControl.opt);
             }
+
+            foreach ((string key, TabViewItem tvi) keyControl in new List<(string, TabViewItem)>
+            {
+                ("tabOutput", tabOutput ),
+                ("tabError", tabError),
+                ("tabHtml", tabHtml ),
+                ("tabLogo", tabLogo),
+            })
+            {
+                keyControl.tvi.Header = selectedLanguage[keyControl.key];
+            }
+
+            foreach ((string key, MenuFlyoutItem mfi) keyControl in new List<(string, MenuFlyoutItem)>
+            {
+                ("tabOutput", mnuOutput ),
+                ("tabError", mnuError),
+                ("tabHtml", mnuHTML ),
+                ("tabLogo", mnuLogo),
+                ("tabRTF",mnuRTF)
+
+            })
+            {
+                keyControl.mfi.Text = selectedLanguage[keyControl.key];
+            }
+
+            txtRendering.Text = selectedLanguage["txtRendering"];
+            mnuRendering.Text = selectedLanguage["txtRendering"];
 
             ToolTipService.SetToolTip(butNew, selectedLanguage["new.Tip"]);
             ToolTipService.SetToolTip(butOpen, selectedLanguage["open.Tip"]);
@@ -183,6 +209,7 @@ namespace PelotonIDE.Presentation
             if (subMenus.Any())
             {
                 MenuFlyoutItemBase first = subMenus.First();
+
                 foreach (MenuFlyoutItemBase? item in ((MenuFlyoutSubItem)first).Items)
                 {
                     telem.Transmit("item.Name=", item.Name, "InterpreterLanguageName=", InterpreterLanguageName);
@@ -222,6 +249,18 @@ namespace PelotonIDE.Presentation
         private bool AnInFocusTabExists()
         {
             return _richEditBoxes.Count > 0;
+        }
+
+        private CustomTabItem? InFocusTab()
+        {
+            if (AnInFocusTabExists())
+            {
+                return (CustomTabItem)tabControl.SelectedItem;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         #region Getters
