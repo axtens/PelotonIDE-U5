@@ -57,12 +57,12 @@ namespace PelotonIDE.Presentation
             //var whitefront = Windows.UI.Color.FromArgb(0x00, 0xff, 0xff, 0xff);
             //var normal = Windows.UI.Color.FromArgb(0x00, 0xf9, 0xf8, 0xbd);
 
-            //Telemetry telem = new();
-            //telem.SetEnabled(true);
+            //Telemetry t = new();
+            //t.SetEnabled(false);
             //CustomRichEditBox me = ((CustomRichEditBox)sender);
             //ITextSelection selection = me.Document.Selection;
             //selection.GetText(TextGetOptions.None, out string text);
-            //telem.Transmit("me.Name=",me.Name,"Text=",text);
+            //t.Transmit("me.Name=",me.Name,"Text=",text);
             //selection.SelectOrDefault(x => x);
             //int caretPosition = selection.StartPosition;
             //int start = selection.StartPosition;
@@ -83,9 +83,9 @@ namespace PelotonIDE.Presentation
             bool isShiftPressed = shiftState.HasFlag(CoreVirtualKeyStates.Locked);
 
             CustomRichEditBox me = (CustomRichEditBox)sender;
-            Telemetry telem = new();
-            telem.SetEnabled(true);
-            telem.Transmit("e.Key=", e.Key, "e.KeyStatus.ScanCode=", e.KeyStatus.ScanCode, "ctrlState=", ctrlState, "shiftState=", shiftState);
+            Telemetry t = new();
+            t.SetEnabled(false);
+            t.Transmit("e.Key=", e.Key, "e.KeyStatus.ScanCode=", e.KeyStatus.ScanCode, "ctrlState=", ctrlState, "shiftState=", shiftState);
             base.OnPreviewKeyDown(e);
         }
 
@@ -97,9 +97,9 @@ namespace PelotonIDE.Presentation
             bool isShiftPressed = shiftState.HasFlag(CoreVirtualKeyStates.Locked);
 
             CustomRichEditBox me = (CustomRichEditBox)sender;
-            Telemetry telem = new();
-            telem.SetEnabled(true);
-            telem.Transmit("e.Key=", e.Key, "e.KeyStatus.ScanCode=", e.KeyStatus.ScanCode, "ctrlState=", ctrlState, "shiftState=", shiftState);
+            Telemetry t = new();
+            t.SetEnabled(false);
+            t.Transmit("e.Key=", e.Key, "e.KeyStatus.ScanCode=", e.KeyStatus.ScanCode, "ctrlState=", ctrlState, "shiftState=", shiftState);
             base.OnKeyUp(e);
         }
 
@@ -118,9 +118,9 @@ namespace PelotonIDE.Presentation
             var overwriteMode = insertState.HasFlag(CoreVirtualKeyStates.Locked);
 
             CustomRichEditBox me = (CustomRichEditBox)sender;
-            Telemetry telem = new();
-            telem.SetEnabled(true);
-            telem.Transmit("e.Key=", e.Key, "e.KeyStatus.ScanCode=", e.KeyStatus.ScanCode, "ctrlState=", ctrlState, "shiftState=", shiftState, "insertState=", insertState, "overwriteMode=", overwriteMode);
+            Telemetry t = new();
+            t.SetEnabled(false);
+            t.Transmit("e.Key=", e.Key, "e.KeyStatus.ScanCode=", e.KeyStatus.ScanCode, "ctrlState=", ctrlState, "shiftState=", shiftState, "insertState=", insertState, "overwriteMode=", overwriteMode);
             //base.OnKeyDown(e);
         }
 
@@ -130,17 +130,17 @@ namespace PelotonIDE.Presentation
             var whitefront = Windows.UI.Color.FromArgb(0x00, 0xff, 0xff, 0xff);
             var normal = Windows.UI.Color.FromArgb(0x00, 0xf9, 0xf8, 0xbd);
 
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
             CustomRichEditBox me = ((CustomRichEditBox)sender);
             ITextSelection selection = me.Document.Selection;
             selection.GetText(TextGetOptions.None, out string text);
-            telem.Transmit(text);
+            t.Transmit(text);
             selection.SelectOrDefault(x => x);
             int caretPosition = selection.StartPosition;
             int start = selection.StartPosition;
             int end = selection.EndPosition;
-            telem.Transmit("start=", start, "end=", end);
+            t.Transmit("start=", start, "end=", end);
             if (start != end)
             {
                 //if (me.PreviousSelection != "0,0," )
@@ -152,7 +152,7 @@ namespace PelotonIDE.Presentation
                 //    selection.CharacterFormat.BackgroundColor = Color.FromArgb(argb[0], argb[1], argb[2], argb[3]);
                 //    me.PreviousSelection = "0,0,";
                 //}
-                //telem.Transmit("me.Tag=", me.PreviousSelection);
+                //t.Transmit("me.Tag=", me.PreviousSelection);
                 //var bc = selection.CharacterFormat.BackgroundColor;
                 //me.PreviousSelection = $"{start},{end},{bc.A}-{bc.R}-{bc.G}-{bc.B}";
                 //bc = blueback;
@@ -163,16 +163,16 @@ namespace PelotonIDE.Presentation
 
         private void CustomRichEditBox_PointerReleased(object sender, PointerRoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
-            telem.Transmit(((RichEditBox)sender).Name, e.GetType().FullName);
+            Telemetry t = new();
+            t.SetEnabled(false);
+            t.Transmit(((RichEditBox)sender).Name, e.GetType().FullName);
             base.OnPointerReleased(e);
         }
 
         protected override void OnKeyDown(KeyRoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
             CoreVirtualKeyStates ctrlState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
             CoreVirtualKeyStates shiftState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift);
             bool isCtrlPressed = ctrlState.HasFlag(CoreVirtualKeyStates.Down);
@@ -201,13 +201,13 @@ namespace PelotonIDE.Presentation
             if (e.Key == VirtualKey.Tab && isCtrlPressed)
             {
                 int direction = ctrlState.ToString().Contains("Locked") ? -1 : 1;
-                telem.Transmit("e.Key=", e.Key, "ctrlState=", ctrlState, "shiftState=", shiftState, "isCtrlPressed=", isCtrlPressed, "isShiftPressed=", isShiftPressed);
+                t.Transmit("e.Key=", e.Key, "ctrlState=", ctrlState, "shiftState=", shiftState, "isCtrlPressed=", isCtrlPressed, "isShiftPressed=", isShiftPressed);
                 e.Handled = true;
                 return;
             }
             if (e.Key == VirtualKey.Tab)
             {
-                telem.Transmit("e.Key=", e.Key, "ctrlState=", ctrlState, "shiftState=", shiftState, "isCtrlPressed=", isCtrlPressed, "isShiftPressed=", isShiftPressed);
+                t.Transmit("e.Key=", e.Key, "ctrlState=", ctrlState, "shiftState=", shiftState, "isCtrlPressed=", isCtrlPressed, "isShiftPressed=", isShiftPressed);
                 if (!isShiftPressed)
                     Document.Selection.TypeText("\t");
                 e.Handled = true;

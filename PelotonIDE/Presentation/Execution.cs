@@ -24,8 +24,8 @@ namespace PelotonIDE.Presentation
     {
         private async void ExecuteInterpreter(string selectedText)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             DispatcherQueue dispatcher = DispatcherQueue.GetForCurrentThread();
 
@@ -46,7 +46,7 @@ namespace PelotonIDE.Presentation
                 }
             }
 
-            telem.Transmit("selectedText=", selectedText);
+            t.Transmit("selectedText=", selectedText);
             // load tab settings
 
 
@@ -73,7 +73,7 @@ namespace PelotonIDE.Presentation
                 (stdOut, stdErr) = RunProtium(engineArguments, selectedText, quietude);
             }
 
-            telem.Transmit("stdOut=", stdOut, "stdErr=", stdErr);
+            t.Transmit("stdOut=", stdOut, "stdErr=", stdErr);
 
             IEnumerable<long> rendering = Type_3_GetInFocusTab<string>("Rendering").Split([',']).Select(e => long.Parse(e));
 
@@ -126,13 +126,66 @@ namespace PelotonIDE.Presentation
                             StorageFile file = await folder.CreateFileAsync("temp.logo", CreationCollisionOption.ReplaceExisting);
                             List<string> lines = [.. stdOut.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)];
                             await FileIO.WriteTextAsync(file, string.Join("\n", lines));
-                            // LogoText.Source = new Uri(file.Path);
-                            
+                            string jsBlock = ParseLogoIntoJavascript(await FileIO.ReadTextAsync(file));
+                            file = await folder.CreateFileAsync("temp.html", CreationCollisionOption.ReplaceExisting);
+                            await FileIO.WriteTextAsync(file, TurtleFrameworkPlus(jsBlock));
+                            LogoText.Source = new Uri(file.Path);
+
                         }
                         break;
                 }
             }
 
+        }
+
+        private string TurtleFrameworkPlus(string jsBlock)
+        {
+            return $@"<script type=""text/javascript"" src=""https://unpkg.com/real-turtle""></script>
+<canvas id=""real-turtle""></canvas>
+<script type=""text/javascript"" src=""https://unpkg.com/real-turtle/build/helpers/simple.js""></script>
+
+<script type=""text/javascript"">
+{jsBlock}
+</script>";
+        }
+
+        private string ParseLogoIntoJavascript(string v)
+        {
+            List<string> result = [];
+            var lines = v.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var line in lines)
+            {
+                var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length > 0)
+                {
+                    switch (parts[0].ToUpper())
+                    {
+                        case "CS":
+                            result.Add("turtle.clear()");
+                            break;
+                        case "PD":
+                            result.Add("turtle.penDown()");
+                            break;
+                        case "PU":
+                            result.Add("turtle.penDown()");
+                            break;
+                        case "FD":
+                            result.Add($"turtle.forward({parts[1]})");
+                            break;
+                        case "BK":
+                            result.Add($"turtle.back({parts[1]})");
+                            break;
+                        case "RT":
+                            result.Add($"turtle.right({parts[1]})");
+                            break;
+                        case "SPEED":
+                            result.Add($"turtle.setSpeed({parts[1]})");
+                            break;
+                    }
+                }
+            }
+            result.Add("turtle.start();");
+            return result.JoinBy("\n");
         }
 
         public void AddOutput(string text)
@@ -147,28 +200,28 @@ namespace PelotonIDE.Presentation
 
         private static void AddInsertParagraph(RichEditBox reb, string text, bool addInsert = true, bool withPrefix = true)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
             if (string.IsNullOrEmpty(text))
             {
                 return;
             }
-            telem.Transmit("text=", text, "addInsert=", addInsert, "withPrefix=", withPrefix);
+            t.Transmit("text=", text, "addInsert=", addInsert, "withPrefix=", withPrefix);
             const string stamp = "> ";
             if (withPrefix)
                 text = text.Insert(0, stamp);
 
             //reb.IsReadOnly = false;
-            reb.Document.GetText(Microsoft.UI.Text.TextGetOptions.UseLf, out string? t);
+            reb.Document.GetText(Microsoft.UI.Text.TextGetOptions.UseLf, out string? tx);
             if (addInsert)
             {
-                reb.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, t + "\n" + text);
+                reb.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, tx + "\n" + text);
                 //reb.Document.GetRange(t.Length, t.Length).Text = t;
             }
             else
             {
                 //reb.Document.GetRange(0, 0).Text = t;
-                reb.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, text + "\n" + t);
+                reb.Document.SetText(Microsoft.UI.Text.TextSetOptions.None, text + "\n" + tx);
             }
             reb.Focus(FocusState.Programmatic);
             //reb.IsReadOnly = true;
@@ -176,8 +229,8 @@ namespace PelotonIDE.Presentation
 
         public (string StdOut, string StdErr) RunProtium(string args, string buff, long quietude)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
             string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.P2"].ToString();
             string temp = System.IO.Path.GetTempFileName();
             File.WriteAllText(temp, buff, Encoding.Unicode);
@@ -186,7 +239,7 @@ namespace PelotonIDE.Presentation
 
             args += $" /F:\"{temp}\"";
 
-            telem.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
+            t.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
 
             ProcessStartInfo info = new()
             {
@@ -205,12 +258,12 @@ namespace PelotonIDE.Presentation
 
         public (string StdOut, string StdErr) RunPeloton(string args, string buff, long quietude)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.P3"].ToString();
 
-            telem.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
+            t.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
 
             string t_in = System.IO.Path.GetTempFileName();
             string t_out = System.IO.Path.ChangeExtension(t_in, "out");
@@ -222,7 +275,7 @@ namespace PelotonIDE.Presentation
 
             args += $" /F:\"{t_in}\""; // 1>\"{t_out}\" 2>\"{t_err}\"";
 
-            telem.Transmit(args, buff);
+            t.Transmit(args, buff);
 
             ProcessStartInfo info = new()
             {
@@ -248,17 +301,17 @@ namespace PelotonIDE.Presentation
         }
         public (string StdOut, string StdErr) RunPeloton2(string args, string buff, long quietude, DispatcherQueue dispatcher)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             string temp = System.IO.Path.GetTempFileName();
             File.WriteAllText(temp, buff, Encoding.Unicode);
 
-            telem.Transmit("temp=", temp);
+            t.Transmit("temp=", temp);
 
             string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.P3"].ToString();
 
-            telem.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
+            t.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
 
             ProcessStartInfo info = new()
             {
@@ -301,9 +354,9 @@ namespace PelotonIDE.Presentation
             };
             proc.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
             {
-                Telemetry telem = new();
-                telem.SetEnabled(true);
-                telem.Transmit(e.Data);
+                Telemetry t = new();
+                t.SetEnabled(false);
+                t.Transmit(e.Data);
                 stderr.AppendLine(e.Data);
             };
 

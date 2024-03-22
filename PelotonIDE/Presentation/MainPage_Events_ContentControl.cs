@@ -92,26 +92,26 @@ namespace PelotonIDE.Presentation
 
         private void UpdateLanguageInContextualMenu(MenuFlyoutItem me, string internationalizedName, string name)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(false);
+            Telemetry t = new();
+            t.SetEnabled(false);
             if (me.Tag is Dictionary<string, object> parent)
             {
                 IList<MenuFlyoutItemBase> subMenus = ((MenuFlyout)parent["MenuFlyout"]).Items; //  from menu in ((MenuFlyoutSubItem)me.Tag).Items select menu;
-                telem.Transmit("subMenus != null", subMenus != null);
+                t.Transmit("subMenus != null", subMenus != null);
                 if (subMenus != null)
                 {
                     foreach (MenuFlyoutItemBase item in subMenus)
                     {
-                        telem.Transmit("item.Name=", item.Name, "name=", name);
+                        t.Transmit("item.Name=", item.Name, "name=", name);
                         if (item.Name == name)
                         {
-                            telem.Transmit("foreground=white, background=black");
+                            t.Transmit("foreground=white, background=black");
                             item.Foreground = new SolidColorBrush(Colors.White);
                             item.Background = new SolidColorBrush(Colors.Black);
                         }
                         else
                         {
-                            telem.Transmit("foreground=black, background=white");
+                            t.Transmit("foreground=black, background=white");
                             item.Foreground = new SolidColorBrush(Colors.Black);
                             item.Background = new SolidColorBrush(Colors.White);
                         }
@@ -122,8 +122,8 @@ namespace PelotonIDE.Presentation
 
         private void ContentControl_FixedVariable_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             ContentControl me = (ContentControl)sender;
 
@@ -136,7 +136,7 @@ namespace PelotonIDE.Presentation
             if (!AnInFocusTabExists()) return;
 
             bool inFocusTabVariableLength = Type_3_GetInFocusTab<bool>("VariableLength");
-            telem.Transmit("inFocusTabTimeout=", inFocusTabVariableLength);
+            t.Transmit("inFocusTabTimeout=", inFocusTabVariableLength);
 
             Dictionary<string, string> globals = LanguageSettings[Type_1_GetVirtualRegistry<string>("InterfaceLanguageName")]["GLOBAL"];
 
@@ -155,7 +155,7 @@ namespace PelotonIDE.Presentation
                         }
                 };
                 menuFlyoutItem.Click += ContentControl_FixedVariable_MenuFlyoutItem_Click; // this has to reset the cell to its original value
-                telem.Transmit(menuFlyoutItem.Text, menuFlyoutItem.Name, menuFlyoutItem.Foreground.ToString(), menuFlyoutItem.Background.ToString());
+                t.Transmit(menuFlyoutItem.Text, menuFlyoutItem.Name, menuFlyoutItem.Foreground.ToString(), menuFlyoutItem.Background.ToString());
                 mf.Items.Add(menuFlyoutItem);
                 inFocusTabVariableLength = !inFocusTabVariableLength;
             }
@@ -169,8 +169,8 @@ namespace PelotonIDE.Presentation
         }
         private void ContentControl_FixedVariable_MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
 
@@ -188,8 +188,8 @@ namespace PelotonIDE.Presentation
 
         private void ContentControl_Quietude_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             ContentControl me = (ContentControl)sender;
 
@@ -202,7 +202,7 @@ namespace PelotonIDE.Presentation
             if (!AnInFocusTabExists()) return;
 
             long inFocusTabQuietude = Type_3_GetInFocusTab<long>("Quietude");
-            telem.Transmit("inFocusTabTimeout=", inFocusTabQuietude);
+            t.Transmit("inFocusTabTimeout=", inFocusTabQuietude);
 
             Dictionary<string, string> frmMain = LanguageSettings[interfaceLanguageName]["frmMain"];
 
@@ -222,7 +222,7 @@ namespace PelotonIDE.Presentation
                         }
                 };
                 menuFlyoutItem.Click += ContentControl_Quietude_MenuFlyoutItem_Click; // this has to reset the cell to its original value
-                telem.Transmit(menuFlyoutItem.Text, menuFlyoutItem.Name, menuFlyoutItem.Foreground.ToString(), menuFlyoutItem.Background.ToString());
+                t.Transmit(menuFlyoutItem.Text, menuFlyoutItem.Name, menuFlyoutItem.Foreground.ToString(), menuFlyoutItem.Background.ToString());
                 mf.Items.Add(menuFlyoutItem);
                 i++;
             }
@@ -237,8 +237,8 @@ namespace PelotonIDE.Presentation
 
         private void ContentControl_Quietude_MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             string[] quietudes = ["mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit"];
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
@@ -259,8 +259,8 @@ namespace PelotonIDE.Presentation
 
         private void ContentControl_Timeout_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             ContentControl me = (ContentControl)sender;
 
@@ -273,7 +273,7 @@ namespace PelotonIDE.Presentation
             if (!AnInFocusTabExists()) return;
 
             long inFocusTabTimeout = Type_3_GetInFocusTab<long>("Timeout");
-            telem.Transmit("inFocusTabTimeout=", inFocusTabTimeout);
+            t.Transmit("inFocusTabTimeout=", inFocusTabTimeout);
 
             Dictionary<string, string> frmMain = LanguageSettings[interfaceLanguageName]["frmMain"];
 
@@ -293,7 +293,7 @@ namespace PelotonIDE.Presentation
                         }
                 };
                 menuFlyoutItem.Click += ContentControl_Timeout_MenuFlyoutItem_Click; // this has to reset the cell to its original value
-                telem.Transmit(menuFlyoutItem.Text, menuFlyoutItem.Name, menuFlyoutItem.Foreground.ToString(), menuFlyoutItem.Background.ToString());
+                t.Transmit(menuFlyoutItem.Text, menuFlyoutItem.Name, menuFlyoutItem.Foreground.ToString(), menuFlyoutItem.Background.ToString());
                 mf.Items.Add(menuFlyoutItem);
                 i++;
             }
@@ -309,8 +309,8 @@ namespace PelotonIDE.Presentation
 
         private void ContentControl_Timeout_MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             string[] timeouts = ["mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite"];
             MenuFlyoutItem me = (MenuFlyoutItem)sender;

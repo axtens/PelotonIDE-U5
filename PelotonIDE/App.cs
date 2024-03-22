@@ -1,3 +1,4 @@
+
 namespace PelotonIDE
 {
     public class App : Application
@@ -56,8 +57,18 @@ namespace PelotonIDE
             //builder.App.DebugSettings.FailFastOnErrors = true;
             _window = builder.Window;
             _window.Title = "Peloton IDE";
-
+            _window.SizeChanged += Window_SizeChanged;
             Host = await builder.NavigateAsync<Shell>();
+        }
+
+        private void Window_SizeChanged(object sender, WindowSizeChangedEventArgs args)
+        {
+            Telemetry t = new();
+            t.SetEnabled(false);
+            Window me = (Window)sender;
+            var height = args.Size.Height;
+            var width = args.Size.Width;
+            t.Transmit(me.Title, "height=", height, "width=", width);
         }
 
         private static void RegisterRoutes(IViewRegistry views, IRouteRegistry routes)

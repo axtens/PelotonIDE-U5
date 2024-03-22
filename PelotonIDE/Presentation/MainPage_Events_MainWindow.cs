@@ -15,6 +15,13 @@ using Windows.Storage;
 using Windows.System;
 using Windows.UI.Core;
 using System.Linq;
+using System.Linq.Expressions;
+using Frame = Microsoft.UI.Xaml.Controls.Frame;
+using DocumentFormat.OpenXml.InkML;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Reflection;
+using Uno.Toolkit.UI;
+using System.Runtime.InteropServices;
 
 namespace PelotonIDE.Presentation
 {
@@ -128,9 +135,11 @@ namespace PelotonIDE.Presentation
             IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<bool>("OutputPanelShowing", FactorySettings, true);
             IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<OutputPanelPosition>("OutputPanelPosition", FactorySettings, (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), "Bottom"));
             IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<double>("OutputPanelHeight", FactorySettings, 200);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<double>("OutputPanelWidth", FactorySettings, 400);
             HandleOutputPanelChange(Type_1_GetVirtualRegistry<string>("OutputPanelPosition"));
 
             outputPanel.Height = Type_1_GetVirtualRegistry<double>("OutputPanelHeight");
+            outputPanel.Width = Type_1_GetVirtualRegistry<double>("OutputPanelWidth");
 
             IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<string>("InterfaceLanguageName", FactorySettings, "English");
             IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<long>("InterfaceLanguageID", FactorySettings, 0);
@@ -200,8 +209,19 @@ namespace PelotonIDE.Presentation
             UpdateCommandLineInStatusBar();
 
             spOutput.Visibility = Visibility.Visible;
-            //spOutput.Visibility
 
+            outputPanel.Width = relativePanel.ActualSize.X;
+
+            Frame fr = (Frame)mainWindow.Parent;
+            FrameView fv = (FrameView)fr.Parent;
+            ExtendedSplashScreen ess = (Uno.Toolkit.UI.ExtendedSplashScreen)fv.Parent;
+            Shell s = (Shell)ess.Parent;
+            DependencyObject depo = (DependencyObject)s.Parent;
+
+            //fv.Height = Type_1_GetVirtualRegistry<double?>("MainWindowHeight") ?? double.NaN;
+            //fv.Width = Type_1_GetVirtualRegistry<double?>("MainWindowWidth") ?? double.NaN;
+            
+            
             void SetKeyboardFlags()
             {
                 var lightGrey = new SolidColorBrush(Colors.LightGray);
@@ -274,8 +294,8 @@ namespace PelotonIDE.Presentation
 
         private void UpdateTransputInMenu()
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             string transput = Type_1_GetVirtualRegistry<long>("Transput").ToString();
             foreach (var mfi in from MenuFlyoutSubItem mfsi in mnuTransput.Items.Cast<MenuFlyoutSubItem>()
@@ -424,6 +444,10 @@ namespace PelotonIDE.Presentation
                     }
                 }
             }
+
+            //Type_1_UpdateVirtualRegistry<double>("MainWindowHeight", mainWindow.ActualHeight); 
+            //Type_1_UpdateVirtualRegistry<double>("MainWindowWidth", mainWindow.ActualWidth);
+            
         }
     }
 }

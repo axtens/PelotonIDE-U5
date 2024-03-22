@@ -157,10 +157,10 @@ namespace PelotonIDE.Presentation
 
         private string TranslateCode(string code, string sourceLanguageName, string targetLanguageName)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
-            telem.Transmit("TranslateCode", "code=", code, "sourceLanguageName=", sourceLanguageName, "targetLanguageName=", targetLanguageName);
+            t.Transmit("TranslateCode", "code=", code, "sourceLanguageName=", sourceLanguageName, "targetLanguageName=", targetLanguageName);
 
             bool variableTarget = chkVarLengthTo.IsChecked ?? false;
             bool variableSource = chkVarLengthFrom.IsChecked ?? false;
@@ -180,7 +180,7 @@ namespace PelotonIDE.Presentation
             IEnumerable<Plex> targetPlexFixed = from plex in Plexes where plex.Meta.Language == targetLanguageName.Replace(" ", "") && !plex.Meta.Variable select plex;
 
 
-            telem.Transmit("TranslateCode", "variableTarget=", variableTarget, "variableSource=", variableSource, "fixedTarget=", fixedTarget, "fixedSource=", fixedSource, "spaced=", spaced);
+            t.Transmit("TranslateCode", "variableTarget=", variableTarget, "variableSource=", variableSource, "fixedTarget=", fixedTarget, "fixedSource=", fixedSource, "spaced=", spaced);
 
             Plex source = new();
             Plex target = new();
@@ -202,7 +202,7 @@ namespace PelotonIDE.Presentation
             string? nameOfSource = Path.GetFileNameWithoutExtension(SourceSpec);
             string? xlsxPath = Path.Combine(pathToSource ?? ".", "p.xlsx");
 
-            telem.Transmit("TranslateCode", "pathToSource=", pathToSource, "nameOfSource=", nameOfSource, "xlsxPath=", xlsxPath);
+            t.Transmit("TranslateCode", "pathToSource=", pathToSource, "nameOfSource=", nameOfSource, "xlsxPath=", xlsxPath);
 
             bool ok = false;
 
@@ -235,7 +235,7 @@ namespace PelotonIDE.Presentation
 
             foreach (string key in dict.Keys)
             {
-                telem.Transmit("TranslateCode", "key=", key, "dict[key]._typeCode=", dict[key]._typeCode, "dict[key]._text=", dict[key]._text);
+                t.Transmit("TranslateCode", "key=", key, "dict[key]._typeCode=", dict[key]._typeCode, "dict[key]._text=", dict[key]._text);
 
                 switch (dict[key]._typeCode)
                 {

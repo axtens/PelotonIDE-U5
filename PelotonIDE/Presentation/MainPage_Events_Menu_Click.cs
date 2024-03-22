@@ -38,11 +38,11 @@ namespace PelotonIDE.Presentation
 
         private async void HandleInterfaceLanguageChange(string langName)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             Dictionary<string, Dictionary<string, string>> selectedLanguage = LanguageSettings[langName];
-            telem.Transmit("Changing interface language to", langName, long.Parse(selectedLanguage["GLOBAL"]["ID"]));
+            t.Transmit("Changing interface language to", langName, long.Parse(selectedLanguage["GLOBAL"]["ID"]));
 
             SetMenuText(selectedLanguage["frmMain"]);
             Type_1_UpdateVirtualRegistry("InterfaceLanguageName", langName);
@@ -791,17 +791,17 @@ namespace PelotonIDE.Presentation
             }
             catch (Exception er)
             {
-                Telemetry telem = new();
-                telem.SetEnabled(true);
-                telem.Transmit(er.Message, er.StackTrace);
+                Telemetry t = new();
+                t.SetEnabled(false);
+                t.Transmit(er.Message, er.StackTrace);
             }
             Environment.Exit(0);
         }
 
         private async void ShowMemory_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             Dictionary<string, Dictionary<string, object>>? currentTabSettings = navigationViewItem.TabSettingsDict;
@@ -825,7 +825,7 @@ namespace PelotonIDE.Presentation
             {
                 lines.Add($"\t{val.Key} -> {val.Value}");
             }
-            telem.Transmit(lines.JoinBy("\r\n"));
+            t.Transmit(lines.JoinBy("\r\n"));
             ContentDialog dialog = new()
             {
                 XamlRoot = this.XamlRoot,
@@ -846,8 +846,8 @@ namespace PelotonIDE.Presentation
             Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
             CultureInfo cultureInfo = new(global["Locale"]);
 
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite" }
                                                  let items = from item in mnuTimeout.Items where item.Name == key select item
@@ -859,7 +859,7 @@ namespace PelotonIDE.Presentation
 
             var me = (MenuFlyoutItem)sender;
             long timeout = 0;
-            telem.Transmit(me.Name, me.Tag);
+            t.Transmit(me.Name, me.Tag);
             switch (me.Name)
             {
                 case "mnu20Seconds":
@@ -894,8 +894,8 @@ namespace PelotonIDE.Presentation
 
         private void InterpretMenu_Rendering_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(true);
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
 
             var black = new SolidColorBrush(Colors.Black);

@@ -1,4 +1,7 @@
-﻿using Microsoft.UI.Text;
+﻿using DocumentFormat.OpenXml.Drawing.Charts;
+
+using Microsoft.UI.Text;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 
 using Newtonsoft.Json;
@@ -8,6 +11,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.System;
 
@@ -21,6 +25,7 @@ using LanguageConfigurationStructure = System.Collections.Generic.Dictionary<str
         System.Collections.Generic.Dictionary<string, string>>>;
 using RenderingConstantsStructure = System.Collections.Generic.Dictionary<string,
         System.Collections.Generic.Dictionary<string, object>>;
+using Thickness = Microsoft.UI.Xaml.Thickness;
 
 namespace PelotonIDE.Presentation
 {
@@ -88,6 +93,14 @@ namespace PelotonIDE.Presentation
             App._window.Closed += MainWindow_Closed;
             UpdateCommandLineInStatusBar();
             customREBox.Document.Selection.SetIndex(TextRangeUnit.Character, 1, false);
+
+            //IList<MenuFlyoutItemBase> items = new MenuFlyoutSubItem().Items;
+            //items.Add(new MenuFlyoutItem() { Text = "One" });
+            //items.Add(new MenuFlyoutItem() { Text = "2" });
+            //items.Add(new MenuFlyoutItem() { Text = "3" });
+            //items.Add(new MenuFlyoutItem() { Text = "4" });
+            //items.Add(new MenuFlyoutItem() { Text = "5" });
+            //items.Add(new MenuFlyoutItem() { Text = "Six" });
         }
 
 
@@ -151,8 +164,8 @@ namespace PelotonIDE.Presentation
 
         private async void InterpreterLanguageSelectionBuilder(MenuBarItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(false);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             LanguageSettings ??= await GetLanguageConfiguration();
             string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
@@ -183,7 +196,7 @@ namespace PelotonIDE.Presentation
                                             let name = LanguageSettings[lang]["GLOBAL"]["Name"]
                                             select name;
 
-                telem.Transmit("names.Any=", names.Any());
+                t.Transmit("names.Any=", names.Any());
 
                 if (names.Any())
                 {
@@ -202,10 +215,10 @@ namespace PelotonIDE.Presentation
         }
         private static void MenuItemHighlightController(MenuFlyoutItem? menuFlyoutItem, bool onish)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
-            telem.Transmit("menuFlyoutItem.Name=", menuFlyoutItem.Name, "onish=", onish);
+            t.Transmit("menuFlyoutItem.Name=", menuFlyoutItem.Name, "onish=", onish);
             if (onish)
             {
                 menuFlyoutItem.Background = new SolidColorBrush(Colors.Black);
@@ -220,9 +233,9 @@ namespace PelotonIDE.Presentation
         // private void ToggleVariableLengthModeInMenu(InterpreterParameterStructure variableLength) => MenuItemHighlightController(mnuVariableLength, (bool)variableLength["Defined"]);
         private void SetVariableLengthModeInMenu(MenuFlyoutItem? menuFlyoutItem, bool showEnabled)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
-            telem.Transmit("menuFlyoutItem.Name=", menuFlyoutItem.Name, "showEnabled=", showEnabled);
+            Telemetry t = new();
+            t.SetEnabled(false);
+            t.Transmit("menuFlyoutItem.Name=", menuFlyoutItem.Name, "showEnabled=", showEnabled);
             if (showEnabled)
             {
                 menuFlyoutItem.Background = new SolidColorBrush(Colors.Black);
@@ -301,8 +314,8 @@ namespace PelotonIDE.Presentation
 
         public string GetLanguageNameOfCurrentTab(InterpreterParametersStructure? tabSettingJson)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             long langValue;
             string langName;
@@ -316,7 +329,7 @@ namespace PelotonIDE.Presentation
                 langValue = Type_2_GetPerTabSettings<long>("Language");
                 langName = LanguageSettings[Type_1_GetVirtualRegistry<string>("InterfaceLanguageName")]["GLOBAL"][$"{101 + langValue}"];
             }
-            telem.Transmit("langValue=", langValue, "langName=", langName);
+            t.Transmit("langValue=", langValue, "langName=", langName);
             return langName;
         }
 
@@ -334,8 +347,8 @@ namespace PelotonIDE.Presentation
 
         public void HandleCustomPropertySaving(StorageFile file, CustomTabItem navigationViewItem)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             string rtfContent = File.ReadAllText(file.Path);
             StringBuilder rtfBuilder = new(rtfContent);
@@ -344,14 +357,15 @@ namespace PelotonIDE.Presentation
 
             var inFocusTab = navigationViewItem.TabSettingsDict;
             Regex ques = new(Regex.Escape("?"));
-            string info = @"{\info {\*\ilang ?} {\*\ilength ?} {\*\itimeout ?} {\*\iquietude ?} {\*\itransput ?} }"; // {\*\ipadout ?}
+            string info = @"{\info {\*\ilang ?} {\*\ilength ?} {\*\itimeout ?} {\*\iquietude ?} {\*\markups ?} {\*\irendering ?} }"; // {\*\ipadout ?}
             info = ques.Replace(info, $"{inFocusTab["Language"]["Value"]}", ONCE);
             info = ques.Replace(info, (bool)inFocusTab["VariableLength"]["Value"] ? "1" : "0", ONCE);
             info = ques.Replace(info, $"{(long)inFocusTab["Timeout"]["Value"]}", ONCE);
             info = ques.Replace(info, $"{(long)inFocusTab["Quietude"]["Value"]}", ONCE);
             info = ques.Replace(info, $"{(long)inFocusTab["Transput"]["Value"]}", ONCE);
+            info = ques.Replace(info, $"{(string)inFocusTab["Rendering"]["Value"]}", ONCE);
 
-            telem.Transmit("info=", info);
+            t.Transmit("info=", info);
 
             Regex regex = CustomRTFRegex();
 
@@ -372,7 +386,7 @@ namespace PelotonIDE.Presentation
                 rtfBuilder.Insert(j, info);
             }
 
-            telem.Transmit("rtfBuilder=", rtfBuilder.ToString());
+            t.Transmit("rtfBuilder=", rtfBuilder.ToString());
 
             string? text = rtfBuilder.ToString();
             if (text.EndsWith((char)0x0)) text = text.Remove(text.Length - 1);
@@ -419,9 +433,10 @@ namespace PelotonIDE.Presentation
                     }
                 }
 
-                MarkupToInFocusSetting(matches, @"\itimeout", "Timeout");
-                MarkupToInFocusSetting(matches, @"\iquietude", "Quietude");
-                MarkupToInFocusSetting(matches, @"\itransput", "Transput");
+                MarkupToInFocusSettingLong(matches, @"\itimeout", "Timeout");
+                MarkupToInFocusSettingLong(matches, @"\iquietude", "Quietude");
+                MarkupToInFocusSettingLong(matches, @"\markups", "Transput");
+                MarkupToInFocusSettingString(matches, @"\irendering", "Rendering");
             }
             else
             {
@@ -459,16 +474,29 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        private void MarkupToInFocusSetting(MatchCollection matches, string markup, string setting)
+        private void MarkupToInFocusSettingLong(MatchCollection matches, string markup, string setting)
         {
-            IEnumerable<Match> itransput = from match in matches where match.Value.Contains(markup) select match;
-            if (itransput.Any())
+            IEnumerable<Match> markups = from match in matches where match.Value.Contains(markup) select match;
+            if (markups.Any())
             {
-                string[] transputs = itransput.First().Value.Split(' ');
-                if (transputs.Any())
+                string[] marked = markups.First().Value.Split(' ');
+                if (marked.Any())
                 {
-                    string num = transputs[1].Replace("}", "");
-                    Type_3_UpdateInFocusTabSettings<long>(setting, true, long.Parse(num));
+                    string arg = marked[1].Replace("}", "");
+                    Type_3_UpdateInFocusTabSettings<long>(setting, true, long.Parse(arg));
+                }
+            }
+        }
+        private void MarkupToInFocusSettingString(MatchCollection matches, string markup, string setting)
+        {
+            IEnumerable<Match> markups = from match in matches where match.Value.Contains(markup) select match;
+            if (markups.Any())
+            {
+                string[] marked = markups.First().Value.Split(' ');
+                if (marked.Any())
+                {
+                    string arg = marked[1].Replace("}", "");
+                    Type_3_UpdateInFocusTabSettings<string>(setting, true, arg);
                 }
             }
         }
@@ -534,9 +562,9 @@ namespace PelotonIDE.Presentation
                 }
                 catch (Exception ex)
                 {
-                    Telemetry telem = new();
-                    telem.SetEnabled(true);
-                    telem.Transmit(ex.Message, accel);
+                    Telemetry t = new();
+                    t.SetEnabled(false);
+                    t.Transmit(ex.Message, accel);
                 }
                 name = name.Replace("&", "");
             }
@@ -604,11 +632,11 @@ namespace PelotonIDE.Presentation
 
         private void FormatMenu_FontSize_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             var me = (MenuFlyoutItem)sender;
-            telem.Transmit(me.Name);
+            t.Transmit(me.Name);
 
             CustomRichEditBox currentRichEditBox = _richEditBoxes[((CustomTabItem)tabControl.SelectedItem).Tag];
 
@@ -618,108 +646,115 @@ namespace PelotonIDE.Presentation
 
         private void TabViewItem_Html_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
             var me = (TabViewItem)sender;
-            telem.Transmit(me.Name);
+            t.Transmit(me.Name);
+
+            FrameworkElement? senderElement = sender as FrameworkElement;
+            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
+            flyoutBase.ShowAt(senderElement);
         }
 
         private void FileCopyHtmlButton_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
             var me = (TabViewItem)sender;
-            telem.Transmit(me.Name);
+            t.Transmit(me.Name);
         }
 
         private void ClipboardCopyHtmlButton_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
             var me = (TabViewItem)sender;
-            telem.Transmit(me.Name);
+            t.Transmit(me.Name);
         }
 
         private void ClearHtmlButton_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
             var me = (TabViewItem)sender;
-            telem.Transmit(me.Name);
+            t.Transmit(me.Name);
         }
 
         private void TabViewItem_Html_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
             var me = (TabViewItem)sender;
-            telem.Transmit(me.Name);
+            t.Transmit(me.Name);
         }
 
         private void TabViewItem_Error_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
             var me = (TabViewItem)sender;
-            telem.Transmit(me.Name);
+            t.Transmit(me.Name);
         }
 
         private void TabViewItem_Output_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
             var me = (TabViewItem)sender;
-            telem.Transmit(me.Name);
+            t.Transmit(me.Name);
         }
 
         private void TabViewItem_Logo_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(true);
             var me = (TabViewItem)sender;
-            telem.Transmit(me.Name);
+            t.Transmit(me.Name);
 
         }
 
         private void TabViewItem_Logo_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(true);
             var me = (TabViewItem)sender;
-            telem.Transmit(me.Name);
+            t.Transmit(me.Name);
 
+            FrameworkElement? senderElement = sender as FrameworkElement;
+            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
+            flyoutBase.ShowAt(senderElement);
         }
 
         private void FileCopyLogoButton_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
             var me = (MenuFlyoutItem)sender;
-            telem.Transmit(me.Name);
+            t.Transmit(me.Name);
 
         }
 
         private void ClipboardCopyLogoButton_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
             var me = (MenuFlyoutItem)sender;
-            telem.Transmit(me.Name);
+            t.Transmit(me.Name);
 
         }
 
         private void ClearLogoButton_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
             var me = (MenuFlyoutItem)sender;
-            telem.Transmit(me.Name);
+            t.Transmit(me.Name);
         }
 
         private void ContentControl_Rendering_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             ContentControl me = (ContentControl)sender;
 
@@ -732,7 +767,7 @@ namespace PelotonIDE.Presentation
             if (!AnInFocusTabExists()) return;
 
             string? inFocusRendering = Type_3_GetInFocusTab<string>("Rendering");
-            telem.Transmit("inFocusRendering=", inFocusRendering);
+            t.Transmit("inFocusRendering=", inFocusRendering);
 
             Dictionary<string, string> frmMain = LanguageSettings[interfaceLanguageName]["frmMain"];
 
@@ -752,7 +787,7 @@ namespace PelotonIDE.Presentation
                         }
                 };
                 menuFlyoutItem.Click += ContentControl_Rendering_MenuFlyoutItem_Click; // this has to reset the cell to its original value
-                telem.Transmit(menuFlyoutItem.Text, menuFlyoutItem.Name, menuFlyoutItem.Foreground.ToString(), menuFlyoutItem.Background.ToString());
+                t.Transmit(menuFlyoutItem.Text, menuFlyoutItem.Name, menuFlyoutItem.Foreground.ToString(), menuFlyoutItem.Background.ToString());
                 mf.Items.Add(menuFlyoutItem);
             }
 
@@ -763,8 +798,8 @@ namespace PelotonIDE.Presentation
 
         private void ContentControl_Rendering_MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
             string meName = me.Name.Replace("tab", "");
@@ -809,13 +844,15 @@ namespace PelotonIDE.Presentation
 
         private void TabViewItem_RTF_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-
+            FrameworkElement? senderElement = sender as FrameworkElement;
+            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
+            flyoutBase.ShowAt(senderElement);
         }
 
         private void InterpretMenu_Transput_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
             foreach (var mfi in from MenuFlyoutSubItem mfsi in mnuTransput.Items.Cast<MenuFlyoutSubItem>()
@@ -837,10 +874,10 @@ namespace PelotonIDE.Presentation
 
         private void Help_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry telem = new();
-            telem.SetEnabled(true);
+            Telemetry t = new();
+            t.SetEnabled(false);
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
-            telem.Transmit(me.Name);
+            t.Transmit(me.Name);
 
             ProcessStartInfo startInfo = new ProcessStartInfo()
             {
@@ -849,9 +886,72 @@ namespace PelotonIDE.Presentation
                 FileName = @"c:\protium\bin\help\protium.chm",
                 WindowStyle = ProcessWindowStyle.Normal
             };
-            // startInfo.Verbs.ToList().ForEach(V => telem.Transmit(V));
+            // startInfo.Verbs.ToList().ForEach(V => t.Transmit(V));
             Process.Start(startInfo);
-            
+
+        }
+
+        private void OutputPanelTabView_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(false);
+            TabView me = (TabView)sender;
+            t.Transmit(me.Name, e.PreviousSize, e.NewSize);
+        }
+
+        private void Page_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(false);
+            Page me = (Page)sender;
+
+            if (Type_1_GetVirtualRegistry<string>("OutputPanelPosition") == "Bottom")
+            {
+                if (!double.IsNaN(outputPanelTabView.Height))
+                {
+
+                    double winHeight = e.PreviousSize.Height;
+                    double panHeight = outputPanelTabView.Height;
+                    if (((winHeight - panHeight) / winHeight) <= 0.10)
+                    {
+                        return;
+                    }
+                    double winPanHeightRatio = panHeight / winHeight;
+                    double newHeight = e.NewSize.Height * winPanHeightRatio;
+                    outputPanel.Height = newHeight;
+                }
+            }
+            else
+            {
+                if (!double.IsNaN(outputPanelTabView.Width))
+                {
+                    double winWidth = e.PreviousSize.Width;
+                    double panWidth = outputPanelTabView.Width;
+                    if (((winWidth - panWidth) / winWidth) <= 0.10)
+                    {
+                        return;
+                    }
+                    double winPanWidthRatio = panWidth / winWidth;
+                    double newWidth = e.NewSize.Width * winPanWidthRatio;
+                    outputPanel.Width = newWidth;
+                }
+            }
+        }
+
+        private void TabViewItem_Checkbox_Checked(object sender, RoutedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(true);
+            CheckBox me = (CheckBox)sender;
+            t.Transmit(me.Name, me.Tag, me.IsChecked, e.OriginalSource);
+        }
+
+        private void TabViewItem_Checkbox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(true);
+            CheckBox me = (CheckBox)sender;
+            t.Transmit(me.Name, me.Tag, me.IsChecked, e.OriginalSource);
         }
     }
 }

@@ -13,6 +13,30 @@
         <LangVersion>latest</LangVersion>
         <UnoUIUseRoslynSourceGenerators>true</UnoUIUseRoslynSourceGenerators>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-windows10.0.19041|AnyCPU'">
+      <Optimize>False</Optimize>
+      <DebugType>embedded</DebugType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0|AnyCPU'">
+      <Optimize>False</Optimize>
+      <DebugType>embedded</DebugType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-maccatalyst|AnyCPU'">
+      <Optimize>False</Optimize>
+      <DebugType>embedded</DebugType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-windows10.0.19041|AnyCPU'">
+      <Optimize>False</Optimize>
+      <DebugType>embedded</DebugType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0|AnyCPU'">
+      <Optimize>False</Optimize>
+      <DebugType>embedded</DebugType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-maccatalyst|AnyCPU'">
+      <Optimize>False</Optimize>
+      <DebugType>embedded</DebugType>
+    </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="ClosedXML" Version="0.102.2" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
@@ -124,5 +148,18 @@
         <Reference Include="EncodingChecker">
             <HintPath>..\..\EncodingChecker\bin\Debug\net7.0\EncodingChecker.dll</HintPath>
         </Reference>
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Properties\Resources.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Resources.resx</DependentUpon>
+      </Compile>
+    </ItemGroup>
+    <ItemGroup>
+      <EmbeddedResource Update="Properties\Resources.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
     </ItemGroup>
 </Project>
