@@ -39,7 +39,7 @@ namespace PelotonIDE.Presentation
         private async void HandleInterfaceLanguageChange(string langName)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
 
             Dictionary<string, Dictionary<string, string>> selectedLanguage = LanguageSettings[langName];
             t.Transmit("Changing interface language to", langName, long.Parse(selectedLanguage["GLOBAL"]["ID"]));
@@ -792,7 +792,7 @@ namespace PelotonIDE.Presentation
             catch (Exception er)
             {
                 Telemetry t = new();
-                t.SetEnabled(false);
+                t.SetEnabled(true);
                 t.Transmit(er.Message, er.StackTrace);
             }
             Environment.Exit(0);
@@ -801,7 +801,7 @@ namespace PelotonIDE.Presentation
         private async void ShowMemory_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
 
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             Dictionary<string, Dictionary<string, object>>? currentTabSettings = navigationViewItem.TabSettingsDict;
@@ -847,7 +847,7 @@ namespace PelotonIDE.Presentation
             CultureInfo cultureInfo = new(global["Locale"]);
 
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
 
             foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite" }
                                                  let items = from item in mnuTimeout.Items where item.Name == key select item

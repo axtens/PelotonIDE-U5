@@ -2,10 +2,10 @@
   "InterfaceLanguageName": "English",
   "InterfaceLanguageID": 0,
   "InterpreterLanguageName": "English",
-  "InterpreterLanguageID":  0,
+  "InterpreterLanguageID": 0,
   "Engine": "Interpreter.P3",
   "OutputPanelHeight": 200.0,
-  "OutputPanelWidth":  400.0,
+  "OutputPanelWidth": 400.0,
   "OutputPanelShowing": true,
   "OutputPanelPosition": "Bottom",
   "Interpreter.P2": "c:\\protium\\bin\\pdb.exe",
@@ -15,5 +15,6 @@
   "Timeout": 1,
   "VariableLength": false,
   "FontSize": 12.0,
-  "Rendering": "0,3"
+  "Rendering": "0,3",
+  "OutputPanelSettings": "True|Bottom|200|400"
 }

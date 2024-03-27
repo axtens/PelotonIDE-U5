@@ -158,7 +158,7 @@ namespace PelotonIDE.Presentation
         private string TranslateCode(string code, string sourceLanguageName, string targetLanguageName)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
 
             t.Transmit("TranslateCode", "code=", code, "sourceLanguageName=", sourceLanguageName, "targetLanguageName=", targetLanguageName);
 

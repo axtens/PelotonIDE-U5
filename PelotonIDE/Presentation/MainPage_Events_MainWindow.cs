@@ -101,6 +101,9 @@ namespace PelotonIDE.Presentation
         /// </summary>
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            Telemetry t = new();
+            t.SetEnabled(true);
+
             LanguageSettings ??= await GetLanguageConfiguration();
             RenderingConstants ??= new Dictionary<string, Dictionary<string, object>>()
                     {
@@ -132,14 +135,26 @@ namespace PelotonIDE.Presentation
             // UpdateFontSizeInMenu();
             UpdateTransputInMenu();
 
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<bool>("OutputPanelShowing", FactorySettings, true);
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<OutputPanelPosition>("OutputPanelPosition", FactorySettings, (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), "Bottom"));
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<double>("OutputPanelHeight", FactorySettings, 200);
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<double>("OutputPanelWidth", FactorySettings, 400);
-            HandleOutputPanelChange(Type_1_GetVirtualRegistry<string>("OutputPanelPosition"));
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<string>("OutputPanelSettings", FactorySettings, "True|Bottom|200|400");
 
-            outputPanel.Height = Type_1_GetVirtualRegistry<double>("OutputPanelHeight");
-            outputPanel.Width = Type_1_GetVirtualRegistry<double>("OutputPanelWidth");
+            var position = FromBarredString_String(Type_1_GetVirtualRegistry<string>("OutputPanelSettings"), 1);
+            Type_1_UpdateVirtualRegistry<string>("OutputPanelPosition", position);
+
+            Type_1_UpdateVirtualRegistry<bool>("OutputPanelShowing", FromBarredString_Boolean(Type_1_GetVirtualRegistry<string>("OutputPanelSettings"), 0));
+            Type_1_UpdateVirtualRegistry<double>("OutputPanelHeight", (double)FromBarredString_Double(Type_1_GetVirtualRegistry<string>("OutputPanelSettings"), 2));
+            Type_1_UpdateVirtualRegistry<double>("OutputPanelWidth", (double)FromBarredString_Double(Type_1_GetVirtualRegistry<string>("OutputPanelSettings"), 3));
+            
+            //t.Transmit(outputPanelTabViewSettings, tabControlSettings);
+
+            //IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<bool>("OutputPanelShowing", FactorySettings, true);
+            //IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<OutputPanelPosition>("OutputPanelPosition", FactorySettings, (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), "Bottom"));
+            //IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<double>("OutputPanelHeight", FactorySettings, 200);
+            //IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<double>("OutputPanelWidth", FactorySettings, 400);
+
+            HandleOutputPanelChange(position);
+
+            //outputPanel.Height = Type_1_GetVirtualRegistry<double>("OutputPanelHeight");
+            //outputPanel.Width = Type_1_GetVirtualRegistry<double>("OutputPanelWidth");
 
             IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<string>("InterfaceLanguageName", FactorySettings, "English");
             IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<long>("InterfaceLanguageID", FactorySettings, 0);
@@ -190,6 +205,7 @@ namespace PelotonIDE.Presentation
                 IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault("VariableLength", FactorySettings, false);
                 Type_3_UpdateInFocusTabSettings("VariableLength", Type_1_GetVirtualRegistry<bool>("VariableLength"), Type_1_GetVirtualRegistry<bool>("VariableLength"));
                 UpdateStatusBarFromInFocusTab();
+                DeserializeTabsFromVirtualRegistry();
             }
             InterfaceLanguageSelectionBuilder(mnuSelectLanguage, Internationalization_Click);
             InterpreterLanguageSelectionBuilder(mnuRun, "mnuLanguage", MnuLanguage_Click);
@@ -210,18 +226,16 @@ namespace PelotonIDE.Presentation
 
             spOutput.Visibility = Visibility.Visible;
 
-            outputPanel.Width = relativePanel.ActualSize.X;
-
-            Frame fr = (Frame)mainWindow.Parent;
-            FrameView fv = (FrameView)fr.Parent;
-            ExtendedSplashScreen ess = (Uno.Toolkit.UI.ExtendedSplashScreen)fv.Parent;
-            Shell s = (Shell)ess.Parent;
-            DependencyObject depo = (DependencyObject)s.Parent;
-
-            //fv.Height = Type_1_GetVirtualRegistry<double?>("MainWindowHeight") ?? double.NaN;
-            //fv.Width = Type_1_GetVirtualRegistry<double?>("MainWindowWidth") ?? double.NaN;
+            // outputPanel.Width = relativePanel.ActualSize.X;            
             
-            
+            (tabControl.Content as CustomRichEditBox).Focus(FocusState.Keyboard);
+
+            string currentLanguageName = GetLanguageNameOfCurrentTab(navigationViewItem.TabSettingsDict);
+            if (languageName.Text != currentLanguageName)
+            {
+                languageName.Text = currentLanguageName;
+            }
+
             void SetKeyboardFlags()
             {
                 var lightGrey = new SolidColorBrush(Colors.LightGray);
@@ -283,19 +297,13 @@ namespace PelotonIDE.Presentation
                 InterpreterP3 ??= @"c:\peloton\bin\p3.exe";
                 Type_1_UpdateVirtualRegistry("Interpreter.P3", InterpreterP3);
             }
-            (tabControl.Content as CustomRichEditBox).Focus(FocusState.Keyboard);
-
-            string currentLanguageName = GetLanguageNameOfCurrentTab(navigationViewItem.TabSettingsDict);
-            if (languageName.Text != currentLanguageName)
-            {
-                languageName.Text = currentLanguageName;
-            }
         }
+
 
         private void UpdateTransputInMenu()
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
 
             string transput = Type_1_GetVirtualRegistry<long>("Transput").ToString();
             foreach (var mfi in from MenuFlyoutSubItem mfsi in mnuTransput.Items.Cast<MenuFlyoutSubItem>()
@@ -447,7 +455,7 @@ namespace PelotonIDE.Presentation
 
             //Type_1_UpdateVirtualRegistry<double>("MainWindowHeight", mainWindow.ActualHeight); 
             //Type_1_UpdateVirtualRegistry<double>("MainWindowWidth", mainWindow.ActualWidth);
-            
+            SerializeTabsToVirtualRegistry();
         }
     }
 }

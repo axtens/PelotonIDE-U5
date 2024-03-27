@@ -26,6 +26,7 @@ using LanguageConfigurationStructure = System.Collections.Generic.Dictionary<str
 using RenderingConstantsStructure = System.Collections.Generic.Dictionary<string,
         System.Collections.Generic.Dictionary<string, object>>;
 using Thickness = Microsoft.UI.Xaml.Thickness;
+using System.Linq;
 
 namespace PelotonIDE.Presentation
 {
@@ -165,7 +166,7 @@ namespace PelotonIDE.Presentation
         private async void InterpreterLanguageSelectionBuilder(MenuBarItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
 
             LanguageSettings ??= await GetLanguageConfiguration();
             string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
@@ -196,7 +197,7 @@ namespace PelotonIDE.Presentation
                                             let name = LanguageSettings[lang]["GLOBAL"]["Name"]
                                             select name;
 
-                t.Transmit("names.Any=", names.Any());
+                //t.Transmit("names.Any=", names.Any());
 
                 if (names.Any())
                 {
@@ -234,7 +235,7 @@ namespace PelotonIDE.Presentation
         private void SetVariableLengthModeInMenu(MenuFlyoutItem? menuFlyoutItem, bool showEnabled)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             t.Transmit("menuFlyoutItem.Name=", menuFlyoutItem.Name, "showEnabled=", showEnabled);
             if (showEnabled)
             {
@@ -315,7 +316,7 @@ namespace PelotonIDE.Presentation
         public string GetLanguageNameOfCurrentTab(InterpreterParametersStructure? tabSettingJson)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
 
             long langValue;
             string langName;
@@ -348,7 +349,7 @@ namespace PelotonIDE.Presentation
         public void HandleCustomPropertySaving(StorageFile file, CustomTabItem navigationViewItem)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
 
             string rtfContent = File.ReadAllText(file.Path);
             StringBuilder rtfBuilder = new(rtfContent);
@@ -563,7 +564,7 @@ namespace PelotonIDE.Presentation
                 catch (Exception ex)
                 {
                     Telemetry t = new();
-                    t.SetEnabled(false);
+                    t.SetEnabled(true);
                     t.Transmit(ex.Message, accel);
                 }
                 name = name.Replace("&", "");
@@ -633,7 +634,7 @@ namespace PelotonIDE.Presentation
         private void FormatMenu_FontSize_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
 
             var me = (MenuFlyoutItem)sender;
             t.Transmit(me.Name);
@@ -647,7 +648,7 @@ namespace PelotonIDE.Presentation
         private void TabViewItem_Html_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             var me = (TabViewItem)sender;
             t.Transmit(me.Name);
 
@@ -659,7 +660,7 @@ namespace PelotonIDE.Presentation
         private void FileCopyHtmlButton_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             var me = (TabViewItem)sender;
             t.Transmit(me.Name);
         }
@@ -667,7 +668,7 @@ namespace PelotonIDE.Presentation
         private void ClipboardCopyHtmlButton_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             var me = (TabViewItem)sender;
             t.Transmit(me.Name);
         }
@@ -675,7 +676,7 @@ namespace PelotonIDE.Presentation
         private void ClearHtmlButton_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             var me = (TabViewItem)sender;
             t.Transmit(me.Name);
         }
@@ -683,7 +684,7 @@ namespace PelotonIDE.Presentation
         private void TabViewItem_Html_Tapped(object sender, TappedRoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             var me = (TabViewItem)sender;
             t.Transmit(me.Name);
         }
@@ -691,7 +692,7 @@ namespace PelotonIDE.Presentation
         private void TabViewItem_Error_Tapped(object sender, TappedRoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             var me = (TabViewItem)sender;
             t.Transmit(me.Name);
         }
@@ -699,7 +700,7 @@ namespace PelotonIDE.Presentation
         private void TabViewItem_Output_Tapped(object sender, TappedRoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             var me = (TabViewItem)sender;
             t.Transmit(me.Name);
         }
@@ -710,7 +711,7 @@ namespace PelotonIDE.Presentation
             t.SetEnabled(true);
             var me = (TabViewItem)sender;
             t.Transmit(me.Name);
-
+            //SerializeTabsToVirtualRegistry();
         }
 
         private void TabViewItem_Logo_RightTapped(object sender, RightTappedRoutedEventArgs e)
@@ -728,7 +729,7 @@ namespace PelotonIDE.Presentation
         private void FileCopyLogoButton_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             var me = (MenuFlyoutItem)sender;
             t.Transmit(me.Name);
 
@@ -737,7 +738,7 @@ namespace PelotonIDE.Presentation
         private void ClipboardCopyLogoButton_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             var me = (MenuFlyoutItem)sender;
             t.Transmit(me.Name);
 
@@ -746,7 +747,7 @@ namespace PelotonIDE.Presentation
         private void ClearLogoButton_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             var me = (MenuFlyoutItem)sender;
             t.Transmit(me.Name);
         }
@@ -754,7 +755,7 @@ namespace PelotonIDE.Presentation
         private void ContentControl_Rendering_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
 
             ContentControl me = (ContentControl)sender;
 
@@ -799,7 +800,7 @@ namespace PelotonIDE.Presentation
         private void ContentControl_Rendering_MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
 
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
             string meName = me.Name.Replace("tab", "");
@@ -852,7 +853,7 @@ namespace PelotonIDE.Presentation
         private void InterpretMenu_Transput_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
 
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
             foreach (var mfi in from MenuFlyoutSubItem mfsi in mnuTransput.Items.Cast<MenuFlyoutSubItem>()
@@ -875,7 +876,7 @@ namespace PelotonIDE.Presentation
         private void Help_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
             t.Transmit(me.Name);
 
@@ -886,38 +887,42 @@ namespace PelotonIDE.Presentation
                 FileName = @"c:\protium\bin\help\protium.chm",
                 WindowStyle = ProcessWindowStyle.Normal
             };
-            // startInfo.Verbs.ToList().ForEach(V => t.Transmit(V));
             Process.Start(startInfo);
-
         }
 
         private void OutputPanelTabView_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             TabView me = (TabView)sender;
-            t.Transmit(me.Name, e.PreviousSize, e.NewSize);
+            t.Transmit(me.Name, "e.PreviousSize=", e.PreviousSize, "e.NewSize=", e.NewSize);
+            string pos = Type_1_GetVirtualRegistry<string>("OutputPanelPosition") ?? "Bottom";
+            Type_1_UpdateVirtualRegistry<string>("OutputPanelTabView_Settings", string.Join("|", [pos, e.NewSize.Height, e.NewSize.Width]));
+            vHW.Text = $"OutputPanelTabView: {e.NewSize.Height}/{e.NewSize.Width}";
         }
 
         private void Page_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             Page me = (Page)sender;
 
+            pHW.Text = $"Page: {e.NewSize.Height}/{e.NewSize.Width}";
+            
             if (Type_1_GetVirtualRegistry<string>("OutputPanelPosition") == "Bottom")
             {
                 if (!double.IsNaN(outputPanelTabView.Height))
                 {
 
                     double winHeight = e.PreviousSize.Height;
-                    double panHeight = outputPanelTabView.Height;
-                    if (((winHeight - panHeight) / winHeight) <= 0.10)
+                    double optvHeight = outputPanelTabView.Height;
+                    t.Transmit("winHeight=", winHeight, "optvWidth=", optvHeight, "(winHeight - optvHeight)=", (winHeight - optvHeight), "(winHeight - optvHeight) / winHeight=", (winHeight - optvHeight) / winHeight);
+                    if (((winHeight - optvHeight) / winHeight) <= 0.10)
                     {
                         return;
                     }
-                    double winPanHeightRatio = panHeight / winHeight;
-                    double newHeight = e.NewSize.Height * winPanHeightRatio;
+                    double winPanHeightRatio = optvHeight / winHeight;
+                    double newHeight = Math.Floor(e.NewSize.Height * winPanHeightRatio);
                     outputPanel.Height = newHeight;
                 }
             }
@@ -926,32 +931,38 @@ namespace PelotonIDE.Presentation
                 if (!double.IsNaN(outputPanelTabView.Width))
                 {
                     double winWidth = e.PreviousSize.Width;
-                    double panWidth = outputPanelTabView.Width;
-                    if (((winWidth - panWidth) / winWidth) <= 0.10)
+                    double optvWidth = outputPanelTabView.Width;
+                    t.Transmit("winWidth=", winWidth, "optvWidth=", optvWidth, "(winWidth - optvWidth)=", (winWidth - optvWidth), "(winWidth - optvWidth) / winWidth=", (winWidth - optvWidth) / winWidth);
+                    if (((winWidth - optvWidth) / winWidth) <= 0.10)
                     {
                         return;
                     }
-                    double winPanWidthRatio = panWidth / winWidth;
-                    double newWidth = e.NewSize.Width * winPanWidthRatio;
+                    double winPanWidthRatio = optvWidth / winWidth;
+                    double newWidth = Math.Floor(e.NewSize.Width * winPanWidthRatio);
                     outputPanel.Width = newWidth;
                 }
             }
         }
 
-        private void TabViewItem_Checkbox_Checked(object sender, RoutedEventArgs e)
+        private void TabView_Rendering_TabItemsChanged(TabView sender, Windows.Foundation.Collections.IVectorChangedEventArgs args)
         {
             Telemetry t = new();
             t.SetEnabled(true);
-            CheckBox me = (CheckBox)sender;
-            t.Transmit(me.Name, me.Tag, me.IsChecked, e.OriginalSource);
+            TabView me = (TabView)sender;
+            //t.Transmit("me.Name=",me.Name, "me,Tag=",me.Tag, "args.Index=",args.Index, "args.CollectionChange=", args.CollectionChange, "Names=",string.Join(',', me.TabItems.Select(e => ((TabViewItem)e).Name)));
+            //SerializeTabsToVirtualRegistry();
         }
 
-        private void TabViewItem_Checkbox_Unchecked(object sender, RoutedEventArgs e)
+        private void TabControl_SizeChanged(object sender, SizeChangedEventArgs args)
         {
             Telemetry t = new();
             t.SetEnabled(true);
-            CheckBox me = (CheckBox)sender;
-            t.Transmit(me.Name, me.Tag, me.IsChecked, e.OriginalSource);
+            NavigationView me = (NavigationView)sender;
+            t.Transmit(me.Name, "e.PreviousSize=", args.PreviousSize, "e.NewSize=", args.NewSize, "args.OriginalSource=", args.OriginalSource);
+            string pos = Type_1_GetVirtualRegistry<string>("OutputPanelPosition") ?? "Bottom";
+            Type_1_UpdateVirtualRegistry<string>("TabControl_Settings", string.Join("|", [pos, args.NewSize.Height, args.NewSize.Width]));
+            tHW.Text = $"Editing: {args.NewSize.Height}/{args.NewSize.Width}";
+
         }
     }
 }

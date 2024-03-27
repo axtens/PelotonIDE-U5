@@ -316,15 +316,15 @@
                 </ResourceDictionary>
             </Button.Resources>
         </Button>
-        <NavigationView x:Name="tabControl" PaneDisplayMode="Top" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" RelativePanel.Below="butSelectAll" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" RelativePanel.Above="outputPanel" SelectionChanged="TabControl_SelectionChanged" RightTapped="TabControl_RightTapped">
+        <NavigationView x:Name="tabControl" PaneDisplayMode="Top" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" RelativePanel.Below="butSelectAll" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" RelativePanel.Above="outputPanel" SelectionChanged="TabControl_SelectionChanged" RightTapped="TabControl_RightTapped" SizeChanged="TabControl_SizeChanged">
             <NavigationView.MenuItems>
                 <local:CustomTabItem x:Name="tab1" Content="Document 1" Tag="Tab1" IsNewFile="True" Height="30" KeyDown="CustomTabItem_KeyDown" RightTapped="CustomTabItem_RightTapped"/>
             </NavigationView.MenuItems>
         </NavigationView>
-        <Border x:Name="outputPanel" RelativePanel.Above="statusBar" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" Background="LightGray" Margin="5, 0, 5, 0" SizeChanged="OutputPanel_SizeChanged">
-            <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Border x:Name="outputPanel" RelativePanel.Above="statusBar" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" Background="White" Margin="5, 0, 5, 0" SizeChanged="OutputPanel_SizeChanged">
+            <Canvas x:Name="outputCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <Thumb x:Name="outputThumb" Height="5" DragDelta="Thumb_DragDelta" DragCompleted="OutputThumb_DragCompleted" Canvas.Top="-5" PointerEntered="OutputThumb_PointerEntered" PointerExited="OutputThumb_PointerExited"/>
-                <TabView x:Name="outputPanelTabView" IsAddTabButtonVisible="False" TabWidthMode="SizeToContent" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="200" SizeChanged="OutputPanelTabView_SizeChanged">
+                <TabView x:Name="outputPanelTabView" IsAddTabButtonVisible="False" TabWidthMode="SizeToContent" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="200" SizeChanged="OutputPanelTabView_SizeChanged" CanReorderTabs="True" TabItemsChanged="TabView_Rendering_TabItemsChanged">
                     <TabView.TabStripFooter>
                         <Button VerticalAlignment="Center" HorizontalAlignment="Right">
                             <Button.Content>
@@ -411,9 +411,9 @@
                                     <MenuFlyoutItem x:Name="ClearHtmlButton" Text="Clear" Click="ClearHtmlButton_Click"/>
                                 </MenuFlyout>
                             </FlyoutBase.AttachedFlyout>
-                            <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                            <Border Background="LightSeaGreen" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" CornerRadius="5">
                                 <ScrollViewer VerticalScrollBarVisibility="Visible" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Visible" HorizontalScrollMode="Auto" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                                    <WebView2 x:Name="HtmlText" FlowDirection="LeftToRight"/>
+                                    <WebView2 x:Name="HtmlText" FlowDirection="LeftToRight" />
                                 </ScrollViewer>
                             </Border>
                         </TabViewItem>
@@ -425,16 +425,11 @@
                                     <MenuFlyoutItem x:Name="ClearLogoButton" Text="Clear" Click="ClearLogoButton_Click"/>
                                 </MenuFlyout>
                             </FlyoutBase.AttachedFlyout>
-                            <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                            <Border Background="LightSkyBlue" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" CornerRadius="5">
                                 <ScrollViewer VerticalScrollBarVisibility="Visible" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Visible" HorizontalScrollMode="Auto" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                                    <WebView2 x:Name="LogoText" FlowDirection="LeftToRight"/>
+                                    <WebView2 x:Name="LogoText" FlowDirection="LeftToRight" />
                                 </ScrollViewer>
                             </Border>
-                            <TabViewItem.Template>
-                                <ControlTemplate TargetType="TabViewItem">
-                                    <CheckBox Width="200"  BorderThickness="2" BorderBrush="Black" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Background="LightGray" Tag="{TemplateBinding Tag}" Content="Logo" Checked="TabViewItem_Checkbox_Checked" Unchecked="TabViewItem_Checkbox_Unchecked" />
-                                </ControlTemplate>
-                            </TabViewItem.Template>
                         </TabViewItem>
                     </TabView.TabItems>
                 </TabView>
@@ -487,6 +482,18 @@
             </Border>
             <Border BorderThickness="1" BorderBrush="Black">
                 <TextBlock Name="SCRL" Height="30" MinWidth="50" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
+            </Border>
+            <Border BorderThickness="1" BorderBrush="Black">
+                <TextBlock x:Name="oHW" Height="30" MinWidth="50" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
+            </Border>
+            <Border BorderThickness="1" BorderBrush="Black">
+                <TextBlock x:Name="tHW" Height="30" MinWidth="50" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
+            </Border>
+            <Border BorderThickness="1" BorderBrush="Black">
+                <TextBlock x:Name="vHW" Height="30" MinWidth="50" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
+            </Border>
+            <Border BorderThickness="1" BorderBrush="Black">
+                <TextBlock x:Name="pHW" Height="30" MinWidth="50" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
             </Border>
             <!--<Border BorderThickness="1" BorderBrush="Black">
                 <TextBlock Name="DATE" Height="30" Width="100" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5" />

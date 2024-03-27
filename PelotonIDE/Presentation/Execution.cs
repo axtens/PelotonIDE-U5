@@ -25,7 +25,7 @@ namespace PelotonIDE.Presentation
         private async void ExecuteInterpreter(string selectedText)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
 
             DispatcherQueue dispatcher = DispatcherQueue.GetForCurrentThread();
 
@@ -151,6 +151,9 @@ namespace PelotonIDE.Presentation
 
         private string ParseLogoIntoJavascript(string v)
         {
+            Telemetry t = new();
+            t.SetEnabled(true);
+            
             List<string> result = [];
             var lines = v.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (var line in lines)
@@ -160,31 +163,73 @@ namespace PelotonIDE.Presentation
                 {
                     switch (parts[0].ToUpper())
                     {
+                        case ";":
+                            break;
                         case "CS":
+                        case "CLEARSCREEN":
                             result.Add("turtle.clear()");
                             break;
                         case "PD":
+                        case "PENDOWN":
                             result.Add("turtle.penDown()");
                             break;
                         case "PU":
+                        case "PENUP":
                             result.Add("turtle.penDown()");
                             break;
                         case "FD":
+                        case "FORWARD":
                             result.Add($"turtle.forward({parts[1]})");
                             break;
                         case "BK":
+                        case "BACK":
                             result.Add($"turtle.back({parts[1]})");
                             break;
                         case "RT":
+                        case "RIGHT":
                             result.Add($"turtle.right({parts[1]})");
                             break;
+                        case "LT":
+                        case "LEFT":
+                            result.Add($"turtle.left({parts[1]})");
+                            break;
+                        case "SP":
                         case "SPEED":
                             result.Add($"turtle.setSpeed({parts[1]})");
+                            break;
+                        case "HT":
+                        case "HIDETURTLE":
+                            break;
+                        case "SETXY":
+                            result.Add($"turtle.setPosition({parts[1]},{parts[2]})");
+                            break;
+                        case "SETPENSIZE":
+                            result.Add($"turtle.setLineWidth({parts[1]})");
+                            break;
+                        case "SETPENCOLOUR":
+                        case "SETPENCOLOR":
+                            result.Add($"turtle.setStrokeColorRGB({parts[1]},{parts[2]},{parts[3]})");
+                            break;
+                        case "SETFILLSTYLE":
+                            result.Add($"turtle.setFillStyle({parts[1]})");
+                            break;
+                        case "FILL":
+                            result.Add($"turtle.fill()");
+                            break;
+                        case "STROKE":
+                            result.Add($"turtle.stroke()");
+                            break;
+                        case "BEGINPATH":
+                            result.Add($"turtle.beginPath()");
+                            break;
+                        case "ENDPATH":
+                            result.Add($"turtle.closePath()");
                             break;
                     }
                 }
             }
             result.Add("turtle.start();");
+            t.Transmit(result.JoinBy("\r\n"));
             return result.JoinBy("\n");
         }
 
@@ -201,7 +246,7 @@ namespace PelotonIDE.Presentation
         private static void AddInsertParagraph(RichEditBox reb, string text, bool addInsert = true, bool withPrefix = true)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             if (string.IsNullOrEmpty(text))
             {
                 return;
@@ -230,7 +275,7 @@ namespace PelotonIDE.Presentation
         public (string StdOut, string StdErr) RunProtium(string args, string buff, long quietude)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.P2"].ToString();
             string temp = System.IO.Path.GetTempFileName();
             File.WriteAllText(temp, buff, Encoding.Unicode);
@@ -259,7 +304,7 @@ namespace PelotonIDE.Presentation
         public (string StdOut, string StdErr) RunPeloton(string args, string buff, long quietude)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
 
             string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.P3"].ToString();
 
@@ -302,7 +347,7 @@ namespace PelotonIDE.Presentation
         public (string StdOut, string StdErr) RunPeloton2(string args, string buff, long quietude, DispatcherQueue dispatcher)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
 
             string temp = System.IO.Path.GetTempFileName();
             File.WriteAllText(temp, buff, Encoding.Unicode);
@@ -322,11 +367,13 @@ namespace PelotonIDE.Presentation
                 RedirectStandardError = true,
                 RedirectStandardInput = true,
                 CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden
+                WindowStyle = ProcessWindowStyle.Hidden,
             };
 
             //inject($"{DateTime.Now:o}(\r");
             Process? proc = Process.Start(info);
+            proc.EnableRaisingEvents = true;
+
             StringBuilder stdout = new();
             StringBuilder stderr = new();
 
@@ -338,25 +385,27 @@ namespace PelotonIDE.Presentation
             {
                 //if (quietude == 0)
                 //{
-                //    stdout.AppendLine(e.Data!);
+                //if (e.Data != null)
+                //    stdout.AppendLine(e.Data);
                 //}
                 //else
                 //{
                 if (e.Data != null)
                 {
-                    dispatcher.TryEnqueue(() =>
-                    {
-                        //Inject($"{DateTime.Now:o}> {e.Data}\r");
-                        Inject($"> {e.Data}\r");
-                    });
+                    //dispatcher.TryEnqueue(() =>
+                    //{
+                    //    //Inject($"{DateTime.Now:o}> {e.Data}\r");
+                    //    Inject($"> {e.Data}\r");
+                    //});
+                    stdout.AppendLine(e.Data);
                 }
                 //}
             };
             proc.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
             {
                 Telemetry t = new();
-                t.SetEnabled(false);
-                t.Transmit(e.Data);
+                t.SetEnabled(true);
+                //t.Transmit(e.Data);
                 stderr.AppendLine(e.Data);
             };
 
