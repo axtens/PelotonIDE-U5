@@ -8,7 +8,7 @@ namespace PelotonIDE
 
         protected async override void OnLaunched(LaunchActivatedEventArgs args)
         {
-            var builder = this.CreateBuilder(args)
+            IApplicationBuilder builder = this.CreateBuilder(args)
 
                 // Add navigation support for toolkit controls such as TabBar and NavigationView
                 .UseToolkitNavigation()
@@ -64,10 +64,10 @@ namespace PelotonIDE
         private void Window_SizeChanged(object sender, WindowSizeChangedEventArgs args)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             Window me = (Window)sender;
-            var height = args.Size.Height;
-            var width = args.Size.Width;
+            double height = args.Size.Height;
+            double width = args.Size.Width;
             t.Transmit(me.Title, "WindowSizeChangedEventArgs.Size.Height=", height, "WindowSizeChangedEventArgs.Size.Width=", width);
         }
 

@@ -3,16 +3,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
 using Windows.Storage;
-using Windows.Web;
 
 namespace PelotonIDE.Presentation
 {
@@ -104,45 +95,41 @@ namespace PelotonIDE.Presentation
         private void HandleOutputPanelChange(string changeTo)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
 
-            var outputPanelPosition = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), changeTo);
+            OutputPanelPosition outputPanelPosition = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), changeTo);
 
-            var outputPanelHeight = Type_1_GetVirtualRegistry<double>("OutputPanelHeight");
-            var outputPanelWidth = Type_1_GetVirtualRegistry<double>("OutputPanelWidth");
-            var outputPanelShowing = Type_1_GetVirtualRegistry<bool>("OutputPanelShowing");
+            double outputPanelHeight = Type_1_GetVirtualRegistry<double>("OutputPanelHeight");
+            double outputPanelWidth = Type_1_GetVirtualRegistry<double>("OutputPanelWidth");
+            bool outputPanelShowing = Type_1_GetVirtualRegistry<bool>("OutputPanelShowing");
 
-            var outputPanelTabViewSettings = Type_1_GetVirtualRegistry<string>("OutputPanelTabView_Settings");
-            var tabControlSettings = Type_1_GetVirtualRegistry<string>("TabControl_Settings");
+            string outputPanelTabViewSettings = Type_1_GetVirtualRegistry<string>("OutputPanelTabView_Settings");
+            string tabControlSettings = Type_1_GetVirtualRegistry<string>("TabControl_Settings");
 
-            var optvPosition = FromBarredString_String(outputPanelTabViewSettings, 0);
-            var optvHeight = FromBarredString_Double(outputPanelTabViewSettings, 1);
-            var optvWidth = FromBarredString_Double(outputPanelTabViewSettings, 2);
+            string optvPosition = FromBarredString_String(outputPanelTabViewSettings, 0);
+            double optvHeight = FromBarredString_Double(outputPanelTabViewSettings, 1);
+            double optvWidth = FromBarredString_Double(outputPanelTabViewSettings, 2);
 
-            var tcPosition = FromBarredString_String(tabControlSettings, 0);
-            var tcHeight = FromBarredString_Double(tabControlSettings, 1);
-            var tcWidth = FromBarredString_Double(tabControlSettings, 2);
+            string tcPosition = FromBarredString_String(tabControlSettings, 0);
+            double tcHeight = FromBarredString_Double(tabControlSettings, 1);
+            double tcWidth = FromBarredString_Double(tabControlSettings, 2);
 
             switch (outputPanelPosition)
             {
                 case OutputPanelPosition.Left:
-                    //outputPanelPosition = OutputPanelPosition.Left;
+
                     Type_1_UpdateVirtualRegistry<string>("OutputPanelPosition", OutputPanelPosition.Left.ToString());
                     RelativePanel.SetAlignLeftWithPanel(outputPanel, true);
                     RelativePanel.SetAlignRightWithPanel(outputPanel, false);
                     RelativePanel.SetBelow(outputPanel, butNew);
 
-                    //t.Transmit("(before) outputPanel.Width=", outputPanel.Width);
-                    //t.Transmit("(before) outputPanel.Height=", outputPanel.Height);
 
                     outputPanel.Height = outputPanelHeight; // Type_1_GetVirtualRegistry<double?>("OutputPanelHeight") ?? 200.0;
                     outputPanel.Width = outputPanelWidth; //  Type_1_GetVirtualRegistry<double?>("OutputPanelWidth") ?? 400.0;
 
-                    //t.Transmit(pos, "(after) outputPanel.Width=", outputPanel.Width);
-                    //t.Transmit(pos, "(after) outputPanel.Height=", outputPanel.Height);
 
                     outputPanel.MinWidth = 175;
-                    //outputPanel.MaxWidth = 700;
+
                     outputPanel.ClearValue(HeightProperty);
                     outputPanel.ClearValue(MaxHeightProperty);
 
@@ -179,17 +166,9 @@ namespace PelotonIDE.Presentation
                     RelativePanel.SetAlignRightWithPanel(outputPanel, true);
                     RelativePanel.SetBelow(outputPanel, null);
 
-                    //t.Transmit("(before) outputPanel.Width=", outputPanel.Width);
-                    //t.Transmit("(before) outputPanel.Height=", outputPanel.Height);
-
                     outputPanel.Height = outputPanelHeight; // Type_1_GetVirtualRegistry<double?>("OutputPanelHeight") ?? 200.0;
                     outputPanel.Width = outputPanelWidth; // Type_1_GetVirtualRegistry<double?>("OutputPanelWidth") ?? 400.0;
 
-                    //t.Transmit(pos, "(after) outputPanel.Width=", outputPanel.Width);
-                    //t.Transmit(pos, "(after) outputPanel.Height=", outputPanel.Height);
-
-
-                    //outputPanel.MaxHeight = 500;
                     outputPanel.MinHeight = 100;
                     outputPanel.ClearValue(WidthProperty);
                     outputPanel.ClearValue(MaxWidthProperty);
@@ -210,23 +189,15 @@ namespace PelotonIDE.Presentation
                     outputDockingFlyout.Hide();
                     break;
                 case OutputPanelPosition.Right:
-                    //outputPanelPosition = OutputPanelPosition.Right;
                     Type_1_UpdateVirtualRegistry<string>("OutputPanelPosition", OutputPanelPosition.Right.ToString());
                     RelativePanel.SetAlignLeftWithPanel(outputPanel, false);
                     RelativePanel.SetAlignRightWithPanel(outputPanel, true);
                     RelativePanel.SetBelow(outputPanel, butNew);
 
-                    //t.Transmit("(before) outputPanel.Width=", outputPanel.Width);
-                    //t.Transmit("(before) outputPanel.Height=", outputPanel.Height);
-
                     outputPanel.Height = outputPanelHeight;// Type_1_GetVirtualRegistry<double?>("OutputPanelHeight") ?? 200.0;
                     outputPanel.Width = outputPanelWidth; // Type_1_GetVirtualRegistry<double?>("OutputPanelWidth") ?? 400.0;
 
-                    //t.Transmit(pos, "(after) outputPanel.Width=", outputPanel.Width);
-                    //t.Transmit(pos, "(after) outputPanel.Height=", outputPanel.Height);
-
                     outputPanel.MinWidth = 175;
-                    //outputPanel.MaxWidth = 700;
                     outputPanel.ClearValue(HeightProperty);
                     outputPanel.ClearValue(MaxHeightProperty);
 
@@ -258,7 +229,7 @@ namespace PelotonIDE.Presentation
         private void ChangeHighlightOfMenuBarForLanguage(MenuBarItem mnuRun, string InterpreterLanguageName)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
 
             t.Transmit("InterpreterLanguageName=", InterpreterLanguageName);
             IEnumerable<MenuFlyoutItemBase> subMenus = from menu in mnuRun.Items where menu.Name == "mnuLanguage" select menu;
@@ -290,7 +261,7 @@ namespace PelotonIDE.Presentation
             //IReadOnlyDictionary<string, ApplicationDataContainer> folder = ApplicationData.Current.LocalSettings.Containers;
 
             List<Plex> list = [];
-            foreach (var file in Directory.GetFiles(@"c:\peloton\bin\lexers", "*.lex"))
+            foreach (string file in Directory.GetFiles(@"c:\peloton\bin\lexers", "*.lex"))
             {
                 byte[] data = File.ReadAllBytes(file);
                 using MemoryStream stream = new(data);
@@ -338,7 +309,7 @@ namespace PelotonIDE.Presentation
         private T Type_1_GetVirtualRegistry<T>(string name)
         {
             Telemetry t = new();
-            t.SetEnabled(false);
+            t.SetEnabled(true);
             object result = ApplicationData.Current.LocalSettings.Values[name];
             t.Transmit(name + "=", name, "result=", result);
             return (T)result;
@@ -390,8 +361,8 @@ namespace PelotonIDE.Presentation
             t.SetEnabled(true);
             t.Transmit(name, defined, value);
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            var currentDefined = (bool)navigationViewItem.TabSettingsDict[name]["Defined"];
-            var currentValue = (T)navigationViewItem.TabSettingsDict[name]["Value"];
+            bool currentDefined = (bool)navigationViewItem.TabSettingsDict[name]["Defined"];
+            T currentValue = (T)navigationViewItem.TabSettingsDict[name]["Value"];
             if (currentDefined == defined && $"{currentValue}" == $"{value}")
             {
                 return;
@@ -424,7 +395,7 @@ namespace PelotonIDE.Presentation
         }
 
         #endregion
-        private void IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<T>(string name, Dictionary<string, object>? factory, T defaultValue)
+        private void IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<T>(string name, Dictionary<string, object>? factory, T defaultValue)
         {
             if (LocalSettings.Values.ContainsKey(name)) return;
             if (factory.TryGetValue(name, out object? factoryValue))
@@ -439,7 +410,7 @@ namespace PelotonIDE.Presentation
         private void SerializeTabsToVirtualRegistry()
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             string list = string.Join(',', outputPanelTabView.TabItems.Select(e =>
             {
                 TabViewItem f = (TabViewItem)e;
@@ -452,9 +423,9 @@ namespace PelotonIDE.Presentation
         private void DeserializeTabsFromVirtualRegistry()
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
 
-            var tabViewLayout = Type_1_GetVirtualRegistry<string>("TabViewLayout");
+            string? tabViewLayout = Type_1_GetVirtualRegistry<string>("TabViewLayout");
             if (tabViewLayout == null) return;
 
             string frontMost = "";
@@ -495,6 +466,39 @@ namespace PelotonIDE.Presentation
         {
             string item = list.Split(['|'])[entry];
             return double.Parse(item);
+        }
+
+        private void UpdateTopMostRendererInCurrentTab()
+        {
+            Telemetry t = new();
+            t.SetEnabled(false);
+
+            long rend = AnInFocusTabExists() ? Type_3_GetInFocusTab<long>("SelectedRenderer") : Type_1_GetVirtualRegistry<long>("SelectedRenderer");
+            t.Transmit("rend=", rend);
+            foreach (string key in new string[] { "Output", "Error", "Html", "Logo", "RTF" })
+            {
+                long renderNumber = (long)RenderingConstants["Rendering"][key];
+                if (renderNumber != rend) continue;
+                TabViewItem tab = (TabViewItem)tabOutput.FindName($"tab{key}");
+                t.Transmit($"tab{key}.Selected = true;");
+                tab.IsSelected = true;
+                break;
+            }
+        }
+
+        private void UpdateInterpreterInStatusBar()
+        {
+            long interp = AnInFocusTabExists() ? Type_3_GetInFocusTab<long>("Engine") : Type_1_GetVirtualRegistry<long>("Engine");
+            switch (interp)
+            {
+                case 2:
+                    interpreter.Text = "P2";
+                    break;
+
+                case 3:
+                    interpreter.Text = "P3";
+                    break;
+            }
         }
 
     }

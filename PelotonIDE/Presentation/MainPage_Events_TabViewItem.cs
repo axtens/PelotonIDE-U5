@@ -31,7 +31,7 @@ namespace PelotonIDE.Presentation
             flyoutBase.ShowAt(senderElement);
         }
 
-        private async void FileCopyOutputButton_Click(object sender, RoutedEventArgs e)
+        private async void OutputTab_Contextual_SaveToFile_Click(object sender, RoutedEventArgs e)
         {
             FileSavePicker savePicker = new()
             {
@@ -72,7 +72,7 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        private void ClipboardCopyOutputButton_Click(object sender, RoutedEventArgs e)
+        private void OutputTab_Contextual_SaveToClipboard_Click(object sender, RoutedEventArgs e)
         {
             Focus(FocusState.Pointer);
             outputText.Document.GetText(TextGetOptions.None, out string? allText);
@@ -86,14 +86,14 @@ namespace PelotonIDE.Presentation
             }
         }
 
-        private void ClearOutputButton_Click(object sender, RoutedEventArgs e)
+        private void OutputTab_Contextual_Clear_Click(object sender, RoutedEventArgs e)
         {
             //outputText.IsReadOnly = false;
             outputText.Document.SetText(TextSetOptions.None, null);
             //outputText.IsReadOnly = true;
         }
 
-        private async void FileCopyErrorButton_Click(object sender, RoutedEventArgs e)
+        private async void ErrorTab_Contextual_SaveToFile_Click(object sender, RoutedEventArgs e)
         {
             FileSavePicker savePicker = new()
             {
@@ -124,39 +124,147 @@ namespace PelotonIDE.Presentation
                 // Let Windows know that we're finished changing the file so the
                 // other app can update the remote version of the file.
                 FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
-                if (status != FileUpdateStatus.Complete)
-                {
-                    Windows.UI.Popups.MessageDialog errorBox =
-                        new($"File {file.Name} couldn't be saved.");
-                    await errorBox.ShowAsync();
-                }
+                if (status == FileUpdateStatus.Complete) return;
+                Windows.UI.Popups.MessageDialog errorBox =
+                    new($"File {file.Name} couldn't be saved.");
+                await errorBox.ShowAsync();
             }
         }
 
-        private void ClipboardCopyErrorButton_Click(object sender, RoutedEventArgs e)
+        private void ErrorTab_Contextual_SaveToClipboard_Click(object sender, RoutedEventArgs e)
         {
             {
                 errorText.Focus(FocusState.Pointer);
                 errorText.Document.GetText(TextGetOptions.None, out string? allText);
                 int endPosition = allText.Length - 1;
-                if (endPosition > 0)
-                {
-                    errorText.Document.Selection.SetRange(0, endPosition);
-                    DataPackage dataPackage = new();
-                    dataPackage.SetText(allText);
-                    Clipboard.SetContent(dataPackage);
-                }
+                if (endPosition <= 0) return;
+                errorText.Document.Selection.SetRange(0, endPosition);
+                DataPackage dataPackage = new();
+                dataPackage.SetText(allText);
+                Clipboard.SetContent(dataPackage);
             }
-
         }
 
-        private void ClearErrorButton_Click(object sender, RoutedEventArgs e)
+        private void ErrorTab_Contextual_Clear_Click(object sender, RoutedEventArgs e)
         {
             //errorText.IsReadOnly = false;
             errorText.Document.SetText(TextSetOptions.None, null);
             //errorText.IsReadOnly = true;
         }
 
+        private void HtmlTab_Contextual_SaveToFile_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(false);
+            MenuFlyoutItem me = (MenuFlyoutItem)sender;
+            t.Transmit(me.Name);
+        }
 
+        private void HtmlTab_Contextual_SaveToClipboard_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(false);
+            MenuFlyoutItem me = (MenuFlyoutItem)sender;
+            t.Transmit(me.Name);
+        }
+
+        private void HtmlTab_Contextual_Clear_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(false);
+            MenuFlyoutItem me = (MenuFlyoutItem)sender;
+            t.Transmit(me.Name);
+
+            string code = Convert.ToBase64String(Encoding.UTF8.GetBytes("<html></html>"));
+            LogoText.Source = new Uri($"data:text/html;base64,{code}");
+        }
+
+        private void LogoTab_Contextual_SaveToFile_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(false);
+            MenuFlyoutItem me = (MenuFlyoutItem)sender;
+            t.Transmit(me.Name);
+        }
+
+        private void LogoTab_Contextual_SaveToClipboard_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(false);
+            MenuFlyoutItem me = (MenuFlyoutItem)sender;
+            t.Transmit(me.Name);
+        }
+
+        private void LogoTab_Contextual_Clear_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(false);
+            MenuFlyoutItem me = (MenuFlyoutItem)sender;
+            t.Transmit(me.Name);
+
+            string code = Convert.ToBase64String(Encoding.UTF8.GetBytes(TurtleFrameworkPlus("turtle.clear()")));
+            LogoText.Source = new Uri($"data:text/html;base64,{code}");
+        }
+
+        private void TabViewItem_RTF_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            FrameworkElement? senderElement = sender as FrameworkElement;
+            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
+            flyoutBase.ShowAt(senderElement);
+        }
+
+        private void RtfTab_Contextual_SaveToFile_Click(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void RtfTab_Contextual_SaveToClipboard_Click(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void RtfTab_Contextual_Clear_Click(object sender, RoutedEventArgs e)
+        {
+            rtfText.Document.SetText(TextSetOptions.None, null);
+        }
+
+        private void TabViewItem_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(true);
+            TabViewItem me = (TabViewItem)sender;
+         
+            
+            //t.Transmit(me.Name);
+            //UpdateOutputTabsFromRenderers();
+            //UpdateTopMostRendererInCurrentTab();
+            CustomTabItem? ift = InFocusTab();
+            long selectedRenderer = long.Parse((string)me.Tag);
+            t.Transmit(ift.Content, "SelectedRenderer=", selectedRenderer,"(was)",Type_3_GetInFocusTab<long>("SelectedRenderer") );
+            Type_3_UpdateInFocusTabSettings<long>("SelectedRenderer", true, selectedRenderer);
+            me.IsSelected = true;
+        }
+
+        private void TabViewItem_Html_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(false);
+            TabViewItem me = (TabViewItem)sender;
+            t.Transmit(me.Name);
+
+            FrameworkElement? senderElement = sender as FrameworkElement;
+            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
+            flyoutBase.ShowAt(senderElement);
+        }
+
+        private void TabViewItem_Logo_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(false);
+            TabViewItem me = (TabViewItem)sender;
+            t.Transmit(me.Name);
+
+            FrameworkElement? senderElement = sender as FrameworkElement;
+            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
+            flyoutBase.ShowAt(senderElement);
+        }
     }
 }

@@ -58,7 +58,7 @@ namespace PelotonIDE.Presentation
             //var normal = Windows.UI.Color.FromArgb(0x00, 0xf9, 0xf8, 0xbd);
 
             //Telemetry t = new();
-            //t.SetEnabled(true);
+            //t.SetEnabled(false);
             //CustomRichEditBox me = ((CustomRichEditBox)sender);
             //ITextSelection selection = me.Document.Selection;
             //selection.GetText(TextGetOptions.None, out string text);
@@ -84,7 +84,7 @@ namespace PelotonIDE.Presentation
 
             CustomRichEditBox me = (CustomRichEditBox)sender;
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             t.Transmit("e.Key=", e.Key, "e.KeyStatus.ScanCode=", e.KeyStatus.ScanCode, "ctrlState=", ctrlState, "shiftState=", shiftState);
             base.OnPreviewKeyDown(e);
         }
@@ -98,7 +98,7 @@ namespace PelotonIDE.Presentation
 
             CustomRichEditBox me = (CustomRichEditBox)sender;
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             t.Transmit("e.Key=", e.Key, "e.KeyStatus.ScanCode=", e.KeyStatus.ScanCode, "ctrlState=", ctrlState, "shiftState=", shiftState);
             base.OnKeyUp(e);
         }
@@ -114,24 +114,24 @@ namespace PelotonIDE.Presentation
             //CoreWindow corWin = curWin.CoreWindow;
             //CoreVirtualKeyStates insertState = corWin.GetKeyState(VirtualKey.Insert);
 
-            var insertState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Insert);
-            var overwriteMode = insertState.HasFlag(CoreVirtualKeyStates.Locked);
+            CoreVirtualKeyStates insertState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Insert);
+            bool overwriteMode = insertState.HasFlag(CoreVirtualKeyStates.Locked);
 
             CustomRichEditBox me = (CustomRichEditBox)sender;
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             t.Transmit("e.Key=", e.Key, "e.KeyStatus.ScanCode=", e.KeyStatus.ScanCode, "ctrlState=", ctrlState, "shiftState=", shiftState, "insertState=", insertState, "overwriteMode=", overwriteMode);
             //base.OnKeyDown(e);
         }
 
         private void CustomRichEditBox_SelectionChanged(object sender, RoutedEventArgs e)
         {
-            var blueback = Windows.UI.Color.FromArgb(0x00,0x55,0x76,0xa2);
-            var whitefront = Windows.UI.Color.FromArgb(0x00, 0xff, 0xff, 0xff);
-            var normal = Windows.UI.Color.FromArgb(0x00, 0xf9, 0xf8, 0xbd);
+            Color blueback = Color.FromArgb(0x00,0x55,0x76,0xa2);
+            Color whitefront = Color.FromArgb(0x00, 0xff, 0xff, 0xff);
+            Color normal = Color.FromArgb(0x00, 0xf9, 0xf8, 0xbd);
 
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             CustomRichEditBox me = ((CustomRichEditBox)sender);
             ITextSelection selection = me.Document.Selection;
             selection.GetText(TextGetOptions.None, out string text);
@@ -164,7 +164,7 @@ namespace PelotonIDE.Presentation
         private void CustomRichEditBox_PointerReleased(object sender, PointerRoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             t.Transmit(((RichEditBox)sender).Name, e.GetType().FullName);
             base.OnPointerReleased(e);
         }
@@ -172,7 +172,7 @@ namespace PelotonIDE.Presentation
         protected override void OnKeyDown(KeyRoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             CoreVirtualKeyStates ctrlState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
             CoreVirtualKeyStates shiftState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift);
             bool isCtrlPressed = ctrlState.HasFlag(CoreVirtualKeyStates.Down);

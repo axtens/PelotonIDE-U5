@@ -53,7 +53,7 @@ namespace PelotonIDE.Presentation
 
         private void ToggleOutputButton_Click(object sender, RoutedEventArgs e)
         {
-            var outputPanelShowing = Type_1_GetVirtualRegistry<bool>("OutputPanelShowing");
+            bool outputPanelShowing = Type_1_GetVirtualRegistry<bool>("OutputPanelShowing");
             outputPanel.Visibility = outputPanelShowing ? Visibility.Collapsed : Visibility.Visible;
             outputPanelShowing = !outputPanelShowing;
             Type_1_UpdateVirtualRegistry<bool>("OutputPanelShowing", outputPanelShowing);
@@ -71,8 +71,8 @@ namespace PelotonIDE.Presentation
 
         private void RunSelectedCodeButton_Click(object sender, RoutedEventArgs e)
         {
-            var highlight = Windows.UI.Color.FromArgb(0x00,0x8d,0x6e, 0x5b);
-            var normal = Windows.UI.Color.FromArgb(0x00,0xf9,0xf8, 0xbd);
+            Windows.UI.Color highlight = Windows.UI.Color.FromArgb(0x00, 0x8d, 0x6e, 0x5b);
+            Windows.UI.Color normal = Windows.UI.Color.FromArgb(0x00,0xf9,0xf8, 0xbd);
 
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];

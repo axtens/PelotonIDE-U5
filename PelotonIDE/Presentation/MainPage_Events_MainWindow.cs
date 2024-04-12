@@ -44,7 +44,7 @@ namespace PelotonIDE.Presentation
             {
                 case "IDEConfig":
                     //string? engine = LocalSettings.Values["Engine"].ToString();
-                    Type_1_UpdateVirtualRegistry("Interpreter.P3", parameters.KVPs["Interpreter"].ToString());
+                    Type_1_UpdateVirtualRegistry("Engine.3", parameters.KVPs["Interpreter"].ToString());
                     Type_1_UpdateVirtualRegistry("Scripts", parameters.KVPs["Scripts"].ToString());
                     break;
                 case "TranslatePage":
@@ -102,7 +102,7 @@ namespace PelotonIDE.Presentation
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
 
             LanguageSettings ??= await GetLanguageConfiguration();
             RenderingConstants ??= new Dictionary<string, Dictionary<string, object>>()
@@ -126,16 +126,18 @@ namespace PelotonIDE.Presentation
             FactorySettings ??= await GetFactorySettings();
 
             // #MainPage-LoadingVirtReg
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<string>("Rendering", FactorySettings, "0,3");
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<long>("Transput", FactorySettings, 3);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("Rendering", FactorySettings, "0,3");
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("SelectedRenderer", FactorySettings,3);
 
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<long>("Timeout", FactorySettings, 1);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("Transput", FactorySettings, 3);
+
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("Timeout", FactorySettings, 1);
             UpdateTimeoutInMenu();
             UpdateRenderingInMenu();
             // UpdateFontSizeInMenu();
             UpdateTransputInMenu();
 
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<string>("OutputPanelSettings", FactorySettings, "True|Bottom|200|400");
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("OutputPanelSettings", FactorySettings, "True|Bottom|200|400");
 
             var position = FromBarredString_String(Type_1_GetVirtualRegistry<string>("OutputPanelSettings"), 1);
             Type_1_UpdateVirtualRegistry<string>("OutputPanelPosition", position);
@@ -144,22 +146,12 @@ namespace PelotonIDE.Presentation
             Type_1_UpdateVirtualRegistry<double>("OutputPanelHeight", (double)FromBarredString_Double(Type_1_GetVirtualRegistry<string>("OutputPanelSettings"), 2));
             Type_1_UpdateVirtualRegistry<double>("OutputPanelWidth", (double)FromBarredString_Double(Type_1_GetVirtualRegistry<string>("OutputPanelSettings"), 3));
             
-            //t.Transmit(outputPanelTabViewSettings, tabControlSettings);
-
-            //IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<bool>("OutputPanelShowing", FactorySettings, true);
-            //IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<OutputPanelPosition>("OutputPanelPosition", FactorySettings, (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), "Bottom"));
-            //IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<double>("OutputPanelHeight", FactorySettings, 200);
-            //IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<double>("OutputPanelWidth", FactorySettings, 400);
-
             HandleOutputPanelChange(position);
 
-            //outputPanel.Height = Type_1_GetVirtualRegistry<double>("OutputPanelHeight");
-            //outputPanel.Width = Type_1_GetVirtualRegistry<double>("OutputPanelWidth");
-
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<string>("InterfaceLanguageName", FactorySettings, "English");
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<long>("InterfaceLanguageID", FactorySettings, 0);
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<string>("InterpreterLanguageName", FactorySettings, "English");
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<long>("InterpreterLanguageID", FactorySettings, 0);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("InterfaceLanguageName", FactorySettings, "English");
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("InterfaceLanguageID", FactorySettings, 0);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("InterpreterLanguageName", FactorySettings, "English");
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("InterpreterLanguageID", FactorySettings, 0);
 
             if (Type_1_GetVirtualRegistry<string>("InterfaceLanguageName") != null)
             {
@@ -167,10 +159,8 @@ namespace PelotonIDE.Presentation
             }
 
             // Engine selection:
-            //  Engine will contain either "Interpreter.P2" or "Interpreter.P3"
-            //  if Engine is present in LocalSettings, use that value, otherwise retrieve it from FactorySettings and update local settings
-            //  if Engine is null (for some reason FactorySettings is broken), use "Interpreter.P3"
-
+            //  Engine will contain either 2 or 3
+            
             SetEngine();
             SetScripts();
             SetInterpreterNew();
@@ -181,8 +171,8 @@ namespace PelotonIDE.Presentation
             if (!AfterTranslation)
             {
 
-                IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<bool>("VariableLength", FactorySettings, false);
-                IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault<long>("Quietude", FactorySettings, 2);
+                IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<bool>("VariableLength", FactorySettings, false);
+                IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("Quietude", FactorySettings, 2);
 
                 Type_2_UpdatePerTabSettings("Language", true, Type_1_GetVirtualRegistry<long>("InterpreterLanguageID"));
                 Type_2_UpdatePerTabSettings("VariableLength", Type_1_GetVirtualRegistry<bool>("VariableLength"), Type_1_GetVirtualRegistry<bool>("VariableLength"));
@@ -202,7 +192,7 @@ namespace PelotonIDE.Presentation
                 //Type_3_UpdateInFocusTabSettings("Language", true, Type_1_GetVirtualRegistry<long>("InterpreterLanguageID"));
                 // Do we also set the VariableLength of the inFocusTab?
                 //bool VariableLength = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("VariableLength", FactorySettings, LocalSettings, false);
-                IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefault("VariableLength", FactorySettings, false);
+                IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo("VariableLength", FactorySettings, false);
                 Type_3_UpdateInFocusTabSettings("VariableLength", Type_1_GetVirtualRegistry<bool>("VariableLength"), Type_1_GetVirtualRegistry<bool>("VariableLength"));
                 UpdateStatusBarFromInFocusTab();
                 DeserializeTabsFromVirtualRegistry();
@@ -236,6 +226,16 @@ namespace PelotonIDE.Presentation
                 languageName.Text = currentLanguageName;
             }
 
+            UpdateOutputTabsFromRenderers();
+
+            await HtmlText.EnsureCoreWebView2Async();
+            HtmlText.NavigateToString("<body style='background-color: papayawhip;'></body>");
+
+            await LogoText.EnsureCoreWebView2Async();
+            LogoText.NavigateToString("<body style='background-color: lightgoldenrodyellow;'></body>");
+
+            UpdateTopMostRendererInCurrentTab();
+
             void SetKeyboardFlags()
             {
                 var lightGrey = new SolidColorBrush(Colors.LightGray);
@@ -249,13 +249,12 @@ namespace PelotonIDE.Presentation
             {
                 if (LocalSettings.Values.TryGetValue("Engine", out object? value))
                 {
-                    Engine = value.ToString();
+                    Engine = (long)value;
                 }
                 else
                 {
-                    Engine = FactorySettings["Engine"].ToString();
+                    Engine = (long)FactorySettings["Engine"];
                 }
-                Engine ??= "Interpreter.P3";
                 Type_1_UpdateVirtualRegistry("Engine", Engine);
             }
             void SetScripts()
@@ -273,29 +272,29 @@ namespace PelotonIDE.Presentation
             }
             void SetInterpreterOld()
             {
-                if (LocalSettings.Values.TryGetValue("Interpreter.P2", out object? value))
+                if (LocalSettings.Values.TryGetValue("Engine.2", out object? value))
                 {
                     InterpreterP2 = value.ToString();
                 }
                 else
                 {
-                    InterpreterP2 = FactorySettings["Interpreter.P2"].ToString();
+                    InterpreterP2 = FactorySettings["Engine.2"].ToString();
                 }
                 InterpreterP2 ??= @"c:\protium\bin\pdb.exe";
-                Type_1_UpdateVirtualRegistry("Interpreter.P2", InterpreterP2);
+                Type_1_UpdateVirtualRegistry("Engine.2", InterpreterP2);
             }
             void SetInterpreterNew()
             {
-                if (LocalSettings.Values.TryGetValue("Interpreter.P3", out object? value))
+                if (LocalSettings.Values.TryGetValue("Engine.3", out object? value))
                 {
                     InterpreterP3 = value.ToString();
                 }
                 else
                 {
-                    InterpreterP3 = FactorySettings["Interpreter.P3"].ToString();
+                    InterpreterP3 = FactorySettings["Engine.3"].ToString();
                 }
                 InterpreterP3 ??= @"c:\peloton\bin\p3.exe";
-                Type_1_UpdateVirtualRegistry("Interpreter.P3", InterpreterP3);
+                Type_1_UpdateVirtualRegistry("Engine.3", InterpreterP3);
             }
         }
 
@@ -303,7 +302,7 @@ namespace PelotonIDE.Presentation
         private void UpdateTransputInMenu()
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
 
             string transput = Type_1_GetVirtualRegistry<long>("Transput").ToString();
             foreach (var mfi in from MenuFlyoutSubItem mfsi in mnuTransput.Items.Cast<MenuFlyoutSubItem>()
@@ -344,10 +343,10 @@ namespace PelotonIDE.Presentation
             foreach (string key in kees)
             {
                 long myid = long.Parse(LanguageSettings[key]["GLOBAL"]["ID"]);
-                var myLanguageInMyLanguage = LanguageSettings[key]["GLOBAL"]["153"];
+                string myLanguageInMyLanguage = LanguageSettings[key]["GLOBAL"]["153"];
                 List<string> strings = [];
 
-                foreach (var kee in kees)
+                foreach (string kee in kees)
                 {
                     long theirId = long.Parse(LanguageSettings[kee]["GLOBAL"]["ID"]);
                     string theirLanguageInTheirLanguage = LanguageSettings[kee]["GLOBAL"]["153"];
@@ -360,8 +359,8 @@ namespace PelotonIDE.Presentation
 
             int CompareLanguagesById(string x, string y)
             {
-                var xid = long.Parse(languageSettings[x]["GLOBAL"]["ID"]);
-                var yid = long.Parse(languageSettings[y]["GLOBAL"]["ID"]);
+                long xid = long.Parse(languageSettings[x]["GLOBAL"]["ID"]);
+                long yid = long.Parse(languageSettings[y]["GLOBAL"]["ID"]);
                 if (xid < yid) { return -1; }
                 if (xid > yid) { return 1; }
                 return 0;
@@ -412,7 +411,7 @@ namespace PelotonIDE.Presentation
 
         private void UpdateEngineSelectionFromFactorySettingsInMenu()
         {
-            if (LocalSettings.Values["Engine"].ToString() == "Interpreter.P2")
+            if (LocalSettings.Values["Engine"].ToString() == "Engine.2")
             {
                 MenuItemHighlightController(mnuNewEngine, false);
                 MenuItemHighlightController(mnuOldEngine, true);
@@ -453,9 +452,22 @@ namespace PelotonIDE.Presentation
                 }
             }
 
-            //Type_1_UpdateVirtualRegistry<double>("MainWindowHeight", mainWindow.ActualHeight); 
-            //Type_1_UpdateVirtualRegistry<double>("MainWindowWidth", mainWindow.ActualWidth);
             SerializeTabsToVirtualRegistry();
+            SerializeLayoutToVirtualRegistry();
+        }
+
+        private void SerializeLayoutToVirtualRegistry()
+        {
+            Telemetry t = new();
+            t.SetEnabled(false);
+            List<string> list =
+            [
+                Type_1_GetVirtualRegistry<bool>("OutputPanelShowing") ? "True" : "False",
+                Type_1_GetVirtualRegistry<string>("OutputPanelPosition"),
+                Type_1_GetVirtualRegistry<double>("OutputPanelHeight").ToString(),
+                Type_1_GetVirtualRegistry<double>("OutputPanelWidth").ToString(),
+            ];
+            Type_1_UpdateVirtualRegistry<string>("OutputPanelSettings", list.JoinBy("|"));
         }
     }
 }

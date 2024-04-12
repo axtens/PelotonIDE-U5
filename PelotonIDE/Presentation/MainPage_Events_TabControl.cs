@@ -27,27 +27,32 @@ namespace PelotonIDE.Presentation
                 }
                 UpdateCommandLineInStatusBar();
                 UpdateStatusBarFromInFocusTab();
+                UpdateInterpreterInStatusBar();
+                UpdateTopMostRendererInCurrentTab();
+                UpdateOutputTabsFromRenderers();
             }
         }
         private void TabControl_KeyDown(object sender, KeyRoutedEventArgs e)
         {
             Telemetry t = new();
             t.SetEnabled(true);
-            t.Transmit(((CustomTabItem)sender).Name, e.GetType().FullName);
+            CustomTabItem me = (CustomTabItem)sender;
+            t.Transmit(me.Name, e.GetType().FullName);
         }
 
         private void CustomTabItem_KeyDown(object sender, KeyRoutedEventArgs e)
         {
             Telemetry t = new();
             t.SetEnabled(true);
-            t.Transmit(((CustomTabItem)sender).Name, e.GetType().FullName);
+            CustomTabItem me = (CustomTabItem)sender;
+            t.Transmit(me.Name, e.GetType().FullName);
 
         }
 
         private async void TabControl_RightTapped(object sender, RightTappedRoutedEventArgs e) // fires first for all tabs other than tab1
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             CustomTabItem selectedItem = (CustomTabItem)((NavigationView)sender).SelectedItem;
 
             CustomRichEditBox currentRichEditBox = _richEditBoxes[selectedItem.Tag];
@@ -74,7 +79,7 @@ namespace PelotonIDE.Presentation
         private void CustomTabItem_RightTapped(object sender, RightTappedRoutedEventArgs e) // fires on tab1 then fires TabControl_RightTapped
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             t.Transmit(((CustomTabItem)sender).Name, e.GetType().FullName);
 
         }

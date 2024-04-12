@@ -18,7 +18,7 @@ namespace PelotonIDE.Presentation
         {
 
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             t.Transmit("e.NewSize.Height=", e.NewSize.Height, "e.NewSize.Width=", e.NewSize.Width, "e.PreviousSize.Height=", e.PreviousSize.Height, "e.PreviousSize.Width=", e.PreviousSize.Width);
 
             string pos = Type_1_GetVirtualRegistry<string>("OutputPanelPosition") ?? "Bottom";
@@ -48,14 +48,14 @@ namespace PelotonIDE.Presentation
                     Canvas.SetLeft(outputThumb, outputPanel.ActualWidth - 1);
                     break;
             }
-            oHW.Text = $"OutputPanel: {e.NewSize.Height}/{e.NewSize.Width}";
+            //oHW.Text = $"OutputPanel: {e.NewSize.Height}/{e.NewSize.Width}";
 
         }
 
         private void Thumb_DragDelta(object sender, DragDeltaEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             Thumb me = (Thumb)sender;
 
 
@@ -98,7 +98,7 @@ namespace PelotonIDE.Presentation
         private void OutputThumb_DragCompleted(object sender, DragCompletedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             Thumb me = (Thumb)sender;
 
             t.Transmit(me.Name, "e.HorizontalChange=", e.HorizontalChange, "e.VerticalChange=", e.VerticalChange, "outputPanel.Width=", outputPanel.Width, "outputPanel.Height=", outputPanel.Height);
@@ -121,7 +121,7 @@ namespace PelotonIDE.Presentation
         private async void OutputThumb_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
 
             OutputPanelPosition outputPanelPosition = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), Type_1_GetVirtualRegistry<string>("OutputPanelPosition"));
 
@@ -139,7 +139,7 @@ namespace PelotonIDE.Presentation
         private void OutputThumb_PointerExited(object sender, PointerRoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             this.ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Arrow, 0));
             t.Transmit(this.ProtectedCursor);
         }
@@ -147,21 +147,21 @@ namespace PelotonIDE.Presentation
         private void OutputLeft_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             HandleOutputPanelChange("Left");
         }
 
         private void OutputBottom_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             HandleOutputPanelChange("Bottom");
         }
 
         private void OutputRight_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             HandleOutputPanelChange("Right");
         }
 

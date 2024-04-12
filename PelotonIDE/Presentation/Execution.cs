@@ -17,6 +17,7 @@ using Windows.UI.Core;
 using Paragraph = Microsoft.UI.Xaml.Documents.Paragraph;
 using Run = Microsoft.UI.Xaml.Documents.Run;
 using System.Linq;
+using System.Resources;
 
 namespace PelotonIDE.Presentation
 {
@@ -25,7 +26,7 @@ namespace PelotonIDE.Presentation
         private async void ExecuteInterpreter(string selectedText)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
 
             DispatcherQueue dispatcher = DispatcherQueue.GetForCurrentThread();
 
@@ -50,8 +51,9 @@ namespace PelotonIDE.Presentation
             // load tab settings
 
 
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            long quietude = (long)navigationViewItem.TabSettingsDict["Quietude"]["Value"];
+            long quietude = Type_3_GetInFocusTab<long>("Quietude");
+            long interpreter = Type_3_GetInFocusTab<long>("Engine");
+
             string engineArguments = BuildTabCommandLine();
 
             string output_Text = string.Empty,
@@ -64,7 +66,7 @@ namespace PelotonIDE.Presentation
             // generate arguments string
             string stdOut;
             string stdErr;
-            if (ApplicationData.Current.LocalSettings.Values["Engine"].ToString() == "Interpreter.P3")
+            if (interpreter == 3)
             {
                 (stdOut, stdErr) = RunPeloton2(engineArguments, selectedText, quietude, dispatcher);
             }
@@ -75,13 +77,13 @@ namespace PelotonIDE.Presentation
 
             t.Transmit("stdOut=", stdOut, "stdErr=", stdErr);
 
-            IEnumerable<long> rendering = Type_3_GetInFocusTab<string>("Rendering").Split([',']).Select(e => long.Parse(e));
+            IEnumerable<long> rendering = Type_3_GetInFocusTab<string>("Rendering").Split([',']).Select(e => long.Parse(e)); // strip focuser
 
             IEnumerable<string> list = (from item in RenderingConstants["Rendering"]
                                         where rendering.Contains((long)item.Value)
                                         select item.Key);
 
-            foreach (var item in list)
+            foreach (string item in list)
             {
                 switch (item)
                 {
@@ -130,7 +132,8 @@ namespace PelotonIDE.Presentation
                             file = await folder.CreateFileAsync("temp.html", CreationCollisionOption.ReplaceExisting);
                             await FileIO.WriteTextAsync(file, TurtleFrameworkPlus(jsBlock));
                             LogoText.Source = new Uri(file.Path);
-
+                            //await LogoText.EnsureCoreWebView2Async();
+                            //await LogoText.ExecuteScriptAsync(jsBlock);
                         }
                         break;
                 }
@@ -140,31 +143,37 @@ namespace PelotonIDE.Presentation
 
         private string TurtleFrameworkPlus(string jsBlock)
         {
-            return $@"<script type=""text/javascript"" src=""https://unpkg.com/real-turtle""></script>
-<canvas id=""real-turtle""></canvas>
-<script type=""text/javascript"" src=""https://unpkg.com/real-turtle/build/helpers/simple.js""></script>
+            /*var resourceLoader = Windows.ApplicationModel.Resources.ResourceLoader.GetForCurrentView();
 
-<script type=""text/javascript"">
-{jsBlock}
-</script>";
+            var library = resourceLoader.GetString("real-turtle_js");
+            var simple = resourceLoader.GetString("simple_js");
+
+            return $"<script type='text/javascript'>{library}</script>" +
+                "<canvas id='real-turtle'></canvas>" +
+                $"<script type='text/javascript'>{simple}</script>" +
+                $"<script type='text/javascript'>{jsBlock}</script>";
+            */
+            return $@"<script type='text/javascript' src='https://unpkg.com/real-turtle'></script>" +
+                    "<canvas id='real-turtle'></canvas>" + 
+                    "<script type='text/javascript' src='https://unpkg.com/real-turtle/build/helpers/simple.js'></script>" + 
+                    $"<script type='text/javascript'>{jsBlock}</script>";
         }
 
         private string ParseLogoIntoJavascript(string v)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             
             List<string> result = [];
-            var lines = v.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var line in lines)
+            string[] lines = v.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string line in lines)
             {
+                if (line.StartsWith(';')) continue;
                 var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 if (parts.Length > 0)
                 {
                     switch (parts[0].ToUpper())
                     {
-                        case ";":
-                            break;
                         case "CS":
                         case "CLEARSCREEN":
                             result.Add("turtle.clear()");
@@ -246,7 +255,7 @@ namespace PelotonIDE.Presentation
         private static void AddInsertParagraph(RichEditBox reb, string text, bool addInsert = true, bool withPrefix = true)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             if (string.IsNullOrEmpty(text))
             {
                 return;
@@ -275,8 +284,9 @@ namespace PelotonIDE.Presentation
         public (string StdOut, string StdErr) RunProtium(string args, string buff, long quietude)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
-            string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.P2"].ToString();
+            t.SetEnabled(false);
+            string interpKey = $"Engine.{Type_3_GetInFocusTab<long>("Engine")}";
+            string? Exe = ApplicationData.Current.LocalSettings.Values[interpKey].ToString();
             string temp = System.IO.Path.GetTempFileName();
             File.WriteAllText(temp, buff, Encoding.Unicode);
 
@@ -304,9 +314,10 @@ namespace PelotonIDE.Presentation
         public (string StdOut, string StdErr) RunPeloton(string args, string buff, long quietude)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
 
-            string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.P3"].ToString();
+            string interpKey = $"Engine.{Type_3_GetInFocusTab<long>("Engine")}";
+            string? Exe = ApplicationData.Current.LocalSettings.Values[interpKey].ToString();
 
             t.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
 
@@ -347,14 +358,15 @@ namespace PelotonIDE.Presentation
         public (string StdOut, string StdErr) RunPeloton2(string args, string buff, long quietude, DispatcherQueue dispatcher)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
 
             string temp = System.IO.Path.GetTempFileName();
             File.WriteAllText(temp, buff, Encoding.Unicode);
 
             t.Transmit("temp=", temp);
 
-            string? Exe = ApplicationData.Current.LocalSettings.Values["Interpreter.P3"].ToString();
+            string interpKey = $"Engine.{Type_3_GetInFocusTab<long>("Engine")}";
+            string? Exe = ApplicationData.Current.LocalSettings.Values[interpKey].ToString();
 
             t.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
 
@@ -404,7 +416,7 @@ namespace PelotonIDE.Presentation
             proc.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
             {
                 Telemetry t = new();
-                t.SetEnabled(true);
+                t.SetEnabled(false);
                 //t.Transmit(e.Data);
                 stderr.AppendLine(e.Data);
             };

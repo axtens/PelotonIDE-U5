@@ -25,6 +25,278 @@ namespace PelotonIDE.Presentation
 {
     public sealed partial class MainPage : Page
     {
+        private async Task<bool> AreYouSureToClose()
+        {
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = "Document changed but not saved. Close?",
+                PrimaryButtonText = "No",
+                SecondaryButtonText = "Yes"
+            };
+            ContentDialogResult result = await dialog.ShowAsync();
+            if (result == ContentDialogResult.Secondary) { return true; }
+            if (result == ContentDialogResult.Primary) { return false; }
+            return false;
+        }
+
+        private async Task<bool> AreYouSureYouWantToRunALongTimeSilently()
+        {
+            string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+            Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
+            Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
+            CultureInfo cultureInfo = new(global["Locale"]);
+
+            string tag = new string[] { "mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite" }[Type_3_GetInFocusTab<long>("Timeout")];
+
+            string title = $"{frmMain["mnuGo"]} '{frmMain[tag]}' {frmMain["mnuTimeout"].ToLower()}, '{frmMain["mnuQuiet"].ToLower(cultureInfo)}' {frmMain["mnuRunningMode"].ToLower(cultureInfo)}?";
+            string secondary = $"'{frmMain["mnuVerbose"]}' {frmMain["mnuTimeout"]}";
+
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = title,
+                PrimaryButtonText = global["1207"],
+                SecondaryButtonText = secondary,
+                CloseButtonText = global["1201"],
+            };
+
+            ContentDialogResult result = await dialog.ShowAsync();
+            if (result == ContentDialogResult.Primary)
+            {
+                return true;
+            }
+            if (result == ContentDialogResult.Secondary)
+            {
+                Type_3_UpdateInFocusTabSettings<long>("Quietude", true, 1);
+                UpdateStatusBarFromInFocusTab();
+                return true;
+            }
+            return false;
+        }
+
+        private void ChooseEngine_Click(object sender, RoutedEventArgs e)
+        {
+            MenuFlyoutItem me = (MenuFlyoutItem)sender;
+            switch ((string)me.Tag)
+            {
+                case "P2":
+                    MenuItemHighlightController(mnuNewEngine, false);
+                    MenuItemHighlightController(mnuOldEngine, true);
+                    Engine = 2;
+                    break
+;
+                case "P3":
+                    MenuItemHighlightController(mnuNewEngine, true);
+                    MenuItemHighlightController(mnuOldEngine, false);
+                    Engine = 3;
+                    break;
+            }
+            interpreter.Text = (string)me.Tag;
+            if (AnInFocusTabExists())
+            {
+                Type_2_UpdatePerTabSettings("Engine", true, Engine);
+                Type_3_UpdateInFocusTabSettings("Engine", true, Engine);
+            }
+        }
+
+        private async void Close()
+        {
+            if (tabControl.MenuItems.Count > 0)
+            {
+                CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+                CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+                // var t1 = tab1;
+                if (currentRichEditBox.IsDirty)
+                {
+                    if (!await AreYouSureToClose()) return;
+                }
+                _richEditBoxes.Remove(navigationViewItem.Tag);
+                tabControl.MenuItems.Remove(tabControl.SelectedItem);
+                if (tabControl.MenuItems.Count > 0)
+                {
+                    tabControl.SelectedItem = tabControl.MenuItems[tabControl.MenuItems.Count - 1];
+                }
+                else
+                {
+                    tabControl.Content = null;
+                    tabControl.SelectedItem = null;
+                }
+                UpdateCommandLineInStatusBar();
+            }
+        }
+
+        private void CopyText()
+        {
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+            string selectedText = currentRichEditBox.Document.Selection.Text;
+            DataPackage dataPackage = new();
+            dataPackage.SetText(selectedText);
+            Clipboard.SetContent(dataPackage);
+        }
+
+        private void CreateNewRichEditBox()
+        {
+            CustomRichEditBox richEditBox = new()
+            {
+                IsDirty = false,
+            };
+            richEditBox.KeyDown += RichEditBox_KeyDown;
+            richEditBox.AcceptsReturn = true;
+            CustomTabItem navigationViewItem = new()
+            {
+                Content = LanguageSettings[LocalSettings.Values["InterfaceLanguageName"].ToString()!]["GLOBAL"]["Document"] + " " + TabControlCounter,  //(tabControl.MenuItems.Count + 1),
+                //Content = "Tab " + (tabControl.MenuItems.Count + 1),
+                Tag = "Tab" + TabControlCounter,//(tabControl.MenuItems.Count + 1),
+                IsNewFile = true,
+                TabSettingsDict = ClonePerTabSettings(PerTabInterpreterParameters),
+                Height = 30
+            };
+            richEditBox.Tag = navigationViewItem.Tag;
+            tabControl.Content = richEditBox;
+            _richEditBoxes[richEditBox.Tag] = richEditBox;
+            tabControl.MenuItems.Add(navigationViewItem);
+            tabControl.SelectedItem = navigationViewItem; // in focus?
+            richEditBox.Focus(FocusState.Keyboard);
+            UpdateLanguageNameInStatusBar(navigationViewItem.TabSettingsDict);
+            UpdateCommandLineInStatusBar();
+
+            TabControlCounter += 1;
+        }
+
+        private void Cut()
+        {
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+            string selectedText = currentRichEditBox.Document.Selection.Text;
+            DataPackage dataPackage = new();
+            dataPackage.SetText(selectedText);
+            Clipboard.SetContent(dataPackage);
+            currentRichEditBox.Document.Selection.Delete(Microsoft.UI.Text.TextRangeUnit.Character, 1);
+        }
+
+        private void EditCopy_Click(object sender, RoutedEventArgs e)
+        {
+            CopyText();
+        }
+
+        private void EditCut_Click(object sender, RoutedEventArgs e)
+        {
+            Cut();
+        }
+
+        private async void EditPaste_Click(object sender, RoutedEventArgs e)
+        {
+            Paste();
+        }
+
+        private void EditSelectAll_Click(object sender, RoutedEventArgs e)
+        {
+            SelectAll();
+        }
+
+        private void FileClose_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void FileNew_Click(object sender, RoutedEventArgs e)
+        {
+            CreateNewRichEditBox();
+        }
+
+        private async void FileOpen_Click(object sender, RoutedEventArgs e)
+        {
+            Open();
+        }
+
+        private async void FileSave_Click(object sender, RoutedEventArgs e)
+        {
+            Save();
+        }
+
+        private async void FileSaveAs_Click(object sender, RoutedEventArgs e)
+        {
+            SaveAs();
+        }
+
+        private async void HandleInterfaceLanguageChange(string langName)
+        {
+            Telemetry t = new();
+            t.SetEnabled(false);
+
+            Dictionary<string, Dictionary<string, string>> selectedLanguage = LanguageSettings[langName];
+            t.Transmit("Changing interface language to", langName, long.Parse(selectedLanguage["GLOBAL"]["ID"]));
+
+            SetMenuText(selectedLanguage["frmMain"]);
+            Type_1_UpdateVirtualRegistry("InterfaceLanguageName", langName);
+            Type_1_UpdateVirtualRegistry("InterfaceLanguageID", long.Parse(selectedLanguage["GLOBAL"]["ID"]));
+
+            InterfaceLanguageSelectionBuilder(mnuSelectLanguage, Internationalization_Click);
+            InterpreterLanguageSelectionBuilder(mnuRun, "mnuLanguage", MnuLanguage_Click);
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            if (navigationViewItem.TabSettingsDict != null)
+            {
+                UpdateLanguageNameInStatusBar(navigationViewItem.TabSettingsDict);
+                UpdateStatusBarFromInFocusTab();
+            }
+        }
+
+        private void HelpAbout_Click(object sender, RoutedEventArgs e)
+        {
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = "PelotonIDE v1.0",
+                Content = "", // Based on original code by\r\nHakob Chalikyan <hchalikyan3@gmail.com>",
+                CloseButtonText = "OK"
+            };
+            _ = dialog.ShowAsync();
+        }
+
+        private void InsertCodeTemplate_Click(object sender, RoutedEventArgs e)
+        {
+            bool VariableLength = Type_1_GetVirtualRegistry<bool>("VariableLength");
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+            ITextSelection selection = currentRichEditBox.Document.Selection;
+            if (selection != null)
+            {
+                MenuFlyoutItem menuFlyoutItem = (MenuFlyoutItem)sender;
+                selection.StartPosition = selection.EndPosition;
+                switch (menuFlyoutItem.Name)
+                {
+                    case "MakePeloton":
+                        if (VariableLength)
+                        {
+                            selection.Text = "<# ></#>";
+                        }
+                        else
+                        {
+                            selection.Text = "<@ ></@>";
+                        }
+                        break;
+
+                    case "MakePelotonVariableLength":
+                        if (VariableLength)
+                        {
+                            selection.Text = "<@ ></@>";
+                        }
+                        else
+                        {
+                            selection.Text = "<# ></#>";
+                        }
+                        break;
+                }
+                selection.EndPosition = selection.StartPosition;
+                currentRichEditBox.Document.Selection.Move(TextRangeUnit.Character, 3);
+            }
+        }
+
         private void Internationalization_Click(object sender, RoutedEventArgs e)
         {
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
@@ -35,28 +307,163 @@ namespace PelotonIDE.Presentation
             });
             HandleInterfaceLanguageChange(name);
         }
+        private void InterpretMenu_Quietude_Click(object sender, RoutedEventArgs e)
+        {
+            string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+            Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
+            Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
+            CultureInfo cultureInfo = new(global["Locale"]);
 
-        private async void HandleInterfaceLanguageChange(string langName)
+            long quietude = 0;
+            foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit" }
+                                                 let items = from item in mnuRunningMode.Items where item.Name == key select item
+                                                 from item in items
+                                                 select item)
+            {
+                MenuItemHighlightController((MenuFlyoutItem)item, false);
+            }
+
+            MenuFlyoutItem? me = sender as MenuFlyoutItem;
+            string clicked = me.Name;
+            mnuRunningMode.Tag = clicked;
+            switch (clicked)
+            {
+                case "mnuQuiet":
+                    MenuItemHighlightController(me, true);
+                    quietude = 0;
+                    break;
+
+                case "mnuVerbose":
+                    MenuItemHighlightController(me, true);
+                    quietude = 1;
+                    break;
+
+                case "mnuVerbosePauseOnExit":
+                    MenuItemHighlightController(me, true);
+                    quietude = 2;
+                    break;
+            }
+
+            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+
+            Type_1_UpdateVirtualRegistry("Quietude", quietude);
+            Type_2_UpdatePerTabSettings("Quietude", true, quietude);
+            _ = Type_3_UpdateInFocusTabSettingsIfPermittedAsync<long>("Quietude", true, quietude, $"{frmMain["mnuUpdate"]} {frmMain["mnuRunningMode"].ToLower(cultureInfo)} = '{frmMain[me.Name].ToLower(cultureInfo)}'");
+            //Type_3_UpdateInFocusTabSettings("Quietude", true, quietude);
+            UpdateCommandLineInStatusBar();
+        }
+
+        private void InterpretMenu_Rendering_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
+            MenuFlyoutItem me = (MenuFlyoutItem)sender;
 
-            Dictionary<string, Dictionary<string, string>> selectedLanguage = LanguageSettings[langName];
-            t.Transmit("Changing interface language to", langName, long.Parse(selectedLanguage["GLOBAL"]["ID"]));
+            SolidColorBrush black = new(Colors.Black);
+            SolidColorBrush white = new(Colors.White);
 
-            SetMenuText(selectedLanguage["frmMain"]);
-            Type_1_UpdateVirtualRegistry("InterfaceLanguageName", langName);
-            Type_1_UpdateVirtualRegistry("InterfaceLanguageID", long.Parse(selectedLanguage["GLOBAL"]["ID"]));
+            mnuRendering.Items.ForEach(item => MenuItemHighlightController((MenuFlyoutItem)item!, false));
 
+            string render = (string)me.Tag;
 
-            InterfaceLanguageSelectionBuilder(mnuSelectLanguage, Internationalization_Click);
-            InterpreterLanguageSelectionBuilder(mnuRun, "mnuLanguage", MnuLanguage_Click);
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            if (navigationViewItem.TabSettingsDict != null)
+            List<string> renderers = [.. Type_1_GetVirtualRegistry<string>("Rendering").Split(',')];
+            if (renderers.Contains(render))
             {
-                UpdateLanguageNameInStatusBar(navigationViewItem.TabSettingsDict);
-                UpdateStatusBarFromInFocusTab();
+                renderers.Remove(render);
             }
+            else
+            {
+                renderers.Add(render);
+            }
+
+            renderers.ForEach(renderer =>
+            {
+                mnuRendering.Items.ForEach(item =>
+                {
+                    if ((string)item.Tag == renderer)
+                    {
+                        item.Background = black;
+                        item.Foreground = white;
+                    }
+                });
+            });
+
+            Type_1_UpdateVirtualRegistry<string>("Rendering", renderers.JoinBy(","));
+            Type_2_UpdatePerTabSettings<string>("Rendering", true, renderers.JoinBy(","));
+            Type_3_UpdateInFocusTabSettings<string>("Rendering", true, renderers.JoinBy(","));
+            //UpdateTopMostRendererInCurrentTab();
+            UpdateOutputTabsFromRenderers();
+
+        }
+
+        private void InterpretMenu_Timeout_Click(object sender, RoutedEventArgs e)
+        {
+            string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+            Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
+            Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
+            CultureInfo cultureInfo = new(global["Locale"]);
+
+            Telemetry t = new();
+            t.SetEnabled(false);
+
+            foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite" }
+                                                 let items = from item in mnuTimeout.Items where item.Name == key select item
+                                                 from item in items
+                                                 select item)
+            {
+                MenuItemHighlightController((MenuFlyoutItem)item!, false);
+            }
+
+            MenuFlyoutItem me = (MenuFlyoutItem)sender;
+            long timeout = 0;
+            t.Transmit(me.Name, me.Tag);
+            switch (me.Name)
+            {
+                case "mnu20Seconds":
+                    MenuItemHighlightController(mnu20Seconds, true);
+                    timeout = 0;
+                    break;
+
+                case "mnu100Seconds":
+                    MenuItemHighlightController(mnu100Seconds, true);
+                    timeout = 1;
+                    break;
+
+                case "mnu200Seconds":
+                    MenuItemHighlightController(mnu200Seconds, true);
+                    timeout = 2;
+                    break;
+
+                case "mnu1000Seconds":
+                    MenuItemHighlightController(mnu1000Seconds, true);
+                    timeout = 3;
+                    break;
+
+                case "mnuInfinite":
+                    MenuItemHighlightController(mnuInfinite, true);
+                    timeout = 4;
+                    break;
+            }
+            Type_1_UpdateVirtualRegistry<long>("Timeout", timeout);
+            Type_2_UpdatePerTabSettings<long>("Timeout", true, timeout);
+            _ = Type_3_UpdateInFocusTabSettingsIfPermittedAsync<long>("Timeout", true, timeout, $"{frmMain["mnuUpdate"]} {frmMain["mnuTimeout"].ToLower(cultureInfo)} = '{frmMain[me.Name].ToLower(cultureInfo)}'");
+        }
+
+        private void MnuIDEConfiguration_Click(object sender, RoutedEventArgs e)
+        {
+            string? interp = LocalSettings.Values["Engine.3"].ToString();
+
+            Frame.Navigate(typeof(IDEConfigPage), new NavigationData()
+            {
+                Source = "MainPage",
+                KVPs = new()
+                {
+                    { "Interpreter", interp!},
+                    { "Scripts",  Scripts!},
+                    { "Language", LanguageSettings[Type_1_GetVirtualRegistry<string>("InterfaceLanguageName")] }
+                }
+            });
         }
 
         private async void MnuLanguage_Click(object sender, RoutedEventArgs e)
@@ -92,46 +499,6 @@ namespace PelotonIDE.Presentation
             UpdateLanguageNameInStatusBar(navigationViewItem.TabSettingsDict);
             UpdateCommandLineInStatusBar();
         }
-
-        private void FileNew_Click(object sender, RoutedEventArgs e)
-        {
-            CreateNewRichEditBox();
-        }
-
-        private void CreateNewRichEditBox()
-        {
-            CustomRichEditBox richEditBox = new()
-            {
-                IsDirty = false,
-            };
-            richEditBox.KeyDown += RichEditBox_KeyDown;
-            richEditBox.AcceptsReturn = true;
-            CustomTabItem navigationViewItem = new()
-            {
-                Content = LanguageSettings[LocalSettings.Values["InterfaceLanguageName"].ToString()!]["GLOBAL"]["Document"] + " " + TabControlCounter,  //(tabControl.MenuItems.Count + 1),
-                //Content = "Tab " + (tabControl.MenuItems.Count + 1),
-                Tag = "Tab" + TabControlCounter,//(tabControl.MenuItems.Count + 1),
-                IsNewFile = true,
-                TabSettingsDict = ClonePerTabSettings(PerTabInterpreterParameters),
-                Height = 30
-            };
-            richEditBox.Tag = navigationViewItem.Tag;
-            tabControl.Content = richEditBox;
-            _richEditBoxes[richEditBox.Tag] = richEditBox;
-            tabControl.MenuItems.Add(navigationViewItem);
-            tabControl.SelectedItem = navigationViewItem; // in focus?
-            richEditBox.Focus(FocusState.Keyboard);
-            UpdateLanguageNameInStatusBar(navigationViewItem.TabSettingsDict);
-            UpdateCommandLineInStatusBar();
-
-            TabControlCounter += 1;
-        }
-
-        private async void FileOpen_Click(object sender, RoutedEventArgs e)
-        {
-            Open();
-        }
-
         private async void Open()
         {
             FileOpenPicker open = new()
@@ -188,15 +555,85 @@ namespace PelotonIDE.Presentation
                 UpdateLanguageNameInStatusBar(navigationViewItem.TabSettingsDict);
                 UpdateStatusBarFromInFocusTab();
                 UpdateCommandLineInStatusBar();
+                UpdateInterpreterInStatusBar();
+                UpdateTopMostRendererInCurrentTab();
+                UpdateOutputTabsFromRenderers();
+                bool flag = InFocusTabIsPrFile(); // FIXME What's this for??
+            }
+        }
+        private async void Paste()
+        {
+            DataPackageView dataPackageView = Clipboard.GetContent();
+            if (dataPackageView.Contains(StandardDataFormats.Text))
+            {
+                string textToPaste = await dataPackageView.GetTextAsync();
 
-                var flag = InFocusTabIsPrFile(); // FIXME What's this for??
-
+                if (!string.IsNullOrEmpty(textToPaste))
+                {
+                    CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+                    CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+                    currentRichEditBox.Document.Selection.Paste(0);
+                }
             }
         }
 
-        private async void FileSave_Click(object sender, RoutedEventArgs e)
+        //private void InsertVariableLengthCodeTemplate_Click(object sender, RoutedEventArgs e)
+        //{
+        //    CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+        //    CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+        //    ITextSelection selection = currentRichEditBox.Document.Selection;
+        //    if (selection != null)
+        //    {
+        //        selection.StartPosition = selection.EndPosition;
+        //        selection.Text = ;
+        //        selection.EndPosition = selection.StartPosition;
+        //        currentRichEditBox.Document.Selection.Move(TextRangeUnit.Character, 3);
+        //    }
+        //}
+        private async void ResetToFactorySettings_Click(object sender, RoutedEventArgs e)
         {
-            Save();
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = "Factory Reset",
+                Content = "Confirm reset. Application will shut down after reset.",
+                PrimaryButtonText = "OK",
+                SecondaryButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Secondary,
+            };
+            ContentDialogResult result = await dialog.ShowAsync();
+
+            if (result is ContentDialogResult.Secondary)
+            {
+                return;
+            }
+
+            Dictionary<string, object> dict = [];
+            Dictionary<string, object>? fac = await GetFactorySettings();
+            File.WriteAllText(Path.Combine(Path.GetTempPath(), "PelotonIDE_FactorySettings_log.json"), JsonConvert.SerializeObject(fac));
+
+            foreach (KeyValuePair<string, object> key in ApplicationData.Current.LocalSettings.Values)
+            {
+                dict.Add(key.Key, key.Value);
+            }
+            File.WriteAllText(Path.Combine(Path.GetTempPath(), "PelotonIDE_LocalSettings_log.json"), JsonConvert.SerializeObject(dict));
+
+            foreach (KeyValuePair<string, object> setting in ApplicationData.Current.LocalSettings.Values)
+            {
+                ApplicationData.Current.LocalSettings.DeleteContainer(setting.Key);
+            }
+            try
+            {
+                await ApplicationData.Current.ClearAsync();
+            }
+            catch (Exception er)
+            {
+                Telemetry t = new();
+                t.SetEnabled(false);
+                t.Transmit(er.Message, er.StackTrace);
+            }
+            Environment.Exit(0);
         }
 
         private async void Save()
@@ -332,11 +769,6 @@ namespace PelotonIDE.Presentation
                 }
             }
         }
-        private async void FileSaveAs_Click(object sender, RoutedEventArgs e)
-        {
-            SaveAs();
-        }
-
         private async void SaveAs()
         {
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
@@ -420,147 +852,6 @@ namespace PelotonIDE.Presentation
                 }
             }
         }
-
-        private void FileClose_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
-        private async void Close()
-        {
-            if (tabControl.MenuItems.Count > 0)
-            {
-                CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-                CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-                // var t1 = tab1;
-                if (currentRichEditBox.IsDirty)
-                {
-                    if (!await AreYouSureToClose()) return;
-                }
-                _richEditBoxes.Remove(navigationViewItem.Tag);
-                tabControl.MenuItems.Remove(tabControl.SelectedItem);
-                if (tabControl.MenuItems.Count > 0)
-                {
-                    tabControl.SelectedItem = tabControl.MenuItems[tabControl.MenuItems.Count - 1];
-                }
-                else
-                {
-                    tabControl.Content = null;
-                    tabControl.SelectedItem = null;
-                }
-                UpdateCommandLineInStatusBar();
-            }
-        }
-
-        private async Task<bool> AreYouSureYouWantToRunALongTimeSilently()
-        {
-            string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
-            Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
-            Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
-            CultureInfo cultureInfo = new(global["Locale"]);
-
-            var tag = new string[] { "mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite" }[Type_3_GetInFocusTab<long>("Timeout")];
-
-            string title = $"{frmMain["mnuGo"]} '{frmMain[tag]}' {frmMain["mnuTimeout"].ToLower()}, '{frmMain["mnuQuiet"].ToLower(cultureInfo)}' {frmMain["mnuRunningMode"].ToLower(cultureInfo)}?";
-            string secondary = $"'{frmMain["mnuVerbose"]}' {frmMain["mnuTimeout"]}";
-
-            ContentDialog dialog = new()
-            {
-                XamlRoot = this.XamlRoot,
-                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                Title = title,
-                PrimaryButtonText = global["1207"],
-                SecondaryButtonText = secondary,
-                CloseButtonText = global["1201"],
-            };
-
-            ContentDialogResult result = await dialog.ShowAsync();
-            if (result == ContentDialogResult.Primary)
-            {
-                return true;
-            }
-            if (result == ContentDialogResult.Secondary)
-            {
-                Type_3_UpdateInFocusTabSettings<long>("Quietude", true, 1);
-                UpdateStatusBarFromInFocusTab();
-                return true;
-            }
-            return false;
-        }
-
-        private async Task<bool> AreYouSureToClose()
-        {
-            ContentDialog dialog = new()
-            {
-                XamlRoot = this.XamlRoot,
-                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                Title = "Document changed but not saved. Close?",
-                PrimaryButtonText = "No",
-                SecondaryButtonText = "Yes"
-            };
-            ContentDialogResult result = await dialog.ShowAsync();
-            if (result == ContentDialogResult.Secondary) { return true; }
-            if (result == ContentDialogResult.Primary) { return false; }
-            return false;
-        }
-
-        private void EditCopy_Click(object sender, RoutedEventArgs e)
-        {
-            CopyText();
-        }
-
-        private void CopyText()
-        {
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-            string selectedText = currentRichEditBox.Document.Selection.Text;
-            DataPackage dataPackage = new();
-            dataPackage.SetText(selectedText);
-            Clipboard.SetContent(dataPackage);
-        }
-
-        private void EditCut_Click(object sender, RoutedEventArgs e)
-        {
-            Cut();
-        }
-
-        private void Cut()
-        {
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-            string selectedText = currentRichEditBox.Document.Selection.Text;
-            DataPackage dataPackage = new();
-            dataPackage.SetText(selectedText);
-            Clipboard.SetContent(dataPackage);
-            currentRichEditBox.Document.Selection.Delete(Microsoft.UI.Text.TextRangeUnit.Character, 1);
-        }
-
-        private async void EditPaste_Click(object sender, RoutedEventArgs e)
-        {
-            Paste();
-        }
-
-        private async void Paste()
-        {
-            DataPackageView dataPackageView = Clipboard.GetContent();
-            if (dataPackageView.Contains(StandardDataFormats.Text))
-            {
-                string textToPaste = await dataPackageView.GetTextAsync();
-
-                if (!string.IsNullOrEmpty(textToPaste))
-                {
-                    CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-                    CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-                    currentRichEditBox.Document.Selection.Paste(0);
-                }
-            }
-        }
-
-        private void EditSelectAll_Click(object sender, RoutedEventArgs e)
-        {
-            SelectAll();
-        }
-
         private void SelectAll()
         {
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
@@ -570,70 +861,70 @@ namespace PelotonIDE.Presentation
             int endPosition = allText.Length - 1;
             currentRichEditBox.Document.Selection.SetRange(0, endPosition);
         }
-
-        private void InterpretMenu_Quietude_Click(object sender, RoutedEventArgs e)
+        private async void ShowMemory_Click(object sender, RoutedEventArgs e)
         {
-            string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
-            Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
-            Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
-            CultureInfo cultureInfo = new(global["Locale"]);
-
-            long quietude = 0;
-            foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit" }
-                                                 let items = from item in mnuRunningMode.Items where item.Name == key select item
-                                                 from item in items
-                                                 select item)
-            {
-                MenuItemHighlightController((MenuFlyoutItem)item, false);
-            }
-
-            MenuFlyoutItem? me = sender as MenuFlyoutItem;
-            string clicked = me.Name;
-            mnuRunningMode.Tag = clicked;
-            switch (clicked)
-            {
-                case "mnuQuiet":
-                    MenuItemHighlightController(me, true);
-                    quietude = 0;
-                    break;
-                case "mnuVerbose":
-                    MenuItemHighlightController(me, true);
-                    quietude = 1;
-                    break;
-                case "mnuVerbosePauseOnExit":
-                    MenuItemHighlightController(me, true);
-                    quietude = 2;
-                    break;
-            }
+            Telemetry t = new();
+            t.SetEnabled(false);
 
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
+            Dictionary<string, Dictionary<string, object>>? currentTabSettings = navigationViewItem.TabSettingsDict;
+            List<string> lines = ["Current Tab"];
+            foreach (string key in currentTabSettings.Keys)
+            {
+                bool isInternal = (bool)currentTabSettings[key]["Internal"];
+                if ((bool)currentTabSettings[key]["Defined"])
+                {
+                    if (isInternal)
+                    {
+                        lines.Add($"\t{key} -> {currentTabSettings[key]["Value"]}");
+                    }
+                    else
+                    {
+                        lines.Add($"\t{key} -> /{currentTabSettings[key]["Key"]}:{currentTabSettings[key]["Value"]}");
+                    }
+                }
+            }
+            lines.Add("");
+            lines.Add("PerTab Settings");
+            foreach (string key in PerTabInterpreterParameters.Keys)
+            {
+                bool isInternal = (bool)PerTabInterpreterParameters[key]["Internal"];
+                if ((bool)PerTabInterpreterParameters[key]["Defined"])
+                {
+                    if (isInternal)
+                    {
+                        lines.Add($"\t{key} -> {PerTabInterpreterParameters[key]["Value"]}");
+                    }
+                    else
+                    {
+                        lines.Add($"\t{key} -> /{PerTabInterpreterParameters[key]["Key"]}:{PerTabInterpreterParameters[key]["Value"]}");
+                    }
+                }
+            }
 
-            Type_1_UpdateVirtualRegistry("Quietude", quietude);
-            Type_2_UpdatePerTabSettings("Quietude", true, quietude);
-            _ = Type_3_UpdateInFocusTabSettingsIfPermittedAsync<long>("Quietude", true, quietude, $"{frmMain["mnuUpdate"]} {frmMain["mnuRunningMode"].ToLower(cultureInfo)} = '{frmMain[me.Name].ToLower(cultureInfo)}'");
-            //Type_3_UpdateInFocusTabSettings("Quietude", true, quietude);
-            UpdateCommandLineInStatusBar();
+            lines.Add("");
+            lines.Add("Virtual Registry");
+            foreach (KeyValuePair<string, object> val in ApplicationData.Current.LocalSettings.Values.OrderBy(pair => pair.Key))
+            {
+                lines.Add($"\t{val.Key} -> {val.Value}");
+            }
+            t.Transmit(lines.JoinBy("\r\n"));
+            ContentDialog dialog = new()
+            {
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = "Show Memory",
+                Content = lines.JoinBy("\n"),
+                PrimaryButtonText = "OK",
+                DefaultButton = ContentDialogButton.Primary,
+                CanBeScrollAnchor = true,
+            };
+            _ = await dialog.ShowAsync();
         }
 
-        private void ChooseNewEngine_Click(object sender, RoutedEventArgs e)
+        private void SwapCodeTemplatesLabels(bool isVariable)
         {
-            MenuItemHighlightController(mnuNewEngine, true);
-            MenuItemHighlightController(mnuOldEngine, false);
-            Engine = LocalSettings.Values["Interpreter.P3"].ToString();
-            Type_1_UpdateVirtualRegistry("Engine", "Interpreter.P3");
-            interpreter.Text = "P3";
-            UpdateCommandLineInStatusBar();
-        }
-
-        private void ChooseOldEngine_Click(object sender, RoutedEventArgs e)
-        {
-            MenuItemHighlightController(mnuNewEngine, false);
-            MenuItemHighlightController(mnuOldEngine, true);
-            Engine = LocalSettings.Values["Interpreter.P2"].ToString();
-            Type_1_UpdateVirtualRegistry("Engine", "Interpreter.P2");
-            interpreter.Text = "P2";
-            UpdateCommandLineInStatusBar();
+            (MakePelotonVariableLength.Text, MakePeloton.Text) = (MakePeloton.Text, MakePelotonVariableLength.Text);
         }
 
         private void VariableLength_Click(object sender, RoutedEventArgs e)
@@ -658,278 +949,12 @@ namespace PelotonIDE.Presentation
             Type_1_UpdateVirtualRegistry("VariableLength", VariableLength);
             Type_2_UpdatePerTabSettings("VariableLength", VariableLength, VariableLength);
             string message = VariableLength ? global["fixedLength"].ToLower(cultureInfo) : global["variableLength"].ToLower(cultureInfo);
-            _ = Type_3_UpdateInFocusTabSettingsIfPermittedAsync<bool>("VariableLength", VariableLength, VariableLength, $"{frmMain["mnuUpdate"]} = {message}?"); // mnuUpdate 
+            _ = Type_3_UpdateInFocusTabSettingsIfPermittedAsync<bool>("VariableLength", VariableLength, VariableLength, $"{frmMain["mnuUpdate"]} = {message}?"); // mnuUpdate
 
             SwapCodeTemplatesLabels(VariableLength);
 
             UpdateCommandLineInStatusBar();
             UpdateStatusBarFromInFocusTab();
-        }
-
-        private void SwapCodeTemplatesLabels(bool isVariable)
-        {
-            (MakePelotonVariableLength.Text, MakePeloton.Text) = (MakePeloton.Text, MakePelotonVariableLength.Text);
-        }
-
-        private void InsertCodeTemplate_Click(object sender, RoutedEventArgs e)
-        {
-            bool VariableLength = Type_1_GetVirtualRegistry<bool>("VariableLength");
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-            ITextSelection selection = currentRichEditBox.Document.Selection;
-            if (selection != null)
-            {
-                MenuFlyoutItem menuFlyoutItem = (MenuFlyoutItem)sender;
-                selection.StartPosition = selection.EndPosition;
-                switch (menuFlyoutItem.Name)
-                {
-                    case "MakePeloton":
-                        if (VariableLength)
-                        {
-                            selection.Text = "<# ></#>";
-                        }
-                        else
-                        {
-                            selection.Text = "<@ ></@>";
-                        }
-                        break;
-                    case "MakePelotonVariableLength":
-                        if (VariableLength)
-                        {
-                            selection.Text = "<@ ></@>";
-                        }
-                        else
-                        {
-                            selection.Text = "<# ></#>";
-                        }
-                        break;
-                }
-                selection.EndPosition = selection.StartPosition;
-                currentRichEditBox.Document.Selection.Move(TextRangeUnit.Character, 3);
-            }
-        }
-
-        //private void InsertVariableLengthCodeTemplate_Click(object sender, RoutedEventArgs e)
-        //{
-        //    CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-        //    CustomRichEditBox currentRichEditBox = _richEditBoxes[navigationViewItem.Tag];
-        //    ITextSelection selection = currentRichEditBox.Document.Selection;
-        //    if (selection != null)
-        //    {
-        //        selection.StartPosition = selection.EndPosition;
-        //        selection.Text = ;
-        //        selection.EndPosition = selection.StartPosition;
-        //        currentRichEditBox.Document.Selection.Move(TextRangeUnit.Character, 3);
-        //    }
-        //}
-
-        private void MnuIDEConfiguration_Click(object sender, RoutedEventArgs e)
-        {
-            string? interp = LocalSettings.Values["Interpreter.P3"].ToString();
-
-            Frame.Navigate(typeof(IDEConfigPage), new NavigationData()
-            {
-                Source = "MainPage",
-                KVPs = new()
-                {
-                    { "Interpreter", interp!},
-                    { "Scripts",  Scripts!},
-                    { "Language", LanguageSettings[Type_1_GetVirtualRegistry<string>("InterfaceLanguageName")] }
-                }
-            });
-        }
-
-        private void HelpAbout_Click(object sender, RoutedEventArgs e)
-        {
-            ContentDialog dialog = new()
-            {
-                XamlRoot = this.XamlRoot,
-                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                Title = "PelotonIDE v1.0",
-                Content = "", // Based on original code by\r\nHakob Chalikyan <hchalikyan3@gmail.com>",
-                CloseButtonText = "OK"
-            };
-            _ = dialog.ShowAsync();
-        }
-
-        private async void ResetToFactorySettings_Click(object sender, RoutedEventArgs e)
-        {
-            ContentDialog dialog = new()
-            {
-                XamlRoot = this.XamlRoot,
-                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                Title = "Factory Reset",
-                Content = "Confirm reset. Application will shut down after reset.",
-                PrimaryButtonText = "OK",
-                SecondaryButtonText = "Cancel",
-                DefaultButton = ContentDialogButton.Secondary,
-            };
-            ContentDialogResult result = await dialog.ShowAsync();
-
-            if (result is ContentDialogResult.Secondary)
-            {
-                return;
-            }
-
-            Dictionary<string, object> dict = [];
-            Dictionary<string, object>? fac = await GetFactorySettings();
-            File.WriteAllText(Path.Combine(Path.GetTempPath(), "PelotonIDE_FactorySettings_log.json"), JsonConvert.SerializeObject(fac));
-
-            foreach (KeyValuePair<string, object> key in ApplicationData.Current.LocalSettings.Values)
-            {
-                dict.Add(key.Key, key.Value);
-            }
-            File.WriteAllText(Path.Combine(Path.GetTempPath(), "PelotonIDE_LocalSettings_log.json"), JsonConvert.SerializeObject(dict));
-
-            foreach (KeyValuePair<string, object> setting in ApplicationData.Current.LocalSettings.Values)
-            {
-                ApplicationData.Current.LocalSettings.DeleteContainer(setting.Key);
-            }
-            try
-            {
-                await ApplicationData.Current.ClearAsync();
-            }
-            catch (Exception er)
-            {
-                Telemetry t = new();
-                t.SetEnabled(true);
-                t.Transmit(er.Message, er.StackTrace);
-            }
-            Environment.Exit(0);
-        }
-
-        private async void ShowMemory_Click(object sender, RoutedEventArgs e)
-        {
-            Telemetry t = new();
-            t.SetEnabled(true);
-
-            CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            Dictionary<string, Dictionary<string, object>>? currentTabSettings = navigationViewItem.TabSettingsDict;
-            List<string> lines = ["Current Tab"];
-            foreach (string key in currentTabSettings.Keys)
-            {
-                if ((bool)currentTabSettings[key]["Defined"])
-                    lines.Add($"\t{key} -> /{currentTabSettings[key]["Key"]}:{currentTabSettings[key]["Value"]}");
-            }
-            lines.Add("");
-            lines.Add("PerTab Settings");
-            foreach (string key in PerTabInterpreterParameters.Keys)
-            {
-                if ((bool)PerTabInterpreterParameters[key]["Defined"])
-                    lines.Add($"\t{key} -> /{PerTabInterpreterParameters[key]["Key"]}:{PerTabInterpreterParameters[key]["Value"]}");
-            }
-
-            lines.Add("");
-            lines.Add("Virtual Registry");
-            foreach (KeyValuePair<string, object> val in ApplicationData.Current.LocalSettings.Values.OrderBy(pair => pair.Key))
-            {
-                lines.Add($"\t{val.Key} -> {val.Value}");
-            }
-            t.Transmit(lines.JoinBy("\r\n"));
-            ContentDialog dialog = new()
-            {
-                XamlRoot = this.XamlRoot,
-                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-                Title = "Show Memory",
-                Content = lines.JoinBy("\n"),
-                PrimaryButtonText = "OK",
-                DefaultButton = ContentDialogButton.Primary,
-                CanBeScrollAnchor = true,
-            };
-            _ = await dialog.ShowAsync();
-        }
-
-        private void InterpretMenu_Timeout_Click(object sender, RoutedEventArgs e)
-        {
-            string il = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
-            Dictionary<string, string> global = LanguageSettings[il]["GLOBAL"];
-            Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
-            CultureInfo cultureInfo = new(global["Locale"]);
-
-            Telemetry t = new();
-            t.SetEnabled(true);
-
-            foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite" }
-                                                 let items = from item in mnuTimeout.Items where item.Name == key select item
-                                                 from item in items
-                                                 select item)
-            {
-                MenuItemHighlightController((MenuFlyoutItem)item!, false);
-            }
-
-            var me = (MenuFlyoutItem)sender;
-            long timeout = 0;
-            t.Transmit(me.Name, me.Tag);
-            switch (me.Name)
-            {
-                case "mnu20Seconds":
-                    MenuItemHighlightController(mnu20Seconds, true);
-                    timeout = 0;
-                    break;
-
-                case "mnu100Seconds":
-                    MenuItemHighlightController(mnu100Seconds, true);
-                    timeout = 1;
-                    break;
-
-                case "mnu200Seconds":
-                    MenuItemHighlightController(mnu200Seconds, true);
-                    timeout = 2;
-                    break;
-
-                case "mnu1000Seconds":
-                    MenuItemHighlightController(mnu1000Seconds, true);
-                    timeout = 3;
-                    break;
-
-                case "mnuInfinite":
-                    MenuItemHighlightController(mnuInfinite, true);
-                    timeout = 4;
-                    break;
-            }
-            Type_1_UpdateVirtualRegistry<long>("Timeout", timeout);
-            Type_2_UpdatePerTabSettings<long>("Timeout", true, timeout);
-            _ = Type_3_UpdateInFocusTabSettingsIfPermittedAsync<long>("Timeout", true, timeout, $"{frmMain["mnuUpdate"]} {frmMain["mnuTimeout"].ToLower(cultureInfo)} = '{frmMain[me.Name].ToLower(cultureInfo)}'");
-        }
-
-        private void InterpretMenu_Rendering_Click(object sender, RoutedEventArgs e)
-        {
-            Telemetry t = new();
-            t.SetEnabled(true);
-            MenuFlyoutItem me = (MenuFlyoutItem)sender;
-
-            var black = new SolidColorBrush(Colors.Black);
-            var white = new SolidColorBrush(Colors.White);
-
-            mnuRendering.Items.ForEach(item => MenuItemHighlightController((MenuFlyoutItem)item!, false));
-
-            string render = (string)me.Tag; 
-
-            List<string> renderers = [.. Type_1_GetVirtualRegistry<string>("Rendering").Split(',')];
-            if (renderers.Contains(render))
-            {
-                renderers.Remove(render);
-            }
-            else
-            {
-                renderers.Add(render);
-            }
-
-            renderers.ForEach(renderer =>
-            {
-                mnuRendering.Items.ForEach(item =>
-                {
-                    if ((string)item.Tag == renderer)
-                    {
-                        item.Background = black;
-                        item.Foreground = white;
-                    }
-                });
-            });
-
-            Type_1_UpdateVirtualRegistry<string>("Rendering", renderers.JoinBy(","));
-            Type_2_UpdatePerTabSettings<string>("Rendering", true, renderers.JoinBy(","));
-            Type_3_UpdateInFocusTabSettings<string>("Rendering", true, renderers.JoinBy(","));
         }
     }
 }

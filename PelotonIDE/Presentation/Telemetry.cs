@@ -37,7 +37,7 @@ namespace PelotonIDE.Presentation
             string path = Path.Combine(folder.Path, $"{DateTime.Now:yyyy-MM-dd-HH}_pi.log");
 
             List<string> frame = [];
-            var trace = new System.Diagnostics.StackTrace();
+            System.Diagnostics.StackTrace trace = new System.Diagnostics.StackTrace();
             string you = trace.GetFrame(1).GetMethod().Name;
 
             StringBuilder sb = new();

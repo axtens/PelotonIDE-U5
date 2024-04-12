@@ -158,7 +158,7 @@ namespace PelotonIDE.Presentation
         private string TranslateCode(string code, string sourceLanguageName, string targetLanguageName)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
 
             t.Transmit("TranslateCode", "code=", code, "sourceLanguageName=", sourceLanguageName, "targetLanguageName=", targetLanguageName);
 
@@ -334,21 +334,21 @@ namespace PelotonIDE.Presentation
 
         private static string ProcessVariableToFixedOrVariable(string code, Plex source, Plex target, bool spaced, bool variableTarget)
         {
-            var variableLengthWords = from variableLengthWord in source.OpcodesByKey.Keys orderby -variableLengthWord.Length select variableLengthWord;
+            IOrderedEnumerable<string> variableLengthWords = from variableLengthWord in source.OpcodesByKey.Keys orderby -variableLengthWord.Length select variableLengthWord;
 
-            var fixedLengthEquivalents = (from word in variableLengthWords
+            Dictionary<string, string> fixedLengthEquivalents = (from word in variableLengthWords
                                           let sourceop = source.OpcodesByKey[word]
                                           let targetword = target.OpcodesByValue[sourceop]
                                           select (word, targetword)).ToDictionary(x => x.word, x => x.targetword);
 
-            var codeBlocks = GetCodeBlocks(code); // in reverse order
+            List<Capture> codeBlocks = GetCodeBlocks(code); // in reverse order
 
-            foreach (var block in codeBlocks)
+            foreach (Capture block in codeBlocks)
             {
-                var codeChunk = block.Value;
-                foreach (var vlw in variableLengthWords)
+                string codeChunk = block.Value;
+                foreach (string? vlw in variableLengthWords)
                 {
-                    var spacedVlw = vlw + " ";
+                    string spacedVlw = vlw + " ";
 
                     if (codeChunk.Contains(spacedVlw, StringComparison.CurrentCulture))
                     {
@@ -382,8 +382,8 @@ namespace PelotonIDE.Presentation
 
         private static List<Capture> GetCodeBlocks(string code)
         {
-            var codeBlocks = new List<Capture>();
-            var pattern = PelotonVariableSpacedPattern();
+            List<Capture> codeBlocks = new List<Capture>();
+            Regex pattern = PelotonVariableSpacedPattern();
             MatchCollection matches = pattern.Matches(code);
             for (int mi = matches.Count - 1; mi >= 0; mi--)
             {
@@ -406,14 +406,14 @@ namespace PelotonIDE.Presentation
                 //var max = kopMatches[mi].Groups[2].Captures.Count - 1;
                 for (int i = matches[mi].Groups[1].Captures.Count - 1; i >= 0; i--)
                 {
-                    var capture = matches[mi].Groups[1].Captures[i];
-                    var key = capture.Value.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim();
+                    Capture capture = matches[mi].Groups[1].Captures[i];
+                    string key = capture.Value.ToUpper(System.Globalization.CultureInfo.InvariantCulture).Trim();
                     if (sourcePlex.OpcodesByKey.TryGetValue(key, out long opcode))
                     {
                         if (targetPlex.OpcodesByValue.TryGetValue(opcode, out string? value))
                         {
-                            var newKey = value;
-                            var next = buff.Substring(capture.Index + capture.Length, 1);
+                            string newKey = value;
+                            string next = buff.Substring(capture.Index + capture.Length, 1);
                             buff = buff.Remove(capture.Index, capture.Length)
                                 .Insert(capture.Index, newKey + ((spaceOut && next != ">") ? " " : ""));
                         }

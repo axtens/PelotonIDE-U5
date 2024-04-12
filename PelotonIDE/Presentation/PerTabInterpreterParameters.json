@@ -238,5 +238,17 @@
     "Key": "r",
     "Value": "0,3",
     "Internal": true
+  },
+  "SelectedRenderer": {
+    "Defined": true,
+    "Key": "s",
+    "Value": 3,
+    "Internal": true
+  },
+  "Engine": {
+    "Defined": true,
+    "Key": "e",
+    "Value": 3,
+    "Internal": true
   }
 }

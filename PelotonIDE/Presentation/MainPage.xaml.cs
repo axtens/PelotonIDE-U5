@@ -42,17 +42,8 @@ namespace PelotonIDE.Presentation
             Bottom,
             Right
         }
-        //string? InterfaceLanguageName = "English";
-        //long InterfaceLanguageID = 0;
 
-        //string? InterpreterLanguageName;
-        //long InterpreterLanguageID;
-
-        //bool VariableLength;
-        //long Quietude = 2;
-
-        //OutputPanelPosition outputPanelPosition = OutputPanelPosition.Bottom;
-        string? Engine = string.Empty;
+        long Engine = 3;
         string? Scripts = string.Empty;
         string? InterpreterP2 = string.Empty;
         string? InterpreterP3 = string.Empty;
@@ -95,24 +86,7 @@ namespace PelotonIDE.Presentation
             UpdateCommandLineInStatusBar();
             customREBox.Document.Selection.SetIndex(TextRangeUnit.Character, 1, false);
 
-            //IList<MenuFlyoutItemBase> items = new MenuFlyoutSubItem().Items;
-            //items.Add(new MenuFlyoutItem() { Text = "One" });
-            //items.Add(new MenuFlyoutItem() { Text = "2" });
-            //items.Add(new MenuFlyoutItem() { Text = "3" });
-            //items.Add(new MenuFlyoutItem() { Text = "4" });
-            //items.Add(new MenuFlyoutItem() { Text = "5" });
-            //items.Add(new MenuFlyoutItem() { Text = "Six" });
         }
-
-
-        /*
-        public static async Task<RenderingConstantsStructure?> GetJSONRenderingConstants()
-        {
-            StorageFile renderingConstantsStorage = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\RenderingConstants.json")); // \Presentation\RenderingConstants.json
-            string renderingConstantsJson = File.ReadAllText(renderingConstantsStorage.Path);
-            return JsonConvert.DeserializeObject<RenderingConstantsStructure>(renderingConstantsJson);
-        }
-        */
         public static async Task<InterpreterParametersStructure?> GetPerTabInterpreterParameters()
         {
             StorageFile tabSettingStorage = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///PelotonIDE\\Presentation\\PerTabInterpreterParameters.json"));
@@ -166,7 +140,7 @@ namespace PelotonIDE.Presentation
         private async void InterpreterLanguageSelectionBuilder(MenuBarItem menuBarItem, string menuLabel, RoutedEventHandler routedEventHandler)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
 
             LanguageSettings ??= await GetLanguageConfiguration();
             string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
@@ -235,7 +209,7 @@ namespace PelotonIDE.Presentation
         private void SetVariableLengthModeInMenu(MenuFlyoutItem? menuFlyoutItem, bool showEnabled)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             t.Transmit("menuFlyoutItem.Name=", menuFlyoutItem.Name, "showEnabled=", showEnabled);
             if (showEnabled)
             {
@@ -252,7 +226,7 @@ namespace PelotonIDE.Presentation
 
         private void UpdateTimeoutInMenu()
         {
-            foreach (var item in mnuTimeout.Items)
+            foreach (MenuFlyoutItemBase? item in mnuTimeout.Items)
             {
                 MenuItemHighlightController((MenuFlyoutItem)item!, false);
             }
@@ -316,7 +290,7 @@ namespace PelotonIDE.Presentation
         public string GetLanguageNameOfCurrentTab(InterpreterParametersStructure? tabSettingJson)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
 
             long langValue;
             string langName;
@@ -349,22 +323,24 @@ namespace PelotonIDE.Presentation
         public void HandleCustomPropertySaving(StorageFile file, CustomTabItem navigationViewItem)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
 
             string rtfContent = File.ReadAllText(file.Path);
             StringBuilder rtfBuilder = new(rtfContent);
 
             const int ONCE = 1;
 
-            var inFocusTab = navigationViewItem.TabSettingsDict;
+            InterpreterParametersStructure? inFocusTab = navigationViewItem.TabSettingsDict;
             Regex ques = new(Regex.Escape("?"));
-            string info = @"{\info {\*\ilang ?} {\*\ilength ?} {\*\itimeout ?} {\*\iquietude ?} {\*\markups ?} {\*\irendering ?} }"; // {\*\ipadout ?}
+            string info = @"{\info {\*\ilang ?} {\*\ilength ?} {\*\itimeout ?} {\*\iquietude ?} {\*\itransput ?} {\*\irendering ?} {\*\iinterpreter ?} {\*\iselected ?} }"; // {\*\ipadout ?}
             info = ques.Replace(info, $"{inFocusTab["Language"]["Value"]}", ONCE);
             info = ques.Replace(info, (bool)inFocusTab["VariableLength"]["Value"] ? "1" : "0", ONCE);
             info = ques.Replace(info, $"{(long)inFocusTab["Timeout"]["Value"]}", ONCE);
             info = ques.Replace(info, $"{(long)inFocusTab["Quietude"]["Value"]}", ONCE);
             info = ques.Replace(info, $"{(long)inFocusTab["Transput"]["Value"]}", ONCE);
             info = ques.Replace(info, $"{(string)inFocusTab["Rendering"]["Value"]}", ONCE);
+            info = ques.Replace(info, $"{(long)inFocusTab["Engine"]["Value"]}", ONCE);
+            info = ques.Replace(info, $"{(long)inFocusTab["SelectedRenderer"]["Value"]}", ONCE);
 
             t.Transmit("info=", info);
 
@@ -436,8 +412,11 @@ namespace PelotonIDE.Presentation
 
                 MarkupToInFocusSettingLong(matches, @"\itimeout", "Timeout");
                 MarkupToInFocusSettingLong(matches, @"\iquietude", "Quietude");
-                MarkupToInFocusSettingLong(matches, @"\markups", "Transput");
+                MarkupToInFocusSettingLong(matches, @"\itransput", "Transput");
                 MarkupToInFocusSettingString(matches, @"\irendering", "Rendering");
+                MarkupToInFocusSettingLong(matches, @"\iselected", "SelectedRenderer");
+                MarkupToInFocusSettingLong(matches, @"\iinterpreter", "Engine");
+
             }
             else
             {
@@ -564,7 +543,7 @@ namespace PelotonIDE.Presentation
                 catch (Exception ex)
                 {
                     Telemetry t = new();
-                    t.SetEnabled(true);
+                    t.SetEnabled(false);
                     t.Transmit(ex.Message, accel);
                 }
                 name = name.Replace("&", "");
@@ -634,7 +613,7 @@ namespace PelotonIDE.Presentation
         private void FormatMenu_FontSize_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
 
             var me = (MenuFlyoutItem)sender;
             t.Transmit(me.Name);
@@ -645,117 +624,14 @@ namespace PelotonIDE.Presentation
             currentRichEditBox.Document.Selection.SelectOrDefault(x => x);
         }
 
-        private void TabViewItem_Html_RightTapped(object sender, RightTappedRoutedEventArgs e)
-        {
-            Telemetry t = new();
-            t.SetEnabled(true);
-            var me = (TabViewItem)sender;
-            t.Transmit(me.Name);
-
-            FrameworkElement? senderElement = sender as FrameworkElement;
-            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
-            flyoutBase.ShowAt(senderElement);
-        }
-
-        private void FileCopyHtmlButton_Click(object sender, RoutedEventArgs e)
-        {
-            Telemetry t = new();
-            t.SetEnabled(true);
-            var me = (TabViewItem)sender;
-            t.Transmit(me.Name);
-        }
-
-        private void ClipboardCopyHtmlButton_Click(object sender, RoutedEventArgs e)
-        {
-            Telemetry t = new();
-            t.SetEnabled(true);
-            var me = (TabViewItem)sender;
-            t.Transmit(me.Name);
-        }
-
-        private void ClearHtmlButton_Click(object sender, RoutedEventArgs e)
-        {
-            Telemetry t = new();
-            t.SetEnabled(true);
-            var me = (TabViewItem)sender;
-            t.Transmit(me.Name);
-        }
-
-        private void TabViewItem_Html_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-            Telemetry t = new();
-            t.SetEnabled(true);
-            var me = (TabViewItem)sender;
-            t.Transmit(me.Name);
-        }
-
-        private void TabViewItem_Error_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-            Telemetry t = new();
-            t.SetEnabled(true);
-            var me = (TabViewItem)sender;
-            t.Transmit(me.Name);
-        }
-
-        private void TabViewItem_Output_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-            Telemetry t = new();
-            t.SetEnabled(true);
-            var me = (TabViewItem)sender;
-            t.Transmit(me.Name);
-        }
-
-        private void TabViewItem_Logo_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-            Telemetry t = new();
-            t.SetEnabled(true);
-            var me = (TabViewItem)sender;
-            t.Transmit(me.Name);
-            //SerializeTabsToVirtualRegistry();
-        }
-
-        private void TabViewItem_Logo_RightTapped(object sender, RightTappedRoutedEventArgs e)
-        {
-            Telemetry t = new();
-            t.SetEnabled(true);
-            var me = (TabViewItem)sender;
-            t.Transmit(me.Name);
-
-            FrameworkElement? senderElement = sender as FrameworkElement;
-            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
-            flyoutBase.ShowAt(senderElement);
-        }
-
-        private void FileCopyLogoButton_Click(object sender, RoutedEventArgs e)
-        {
-            Telemetry t = new();
-            t.SetEnabled(true);
-            var me = (MenuFlyoutItem)sender;
-            t.Transmit(me.Name);
-
-        }
-
-        private void ClipboardCopyLogoButton_Click(object sender, RoutedEventArgs e)
-        {
-            Telemetry t = new();
-            t.SetEnabled(true);
-            var me = (MenuFlyoutItem)sender;
-            t.Transmit(me.Name);
-
-        }
-
-        private void ClearLogoButton_Click(object sender, RoutedEventArgs e)
-        {
-            Telemetry t = new();
-            t.SetEnabled(true);
-            var me = (MenuFlyoutItem)sender;
-            t.Transmit(me.Name);
-        }
-
         private void ContentControl_Rendering_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
+
+            SolidColorBrush white = new(Colors.White);
+            SolidColorBrush black = new(Colors.Black);
+            SolidColorBrush darkGrey = new(Colors.DarkGray);
 
             ContentControl me = (ContentControl)sender;
 
@@ -772,40 +648,81 @@ namespace PelotonIDE.Presentation
 
             Dictionary<string, string> frmMain = LanguageSettings[interfaceLanguageName]["frmMain"];
 
+            UpdateOutputTabsFromRenderers();
+
             foreach (string key in new string[] { "Output", "Error", "Html", "Logo", "RTF" })
             {
                 long renderNumber = (long)RenderingConstants["Rendering"][key];
+
                 MenuFlyoutItem menuFlyoutItem = new()
                 {
                     Name = key,
                     Text = frmMain[$"tab{key}"],
-                    Foreground = inFocusRendering.Contains(renderNumber.ToString()) ? new SolidColorBrush(Colors.White) : new SolidColorBrush(Colors.Black),
-                    Background = inFocusRendering.Contains(renderNumber.ToString()) ? new SolidColorBrush(Colors.Black) : new SolidColorBrush(Colors.White),
-                    Tag = new Dictionary<string, object>()
-                        {
-                            { "Globals", frmMain },
-                            { "CurrentValue", inFocusRendering }
-                        }
+                    Foreground = inFocusRendering.Contains(renderNumber.ToString()) ? white : black,
+                    Background = inFocusRendering.Contains(renderNumber.ToString()) ? black : white,
+                    Tag = key,
                 };
                 menuFlyoutItem.Click += ContentControl_Rendering_MenuFlyoutItem_Click; // this has to reset the cell to its original value
-                t.Transmit(menuFlyoutItem.Text, menuFlyoutItem.Name, menuFlyoutItem.Foreground.ToString(), menuFlyoutItem.Background.ToString());
+                t.Transmit(menuFlyoutItem.Text, menuFlyoutItem.Name);
                 mf.Items.Add(menuFlyoutItem);
             }
 
-            FrameworkElement? senderElement = sender as FrameworkElement;
+            //FrameworkElement? senderElement = sender as FrameworkElement;
 
             mf.ShowAt(sender as UIElement, e.GetPosition(sender as UIElement));
+        }
+
+        private void UpdateOutputTabsFromRenderers()
+        {
+            Telemetry t = new();
+            t.SetEnabled(true);
+
+            SolidColorBrush white = new(Colors.White);
+            SolidColorBrush black = new(Colors.Black);
+            SolidColorBrush darkGrey = new(Colors.DarkGray);
+
+            CustomTabItem? ift = InFocusTab();
+
+            string? inFocusRendering = Type_3_GetInFocusTab<string>("Rendering");
+            foreach (string key in new string[] { "Output", "Error", "Html", "Logo", "RTF" })
+            {
+                long renderNumber = (long)RenderingConstants["Rendering"][key];
+                TabViewItem tvi = (TabViewItem)outputPanelTabView.FindName($"tab{key}");
+                if (inFocusRendering.Contains(renderNumber.ToString()))
+                {
+                    tvi.Background = black;
+                    tvi.Foreground = white;
+                    t.Transmit(ift.Content, renderNumber, key, "enabled");
+                }
+                else
+                {
+                    tvi.Background = darkGrey;
+                    tvi.Foreground = black;
+                    t.Transmit(ift.Content, renderNumber, key, "disabled");
+                }
+            }
+            // which one is selected?
+            IEnumerable<object> selected = from tvi in outputPanelTabView.TabItems where ((TabViewItem)tvi).IsSelected select tvi;
+            if (selected.Any())
+            {
+                TabViewItem selection = (TabViewItem)selected.First();
+                t.Transmit(ift.Content, selection.Tag, "selected");
+                Type_3_UpdateInFocusTabSettings<long>("SelectedRenderer", true, long.Parse((string)selection.Tag));
+                UpdateTopMostRendererInCurrentTab();
+            }
+
         }
 
         private void ContentControl_Rendering_MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
 
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
-            string meName = me.Name.Replace("tab", "");
+            //string meName = me.Name.Replace("tab", "");
+            string key = (string)me.Tag;
 
-            string render = ((long)RenderingConstants["Rendering"][meName]).ToString();
+            string render = ((long)RenderingConstants["Rendering"][key]).ToString();
 
             if (AnInFocusTabExists())
             {
@@ -821,46 +738,20 @@ namespace PelotonIDE.Presentation
                 Type_3_UpdateInFocusTabSettings<string>("Rendering", true, string.Join(",", keys));
             }
             UpdateCommandLineInStatusBar();
-        }
-
-        private void TabViewItem_RTF_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-
-        }
-
-        private void FileCopyRTFButton_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void ClipboardCopyRTFButton_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void ClearRTFButton_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void TabViewItem_RTF_RightTapped(object sender, RightTappedRoutedEventArgs e)
-        {
-            FrameworkElement? senderElement = sender as FrameworkElement;
-            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
-            flyoutBase.ShowAt(senderElement);
+            UpdateOutputTabsFromRenderers();
         }
 
         private void InterpretMenu_Transput_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
 
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
-            foreach (var mfi in from MenuFlyoutSubItem mfsi in mnuTransput.Items.Cast<MenuFlyoutSubItem>()
-                                where mfsi != null
-                                where mfsi.Items.Count > 0
-                                from MenuFlyoutItem mfi in mfsi.Items.Cast<MenuFlyoutItem>()
-                                select mfi)
+            foreach (MenuFlyoutItem? mfi in from MenuFlyoutSubItem mfsi in mnuTransput.Items.Cast<MenuFlyoutSubItem>()
+                                            where mfsi != null
+                                            where mfsi.Items.Count > 0
+                                            from MenuFlyoutItem mfi in mfsi.Items.Cast<MenuFlyoutItem>()
+                                            select mfi)
             {
                 MenuItemHighlightController((MenuFlyoutItem)mfi, false);
                 if ((string)me.Tag == (string)mfi.Tag)
@@ -876,11 +767,11 @@ namespace PelotonIDE.Presentation
         private void Help_Click(object sender, RoutedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
             t.Transmit(me.Name);
 
-            ProcessStartInfo startInfo = new ProcessStartInfo()
+            ProcessStartInfo startInfo = new()
             {
                 UseShellExecute = true,
                 Verb = "open",
@@ -893,22 +784,22 @@ namespace PelotonIDE.Presentation
         private void OutputPanelTabView_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             TabView me = (TabView)sender;
             t.Transmit(me.Name, "e.PreviousSize=", e.PreviousSize, "e.NewSize=", e.NewSize);
             string pos = Type_1_GetVirtualRegistry<string>("OutputPanelPosition") ?? "Bottom";
             Type_1_UpdateVirtualRegistry<string>("OutputPanelTabView_Settings", string.Join("|", [pos, e.NewSize.Height, e.NewSize.Width]));
-            vHW.Text = $"OutputPanelTabView: {e.NewSize.Height}/{e.NewSize.Width}";
+            //vHW.Text = $"OutputPanelTabView: {e.NewSize.Height}/{e.NewSize.Width}";
         }
 
         private void Page_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             Page me = (Page)sender;
 
-            pHW.Text = $"Page: {e.NewSize.Height}/{e.NewSize.Width}";
-            
+            //pHW.Text = $"Page: {e.NewSize.Height}/{e.NewSize.Width}";
+
             if (Type_1_GetVirtualRegistry<string>("OutputPanelPosition") == "Bottom")
             {
                 if (!double.IsNaN(outputPanelTabView.Height))
@@ -947,7 +838,7 @@ namespace PelotonIDE.Presentation
         private void TabView_Rendering_TabItemsChanged(TabView sender, Windows.Foundation.Collections.IVectorChangedEventArgs args)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             TabView me = (TabView)sender;
             //t.Transmit("me.Name=",me.Name, "me,Tag=",me.Tag, "args.Index=",args.Index, "args.CollectionChange=", args.CollectionChange, "Names=",string.Join(',', me.TabItems.Select(e => ((TabViewItem)e).Name)));
             //SerializeTabsToVirtualRegistry();
@@ -956,13 +847,66 @@ namespace PelotonIDE.Presentation
         private void TabControl_SizeChanged(object sender, SizeChangedEventArgs args)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             NavigationView me = (NavigationView)sender;
             t.Transmit(me.Name, "e.PreviousSize=", args.PreviousSize, "e.NewSize=", args.NewSize, "args.OriginalSource=", args.OriginalSource);
             string pos = Type_1_GetVirtualRegistry<string>("OutputPanelPosition") ?? "Bottom";
             Type_1_UpdateVirtualRegistry<string>("TabControl_Settings", string.Join("|", [pos, args.NewSize.Height, args.NewSize.Width]));
-            tHW.Text = $"Editing: {args.NewSize.Height}/{args.NewSize.Width}";
+            //tHW.Text = $"Editing: {args.NewSize.Height}/{args.NewSize.Width}";
 
+        }
+
+        private void ContentControl_Interpreter_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(false);
+
+            var white = new SolidColorBrush(Colors.White);
+            var black = new SolidColorBrush(Colors.Black);
+
+            ContentControl me = (ContentControl)sender;
+
+            object prevContent = me.Content;
+
+            MenuFlyout mf = new();
+
+            string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+
+            long inFocusInterpreter = AnInFocusTabExists() ? Type_3_GetInFocusTab<long>("Engine") : Type_1_GetVirtualRegistry<long>("Engine");
+
+            t.Transmit("inFocusInterpreter=", inFocusInterpreter);
+
+            foreach (long key in new long[] { 2, 3 })
+            {
+                MenuFlyoutItem menuFlyoutItem = new()
+                {
+                    Name = $"P{key}",
+                    Text = $"P{key}",
+                    Foreground = inFocusInterpreter == key ? white : black,
+                    Background = inFocusInterpreter == key ? black : white,
+                    Tag = key
+                };
+                menuFlyoutItem.Click += ContentControl_Interpreter_MenuFlyoutItem_Click; // this has to reset the cell to its original value
+                t.Transmit(menuFlyoutItem.Text, menuFlyoutItem.Name, menuFlyoutItem.Foreground.ToString(), menuFlyoutItem.Background.ToString());
+                mf.Items.Add(menuFlyoutItem);
+            }
+
+            mf.ShowAt(sender as UIElement, e.GetPosition(sender as UIElement));
+
+        }
+
+        private void ContentControl_Interpreter_MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(false);
+
+            MenuFlyoutItem me = (MenuFlyoutItem)sender;
+
+            if (AnInFocusTabExists())
+            {
+                Type_3_UpdateInFocusTabSettings<long>("Engine", true, (long)me.Tag);
+            }
+            UpdateInterpreterInStatusBar();
         }
     }
 }
