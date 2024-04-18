@@ -226,11 +226,10 @@ namespace PelotonIDE.Presentation
 
         private async void HandleInterfaceLanguageChange(string langName)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
 
             Dictionary<string, Dictionary<string, string>> selectedLanguage = LanguageSettings[langName];
-            t.Transmit("Changing interface language to", langName, long.Parse(selectedLanguage["GLOBAL"]["ID"]));
+            Telemetry.Transmit("Changing interface language to", langName, long.Parse(selectedLanguage["GLOBAL"]["ID"]));
 
             SetMenuText(selectedLanguage["frmMain"]);
             Type_1_UpdateVirtualRegistry("InterfaceLanguageName", langName);
@@ -360,8 +359,7 @@ namespace PelotonIDE.Presentation
 
         private void InterpretMenu_Rendering_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
 
             SolidColorBrush black = new(Colors.Black);
@@ -408,8 +406,7 @@ namespace PelotonIDE.Presentation
             Dictionary<string, string> frmMain = LanguageSettings[il]["frmMain"];
             CultureInfo cultureInfo = new(global["Locale"]);
 
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
 
             foreach (MenuFlyoutItemBase? item in from key in new string[] { "mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite" }
                                                  let items = from item in mnuTimeout.Items where item.Name == key select item
@@ -421,7 +418,7 @@ namespace PelotonIDE.Presentation
 
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
             long timeout = 0;
-            t.Transmit(me.Name, me.Tag);
+            Telemetry.Transmit(me.Name, me.Tag);
             switch (me.Name)
             {
                 case "mnu20Seconds":
@@ -634,9 +631,8 @@ namespace PelotonIDE.Presentation
             }
             catch (Exception er)
             {
-                Telemetry t = new();
-                t.SetEnabled(false);
-                t.Transmit(er.Message, er.StackTrace);
+                Telemetry.SetEnabled(false);
+                Telemetry.Transmit(er.Message, er.StackTrace);
             }
             Environment.Exit(0);
         }
@@ -868,8 +864,7 @@ namespace PelotonIDE.Presentation
         }
         private async void ShowMemory_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
 
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             Dictionary<string, Dictionary<string, object>>? currentTabSettings = navigationViewItem.TabSettingsDict;
@@ -913,7 +908,7 @@ namespace PelotonIDE.Presentation
             {
                 lines.Add($"\t{val.Key} -> {val.Value}");
             }
-            t.Transmit(lines.JoinBy("\r\n"));
+            Telemetry.Transmit(lines.JoinBy("\r\n"));
             ContentDialog dialog = new()
             {
                 XamlRoot = this.XamlRoot,

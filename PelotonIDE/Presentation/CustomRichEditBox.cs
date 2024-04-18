@@ -57,17 +57,16 @@ namespace PelotonIDE.Presentation
             //Color whitefront = Color.FromArgb(0x00, 0xff, 0xff, 0xff);
             //Color normal = Color.FromArgb(0x00, 0xf9, 0xf8, 0xbd);
 
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
             CustomRichEditBox me = ((CustomRichEditBox)sender);
             ITextSelection selection = me.Document.Selection;
             selection.GetText(TextGetOptions.None, out string text);
-            t.Transmit(text);
+            Telemetry.Transmit(text);
             selection.SelectOrDefault(x => x);
             int caretPosition = selection.StartPosition;
             int start = selection.StartPosition;
             int end = selection.EndPosition;
-            t.Transmit("start=", start, "end=", end);
+            Telemetry.Transmit("start=", start, "end=", end);
             if (start != end)
             {
                 //if (me.PreviousSelection != "0,0," )
@@ -79,7 +78,7 @@ namespace PelotonIDE.Presentation
                 //    selection.CharacterFormat.BackgroundColor = Color.FromArgb(argb[0], argb[1], argb[2], argb[3]);
                 //    me.PreviousSelection = "0,0,";
                 //}
-                //t.Transmit("me.Tag=", me.PreviousSelection);
+                //Telemetry.Transmit("me.Tag=", me.PreviousSelection);
                 //var bc = selection.CharacterFormat.BackgroundColor;
                 //me.PreviousSelection = $"{start},{end},{bc.A}-{bc.R}-{bc.G}-{bc.B}";
                 //bc = blueback;
@@ -90,16 +89,14 @@ namespace PelotonIDE.Presentation
 
         private void CustomRichEditBox_PointerReleased(object sender, PointerRoutedEventArgs e)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
-            t.Transmit(((RichEditBox)sender).Name, e.GetType().FullName);
+            Telemetry.SetEnabled(false);
+            Telemetry.Transmit(((RichEditBox)sender).Name, e.GetType().FullName);
             base.OnPointerReleased(e);
         }
 
         protected override void OnKeyDown(KeyRoutedEventArgs e)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
             CoreVirtualKeyStates ctrlState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
             CoreVirtualKeyStates shiftState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift);
             bool isCtrlPressed = ctrlState.HasFlag(CoreVirtualKeyStates.Down);
@@ -128,13 +125,13 @@ namespace PelotonIDE.Presentation
             if (e.Key == VirtualKey.Tab && isCtrlPressed)
             {
                 int direction = ctrlState.ToString().Contains("Locked") ? -1 : 1;
-                t.Transmit("e.Key=", e.Key, "ctrlState=", ctrlState, "shiftState=", shiftState, "isCtrlPressed=", isCtrlPressed, "isShiftPressed=", isShiftPressed);
+                Telemetry.Transmit("e.Key=", e.Key, "ctrlState=", ctrlState, "shiftState=", shiftState, "isCtrlPressed=", isCtrlPressed, "isShiftPressed=", isShiftPressed);
                 e.Handled = true;
                 return;
             }
             if (e.Key == VirtualKey.Tab)
             {
-                t.Transmit("e.Key=", e.Key, "ctrlState=", ctrlState, "shiftState=", shiftState, "isCtrlPressed=", isCtrlPressed, "isShiftPressed=", isShiftPressed);
+                Telemetry.Transmit("e.Key=", e.Key, "ctrlState=", ctrlState, "shiftState=", shiftState, "isCtrlPressed=", isCtrlPressed, "isShiftPressed=", isShiftPressed);
                 if (!isShiftPressed)
                     Document.Selection.TypeText("\t");
                 e.Handled = true;

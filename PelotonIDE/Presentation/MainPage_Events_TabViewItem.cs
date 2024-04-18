@@ -155,26 +155,23 @@ namespace PelotonIDE.Presentation
 
         private void HtmlTab_Contextual_SaveToFile_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
-            t.Transmit(me.Name);
+            Telemetry.Transmit(me.Name);
         }
 
         private void HtmlTab_Contextual_SaveToClipboard_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
-            t.Transmit(me.Name);
+            Telemetry.Transmit(me.Name);
         }
 
         private void HtmlTab_Contextual_Clear_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
-            t.Transmit(me.Name);
+            Telemetry.Transmit(me.Name);
 
             string code = Convert.ToBase64String(Encoding.UTF8.GetBytes("<html></html>"));
             LogoText.Source = new Uri($"data:text/html;base64,{code}");
@@ -182,26 +179,23 @@ namespace PelotonIDE.Presentation
 
         private void LogoTab_Contextual_SaveToFile_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
-            t.Transmit(me.Name);
+            Telemetry.Transmit(me.Name);
         }
 
         private void LogoTab_Contextual_SaveToClipboard_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
-            t.Transmit(me.Name);
+            Telemetry.Transmit(me.Name);
         }
 
         private void LogoTab_Contextual_Clear_Click(object sender, RoutedEventArgs e)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
             MenuFlyoutItem me = (MenuFlyoutItem)sender;
-            t.Transmit(me.Name);
+            Telemetry.Transmit(me.Name);
 
             string code = Convert.ToBase64String(Encoding.UTF8.GetBytes(TurtleFrameworkPlus("turtle.clear()")));
             LogoText.Source = new Uri($"data:text/html;base64,{code}");
@@ -229,8 +223,7 @@ namespace PelotonIDE.Presentation
 
         private void TabViewItem_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            Telemetry t = new();
-            t.SetEnabled(true);
+            Telemetry.SetEnabled(false);
             TabViewItem me = (TabViewItem)sender;
 
             Type_3_UpdateInFocusTabSettings<long>("SelectedRenderer", true, long.Parse((string)me.Tag));
@@ -241,10 +234,9 @@ namespace PelotonIDE.Presentation
 
         private void TabViewItem_Html_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
             TabViewItem me = (TabViewItem)sender;
-            t.Transmit(me.Name);
+            Telemetry.Transmit(me.Name);
 
             FrameworkElement? senderElement = sender as FrameworkElement;
             FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
@@ -253,10 +245,9 @@ namespace PelotonIDE.Presentation
 
         private void TabViewItem_Logo_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
             TabViewItem me = (TabViewItem)sender;
-            t.Transmit(me.Name);
+            Telemetry.Transmit(me.Name);
 
             FrameworkElement? senderElement = sender as FrameworkElement;
             FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);

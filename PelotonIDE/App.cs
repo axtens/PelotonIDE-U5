@@ -63,12 +63,11 @@ namespace PelotonIDE
 
         private void Window_SizeChanged(object sender, WindowSizeChangedEventArgs args)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
             Window me = (Window)sender;
             double height = args.Size.Height;
             double width = args.Size.Width;
-            t.Transmit(me.Title, "WindowSizeChangedEventArgs.Size.Height=", height, "WindowSizeChangedEventArgs.Size.Width=", width);
+            Telemetry.Transmit(me.Title, "WindowSizeChangedEventArgs.Size.Height=", height, "WindowSizeChangedEventArgs.Size.Width=", width);
         }
 
         private static void RegisterRoutes(IViewRegistry views, IRouteRegistry routes)

@@ -397,7 +397,7 @@
                         </Button>
                     </TabView.TabStripFooter>
                     <TabView.TabItems>
-                        <TabViewItem x:Name="tabOutput" Tag="3" Header="Output/Text" IsClosable="False" RightTapped="TabViewItem_Output_RightTapped" Tapped="TabViewItem_Tapped" BorderBrush="Black" BorderThickness="1" IsEnabledChanged="TabViewItem_IsEnabledChanged" >
+                        <TabViewItem x:Name="tabOutput" Tag="3" Header="Output/Text" IsClosable="False" RightTapped="TabViewItem_Output_RightTapped" Tapped="TabViewItem_Tapped" BorderBrush="Black" BorderThickness="1" IsEnabledChanged="TabViewItem_IsEnabledChanged" BringIntoViewRequested="TabViewItem_BringIntoViewRequested" Loaded="TabViewItem_Loaded" >
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout>
                                     <MenuFlyoutItem x:Name="OutputTab_Contextual_SaveToFile" Text="File Copy" Click="OutputTab_Contextual_SaveToFile_Click"/>

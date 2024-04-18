@@ -25,8 +25,7 @@ namespace PelotonIDE.Presentation
     {
         private async void ExecuteInterpreter(string selectedText)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
 
             DispatcherQueue dispatcher = DispatcherQueue.GetForCurrentThread();
 
@@ -47,7 +46,7 @@ namespace PelotonIDE.Presentation
                 }
             }
 
-            t.Transmit("selectedText=", selectedText);
+            Telemetry.Transmit("selectedText=", selectedText);
             // load tab settings
 
 
@@ -75,7 +74,7 @@ namespace PelotonIDE.Presentation
                 (stdOut, stdErr) = RunProtium(engineArguments, selectedText, quietude);
             }
 
-            t.Transmit("stdOut=", stdOut, "stdErr=", stdErr);
+            Telemetry.Transmit("stdOut=", stdOut, "stdErr=", stdErr);
 
             IEnumerable<long> rendering = Type_3_GetInFocusTab<string>("Rendering").Split(',', StringSplitOptions.RemoveEmptyEntries).Select(e => long.Parse(e)); // strip focuser
 
@@ -154,8 +153,8 @@ namespace PelotonIDE.Presentation
                 $"<script type='text/javascript'>{simple}</script>" +
                 $"<script type='text/javascript'>{jsBlock}</script>";
             */
-            var tmp = JavaScriptLibrariesHelper.GetJavaScriptLibrariesResource("real-turtle");
-            var pmt = JavaScriptLibrariesHelper.GetResource("real-turtle");
+            //string tmp = JavaScriptLibrariesHelper.GetJavaScriptLibrariesResource("real-turtle");
+            //string pmt = JavaScriptLibrariesHelper.GetResource("real-turtle");
             return $@"<script type='text/javascript' src='https://unpkg.com/real-turtle'></script>" +
                     "<canvas id='real-turtle'></canvas>" +
                     "<script type='text/javascript' src='https://unpkg.com/real-turtle/build/helpers/simple.js'></script>" +
@@ -170,8 +169,7 @@ namespace PelotonIDE.Presentation
 
         private string ParseLogoIntoJavascript(string v)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
             
             List<string> result = [];
             string[] lines = v.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -247,7 +245,7 @@ namespace PelotonIDE.Presentation
                 }
             }
             result.Add("turtle.start();");
-            t.Transmit(result.JoinBy("\r\n"));
+            Telemetry.Transmit(result.JoinBy("\r\n"));
             return result.JoinBy("\n");
         }
 
@@ -263,13 +261,12 @@ namespace PelotonIDE.Presentation
 
         private static void AddInsertParagraph(RichEditBox reb, string text, bool addInsert = true, bool withPrefix = true)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
             if (string.IsNullOrEmpty(text))
             {
                 return;
             }
-            t.Transmit("text=", text, "addInsert=", addInsert, "withPrefix=", withPrefix);
+            Telemetry.Transmit("text=", text, "addInsert=", addInsert, "withPrefix=", withPrefix);
             const string stamp = "> ";
             if (withPrefix)
                 text = text.Insert(0, stamp);
@@ -292,8 +289,7 @@ namespace PelotonIDE.Presentation
 
         public (string StdOut, string StdErr) RunProtium(string args, string buff, long quietude)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
             string interpKey = $"Engine.{Type_3_GetInFocusTab<long>("Engine")}";
             string? Exe = ApplicationData.Current.LocalSettings.Values[interpKey].ToString();
             string temp = System.IO.Path.GetTempFileName();
@@ -303,7 +299,7 @@ namespace PelotonIDE.Presentation
 
             args += $" /F:\"{temp}\"";
 
-            t.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
+            Telemetry.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
 
             ProcessStartInfo info = new()
             {
@@ -322,13 +318,12 @@ namespace PelotonIDE.Presentation
 
         public (string StdOut, string StdErr) RunPeloton(string args, string buff, long quietude)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
 
             string interpKey = $"Engine.{Type_3_GetInFocusTab<long>("Engine")}";
             string? Exe = ApplicationData.Current.LocalSettings.Values[interpKey].ToString();
 
-            t.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
+            Telemetry.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
 
             string t_in = System.IO.Path.GetTempFileName();
             string t_out = System.IO.Path.ChangeExtension(t_in, "out");
@@ -340,7 +335,7 @@ namespace PelotonIDE.Presentation
 
             args += $" /F:\"{t_in}\""; // 1>\"{t_out}\" 2>\"{t_err}\"";
 
-            t.Transmit(args, buff);
+            Telemetry.Transmit(args, buff);
 
             ProcessStartInfo info = new()
             {
@@ -366,18 +361,17 @@ namespace PelotonIDE.Presentation
         }
         public (string StdOut, string StdErr) RunPeloton2(string args, string buff, long quietude, DispatcherQueue dispatcher)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
 
             string temp = System.IO.Path.GetTempFileName();
             File.WriteAllText(temp, buff, Encoding.Unicode);
 
-            t.Transmit("temp=", temp);
+            Telemetry.Transmit("temp=", temp);
 
             string interpKey = $"Engine.{Type_3_GetInFocusTab<long>("Engine")}";
             string? Exe = ApplicationData.Current.LocalSettings.Values[interpKey].ToString();
 
-            t.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
+            Telemetry.Transmit("Exe=", Exe, "Args:", args, "Buff=", buff, "Quietude=", quietude);
 
             ProcessStartInfo info = new()
             {
@@ -424,9 +418,8 @@ namespace PelotonIDE.Presentation
             };
             proc.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
             {
-                Telemetry t = new();
-                t.SetEnabled(false);
-                //t.Transmit(e.Data);
+                Telemetry.SetEnabled(false);
+                //Telemetry.Transmit(e.Data);
                 stderr.AppendLine(e.Data);
             };
 

@@ -10,29 +10,23 @@ using Windows.Storage;
 
 namespace PelotonIDE.Presentation
 {
-    public class Telemetry
+    public static class Telemetry
     {
-        private bool enabled;
-
-        public Telemetry()
-        {
-            SetEnabled(false);
-        }
-
-        public bool GetEnabled()
+        private static bool enabled;
+        private static bool firsted = false;
+        public static bool GetEnabled()
         {
             return enabled;
         }
 
-        public Telemetry SetEnabled(bool value)
+        public static void SetEnabled(bool value)
         {
             enabled = value;
-            return this;
         }
 
-        public Telemetry Transmit(params object?[] args)
+        public static void Transmit(params object?[] args)
         {
-            if (!enabled) return this;
+            if (!enabled) return;
             StorageFolder folder = ApplicationData.Current.LocalFolder;
             string path = Path.Combine(folder.Path, $"{DateTime.Now:yyyy-MM-dd-HH}_pi.log");
 
@@ -41,29 +35,38 @@ namespace PelotonIDE.Presentation
             string you = trace.GetFrame(1).GetMethod().Name;
 
             StringBuilder sb = new();
-            sb.Append($"From {you}: ");
-            for (int i = 0; i < args.Length; i++)
+            if (!firsted)
             {
-                string item = $"{args[i]}";
-                if (i == 0)
+                sb.Append("---");
+                firsted = true;
+                File.AppendAllText(path, $"{DateTime.Now:o} > {sb}\r\n", Encoding.UTF8);
+            }
+            else
+            {
+                sb.Append($"From {you}: ");
+                for (int i = 0; i < args.Length; i++)
                 {
-                    sb.Append(item);
-                }
-                else
-                {
-                    string prev = $"{args[i - 1]}";
-                    if (prev.EndsWith("="))
+                    string item = $"{args[i]}";
+                    if (i == 0)
                     {
                         sb.Append(item);
                     }
                     else
                     {
-                        sb.Append(' ').Append(item);
+                        string prev = $"{args[i - 1]}";
+                        if (prev.EndsWith("="))
+                        {
+                            sb.Append(item);
+                        }
+                        else
+                        {
+                            sb.Append(' ').Append(item);
+                        }
                     }
                 }
+                File.AppendAllText(path, $"{DateTime.Now:o} > {sb}\r\n", Encoding.UTF8);
             }
-            File.AppendAllText(path, $"{DateTime.Now:o} > {sb}\r\n", Encoding.UTF8);
-            return this;
+            return;
         }
     }
 }

@@ -101,8 +101,7 @@ namespace PelotonIDE.Presentation
         /// </summary>
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
 
            
             LanguageSettings ??= await GetLanguageConfiguration();
@@ -302,8 +301,7 @@ namespace PelotonIDE.Presentation
 
         private void UpdateTransputInMenu()
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
 
             string transput = Type_1_GetVirtualRegistry<long>("Transput").ToString();
             foreach (var mfi in from MenuFlyoutSubItem mfsi in mnuTransput.Items.Cast<MenuFlyoutSubItem>()
@@ -459,8 +457,7 @@ namespace PelotonIDE.Presentation
 
         private void SerializeLayoutToVirtualRegistry()
         {
-            Telemetry t = new();
-            t.SetEnabled(false);
+            Telemetry.SetEnabled(false);
             List<string> list =
             [
                 Type_1_GetVirtualRegistry<bool>("OutputPanelShowing") ? "True" : "False",
