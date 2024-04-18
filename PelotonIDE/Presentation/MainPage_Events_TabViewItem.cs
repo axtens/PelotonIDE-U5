@@ -12,6 +12,7 @@ using Windows.Storage.Pickers;
 using Windows.Storage.Provider;
 using Windows.Storage;
 using Microsoft.UI.Text;
+using Microsoft.UI;
 
 namespace PelotonIDE.Presentation
 {
@@ -231,16 +232,11 @@ namespace PelotonIDE.Presentation
             Telemetry t = new();
             t.SetEnabled(true);
             TabViewItem me = (TabViewItem)sender;
-         
-            
-            //t.Transmit(me.Name);
+
+            Type_3_UpdateInFocusTabSettings<long>("SelectedRenderer", true, long.Parse((string)me.Tag));
+            // remove all "selected" attributes from all tabs
             //UpdateOutputTabsFromRenderers();
-            //UpdateTopMostRendererInCurrentTab();
-            CustomTabItem? ift = InFocusTab();
-            long selectedRenderer = long.Parse((string)me.Tag);
-            t.Transmit(ift.Content, "SelectedRenderer=", selectedRenderer,"(was)",Type_3_GetInFocusTab<long>("SelectedRenderer") );
-            Type_3_UpdateInFocusTabSettings<long>("SelectedRenderer", true, selectedRenderer);
-            me.IsSelected = true;
+            //AssertSelectedOutputTab();
         }
 
         private void TabViewItem_Html_RightTapped(object sender, RightTappedRoutedEventArgs e)

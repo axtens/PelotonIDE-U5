@@ -1,9 +1,18 @@
-﻿using Microsoft.UI;
+﻿using DocumentFormat.OpenXml.Office2019.Drawing.HyperLinkColor;
+
+using Microsoft.UI;
+using Microsoft.UI.Xaml.Markup;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 
+using System.Drawing;
+using System.Runtime.CompilerServices;
+
 using Windows.Storage;
+using Windows.UI;
+
+using Color = Windows.UI.Color;
 
 namespace PelotonIDE.Presentation
 {
@@ -299,17 +308,18 @@ namespace PelotonIDE.Presentation
             t.SetEnabled(true);
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
             T? result = default;
-            if (navigationViewItem != null)
+            if (navigationViewItem == null || navigationViewItem.TabSettingsDict == null)
             {
-                result = ((bool)navigationViewItem.TabSettingsDict[name]["Defined"]) ? (T)navigationViewItem.TabSettingsDict[name]["Value"] : default;
+                return result;
             }
+            result = ((bool)navigationViewItem.TabSettingsDict[name]["Defined"]) ? (T)navigationViewItem.TabSettingsDict[name]["Value"] : default;
             return result;
         }
 
         private T Type_1_GetVirtualRegistry<T>(string name)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             object result = ApplicationData.Current.LocalSettings.Values[name];
             t.Transmit(name + "=", name, "result=", result);
             return (T)result;
@@ -329,7 +339,7 @@ namespace PelotonIDE.Presentation
         private void Type_1_UpdateVirtualRegistry<T>(string name, T value)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             t.Transmit(name, value);
             ApplicationData.Current.LocalSettings.Values[name] = value;
         }
@@ -338,7 +348,7 @@ namespace PelotonIDE.Presentation
         private void Type_2_UpdatePerTabSettings<T>(string name, bool enabled, T value)
         {
             Telemetry t = new();
-            t.SetEnabled(true);
+            t.SetEnabled(false);
             t.Transmit(name, enabled, value);
             PerTabInterpreterParameters[name]["Defined"] = enabled;
             PerTabInterpreterParameters[name]["Value"] = value!;
@@ -351,6 +361,10 @@ namespace PelotonIDE.Presentation
             t.SetEnabled(true);
             t.Transmit(name, enabled, value);
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            if (navigationViewItem == null || navigationViewItem.TabSettingsDict == null) 
+            {
+                return;
+            }
             navigationViewItem.TabSettingsDict[name]["Defined"] = enabled;
             navigationViewItem.TabSettingsDict[name]["Value"] = value!;
         }
@@ -361,6 +375,10 @@ namespace PelotonIDE.Presentation
             t.SetEnabled(true);
             t.Transmit(name, defined, value);
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+            if (navigationViewItem == null || navigationViewItem.TabSettingsDict == null)
+            {
+                return;
+            }
             bool currentDefined = (bool)navigationViewItem.TabSettingsDict[name]["Defined"];
             T currentValue = (T)navigationViewItem.TabSettingsDict[name]["Value"];
             if (currentDefined == defined && $"{currentValue}" == $"{value}")
@@ -473,15 +491,18 @@ namespace PelotonIDE.Presentation
             Telemetry t = new();
             t.SetEnabled(false);
 
-            long rend = AnInFocusTabExists() ? Type_3_GetInFocusTab<long>("SelectedRenderer") : Type_1_GetVirtualRegistry<long>("SelectedRenderer");
-            t.Transmit("rend=", rend);
-            foreach (string key in new string[] { "Output", "Error", "Html", "Logo", "RTF" })
+            if (!AnInFocusTabExists()) return;
+            string? rendering = Type_3_GetInFocusTab<string>("Rendering");
+            long rend = Type_3_GetInFocusTab<long>("SelectedRenderer");
+            if (rendering == null || rendering.Split(',',StringSplitOptions.RemoveEmptyEntries).Length == 0)
             {
-                long renderNumber = (long)RenderingConstants["Rendering"][key];
-                if (renderNumber != rend) continue;
-                TabViewItem tab = (TabViewItem)tabOutput.FindName($"tab{key}");
-                t.Transmit($"tab{key}.Selected = true;");
-                tab.IsSelected = true;
+                return;
+            }
+            t.Transmit("rend=", rend);
+            foreach (TabViewItem tvi in outputPanelTabView.TabItems)
+            {
+                if (rend != long.Parse((string)tvi.Tag)) continue;
+                tvi.IsSelected = true;
                 break;
             }
         }
@@ -501,5 +522,14 @@ namespace PelotonIDE.Presentation
             }
         }
 
+        private void StyleTab(TabViewItem tvi, string foreGround, string backGround)
+        {
+            System.Drawing.Color fg = ColorTranslator.FromHtml(foreGround);
+            System.Drawing.Color bg = ColorTranslator.FromHtml(backGround);
+            SolidColorBrush fgScb = new SolidColorBrush(new Color() { A = fg.A, R = fg.R, G = fg.G, B = fg.B });
+            SolidColorBrush bgScb = new SolidColorBrush(new Color() { A =bg.A, R = bg.R, G = bg.G, B = bg.B });
+            tvi.Foreground = fgScb;
+            tvi.Background = bgScb;
+        }
     }
 }

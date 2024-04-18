@@ -164,6 +164,7 @@ namespace PelotonIDE.Presentation
             UpdateLanguageNameInStatusBar(navigationViewItem.TabSettingsDict);
             UpdateCommandLineInStatusBar();
 
+            AssertSelectedOutputTab();
             TabControlCounter += 1;
         }
 
@@ -352,6 +353,9 @@ namespace PelotonIDE.Presentation
             _ = Type_3_UpdateInFocusTabSettingsIfPermittedAsync<long>("Quietude", true, quietude, $"{frmMain["mnuUpdate"]} {frmMain["mnuRunningMode"].ToLower(cultureInfo)} = '{frmMain[me.Name].ToLower(cultureInfo)}'");
             //Type_3_UpdateInFocusTabSettings("Quietude", true, quietude);
             UpdateCommandLineInStatusBar();
+
+            AssertSelectedOutputTab();
+
         }
 
         private void InterpretMenu_Rendering_Click(object sender, RoutedEventArgs e)
@@ -393,8 +397,8 @@ namespace PelotonIDE.Presentation
             Type_2_UpdatePerTabSettings<string>("Rendering", true, renderers.JoinBy(","));
             Type_3_UpdateInFocusTabSettings<string>("Rendering", true, renderers.JoinBy(","));
             //UpdateTopMostRendererInCurrentTab();
-            UpdateOutputTabsFromRenderers();
 
+            AssertSelectedOutputTab();
         }
 
         private void InterpretMenu_Timeout_Click(object sender, RoutedEventArgs e)
@@ -557,8 +561,9 @@ namespace PelotonIDE.Presentation
                 UpdateCommandLineInStatusBar();
                 UpdateInterpreterInStatusBar();
                 UpdateTopMostRendererInCurrentTab();
-                UpdateOutputTabsFromRenderers();
-                bool flag = InFocusTabIsPrFile(); // FIXME What's this for??
+    
+                AssertSelectedOutputTab();
+                //bool flag = InFocusTabIsPrFile(); // FIXME What's this for??
             }
         }
         private async void Paste()

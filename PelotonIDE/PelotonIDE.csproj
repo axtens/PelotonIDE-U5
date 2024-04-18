@@ -130,7 +130,9 @@
         <UpToDateCheckInput Remove="Presentation\TranslatePage.xaml" />
     </ItemGroup>
     <ItemGroup>
-        <Content Include="Peloton_Logo_MarkOnly_TransparentBack-lighter.ico" />
+        <Content Include="Peloton_Logo_MarkOnly_TransparentBack-lighter.ico">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
         <Content Include="Presentation\PerTabInterpreterParameters.json" />
         <Content Include="Presentation\FactorySettings.json" />
         <Content Include="Presentation\LanguageConfiguration.json" />
@@ -142,6 +144,7 @@
         <None Include="..\Peloton_Logo_MarkOnly_TransparentBack.svg"><!-- -lighter.png -->
             <Pack>True</Pack>
             <PackagePath>\</PackagePath>
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
     </ItemGroup>
     <ItemGroup>
@@ -155,11 +158,20 @@
         <AutoGen>True</AutoGen>
         <DependentUpon>Resources.resx</DependentUpon>
       </Compile>
+      <Compile Update="Strings\en\JavaScriptLibraries.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>JavaScriptLibraries.resx</DependentUpon>
+      </Compile>
     </ItemGroup>
     <ItemGroup>
       <EmbeddedResource Update="Properties\Resources.resx">
         <Generator>ResXFileCodeGenerator</Generator>
         <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
+      <EmbeddedResource Update="Strings\en\JavaScriptLibraries.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>JavaScriptLibraries.Designer.cs</LastGenOutput>
       </EmbeddedResource>
     </ItemGroup>
 </Project>

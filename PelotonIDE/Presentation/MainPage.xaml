@@ -15,6 +15,23 @@
         <SolidColorBrush Color="#F9F8BD" x:Key="TextControlBackgroundPointerOver"/>
         <SolidColorBrush Color="#F9F8BD" x:Key="TextControlBackgroundFocused"/>
         <SolidColorBrush Color="#F9F8BD" x:Key="TextControlBackground"/>
+
+        <SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="LightSlateGray"/>
+        <!--<SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="White" />-->
+
+        <SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelected" Color="PaleGreen"/>
+        <!--<SolidColorBrush x:Key="TabViewItemHeaderForegroundSelected" Color="White" />-->
+
+        <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver" Color="DarkGreen" />
+        <!--<SolidColorBrush x:Key="TabViewItemHeaderForegroundPointerOver" Color="Black" />-->
+
+        <SolidColorBrush x:Key="TabViewItemHeaderBackgroundDisabled" Color="LightGray"/>
+        <!--<SolidColorBrush x:Key="TabViewItemHeaderForegroundDisabled" Color="Black" />-->
+
+        <!--<SolidColorBrush x:Key="TabViewItemBorderBrush" Color="Black" />-->
+        <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="DarkSlateGray" />
+        
+
         <Style TargetType="RichEditBox" x:Key="CustomRichEditBoxStyle">
             <Setter Property="Background" Value="#F9F8BD"/>
             <!-- Set your desired background color here -->
@@ -54,9 +71,12 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
         <!--<Style TargetType="WebView2" x:Key="HtmlOutputStyle">
             <Setter Property="Background" Value="LightSteelBlue"/>
-            --><!-- Set your desired background color here --><!--
+            -->
+        <!-- Set your desired background color here -->
+        <!--
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RichEditBox">
@@ -329,7 +349,9 @@
                 </ResourceDictionary>
             </Button.Resources>
         </Button>
-        <NavigationView x:Name="tabControl" PaneDisplayMode="Top" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" RelativePanel.Below="butSelectAll" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" RelativePanel.Above="outputPanel" SelectionChanged="TabControl_SelectionChanged" RightTapped="TabControl_RightTapped" SizeChanged="TabControl_SizeChanged">
+        <NavigationView x:Name="tabControl" PaneDisplayMode="Top" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" 
+                        RelativePanel.Below="butSelectAll" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" RelativePanel.Above="outputPanel" 
+                        SelectionChanged="TabControl_SelectionChanged" RightTapped="TabControl_RightTapped" SizeChanged="TabControl_SizeChanged" >
             <NavigationView.MenuItems>
                 <local:CustomTabItem x:Name="tab1" Content="Document 1" Tag="Tab1" IsNewFile="True" Height="30" KeyDown="CustomTabItem_KeyDown" RightTapped="CustomTabItem_RightTapped"/>
             </NavigationView.MenuItems>
@@ -337,7 +359,8 @@
         <Border x:Name="outputPanel" RelativePanel.Above="statusBar" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" Background="White" Margin="5, 0, 5, 0" SizeChanged="OutputPanel_SizeChanged">
             <Canvas x:Name="outputCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <Thumb x:Name="outputThumb" Height="5" DragDelta="Thumb_DragDelta" DragCompleted="OutputThumb_DragCompleted" Canvas.Top="-5" PointerEntered="OutputThumb_PointerEntered" PointerExited="OutputThumb_PointerExited"/>
-                <TabView x:Name="outputPanelTabView" IsAddTabButtonVisible="False" TabWidthMode="SizeToContent" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="200" SizeChanged="OutputPanelTabView_SizeChanged" CanReorderTabs="True" TabItemsChanged="TabView_Rendering_TabItemsChanged">
+                <TabView x:Name="outputPanelTabView" IsAddTabButtonVisible="False" TabWidthMode="SizeToContent" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" 
+                         Height="200" SizeChanged="OutputPanelTabView_SizeChanged" CanReorderTabs="True" TabItemsChanged="TabView_Rendering_TabItemsChanged" >
                     <TabView.TabStripFooter>
                         <Button VerticalAlignment="Center" HorizontalAlignment="Right">
                             <Button.Content>
@@ -374,7 +397,7 @@
                         </Button>
                     </TabView.TabStripFooter>
                     <TabView.TabItems>
-                        <TabViewItem x:Name="tabOutput" Tag="3" Header="Output/Text" IsSelected="True" IsClosable="False" Background="DarkGray" Foreground="White" RightTapped="TabViewItem_Output_RightTapped" Tapped="TabViewItem_Tapped">
+                        <TabViewItem x:Name="tabOutput" Tag="3" Header="Output/Text" IsClosable="False" RightTapped="TabViewItem_Output_RightTapped" Tapped="TabViewItem_Tapped" BorderBrush="Black" BorderThickness="1" IsEnabledChanged="TabViewItem_IsEnabledChanged" >
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout>
                                     <MenuFlyoutItem x:Name="OutputTab_Contextual_SaveToFile" Text="File Copy" Click="OutputTab_Contextual_SaveToFile_Click"/>
@@ -382,13 +405,41 @@
                                     <MenuFlyoutItem x:Name="OutputTab_Contextual_Clear" Text="Clear" Click="OutputTab_Contextual_Clear_Click"/>
                                 </MenuFlyout>
                             </FlyoutBase.AttachedFlyout>
-                            <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                            <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" BorderThickness="1" BorderBrush="Black">
                                 <ScrollViewer VerticalScrollBarVisibility="Visible" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Visible" HorizontalScrollMode="Auto" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                                    <RichEditBox x:Name="outputText" FlowDirection="LeftToRight" TextAlignment="DetectFromContent" FontFamily="Lucida Sans Unicode,Tahoma" Foreground="Black" Background="AliceBlue"/>
+                                    <RichEditBox x:Name="outputText" FlowDirection="LeftToRight" TextAlignment="DetectFromContent" FontFamily="Lucida Sans Unicode,Tahoma" >
+                                        <RichEditBox.Resources>
+                                            <ResourceDictionary x:Key="Light">
+                                                <SolidColorBrush Color="AliceBlue" x:Key="TextControlBackgroundPointerOver"/>
+                                                <SolidColorBrush Color="AliceBlue" x:Key="TextControlBackgroundFocused"/>
+                                                <SolidColorBrush Color="AliceBlue" x:Key="TextControlBackground"/>
+
+                                            </ResourceDictionary>
+                                        </RichEditBox.Resources>
+                                    </RichEditBox>
                                 </ScrollViewer>
                             </Border>
+                            <!--<TabViewItem.Resources>
+                                <ResourceDictionary>
+                                    <ResourceDictionary.ThemeDictionaries>
+                                        <ResourceDictionary x:Key="Light">
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="Black"/>
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="White" />
+
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPressed" Color="PaleGreen"/>
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPressed" Color="White" />
+
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver" Color="DarkGreen" />
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPointerOver" Color="Black" />
+
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundDisabled" Color="LightGray"/>
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundDisabled" Color="Black" />
+                                        </ResourceDictionary>
+                                    </ResourceDictionary.ThemeDictionaries>
+                                </ResourceDictionary>
+                            </TabViewItem.Resources>-->
                         </TabViewItem>
-                        <TabViewItem x:Name="tabError" Tag="0" Header="Error" IsClosable="False" Background="DarkGray" Foreground="White" RightTapped="TabViewItem_Error_RightTapped" Tapped="TabViewItem_Tapped">
+                        <TabViewItem x:Name="tabError" Tag="0" Header="Error" IsClosable="False" RightTapped="TabViewItem_Error_RightTapped" Tapped="TabViewItem_Tapped"  BorderBrush="Black" BorderThickness="1">
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout>
                                     <MenuFlyoutItem x:Name="ErrorTab_Contextual_SaveToFile" Text="File Copy" Click="ErrorTab_Contextual_SaveToFile_Click"/>
@@ -396,13 +447,41 @@
                                     <MenuFlyoutItem x:Name="ErrorTab_Contextual_Clear" Text="Clear" Click="ErrorTab_Contextual_Clear_Click"/>
                                 </MenuFlyout>
                             </FlyoutBase.AttachedFlyout>
-                            <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                            <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" BorderThickness="1" BorderBrush="Black">
                                 <ScrollViewer VerticalScrollBarVisibility="Visible" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Visible" HorizontalScrollMode="Auto" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                                    <RichEditBox x:Name="errorText" FlowDirection="LeftToRight" TextAlignment="DetectFromContent" FontFamily="Lucida Sans Unicode,Tahoma" Foreground="Black" Background="FloralWhite"/>
+                                    <RichEditBox x:Name="errorText" FlowDirection="LeftToRight" TextAlignment="DetectFromContent" FontFamily="Lucida Sans Unicode,Tahoma" >
+                                        <RichEditBox.Resources>
+                                            <ResourceDictionary x:Key="Light">
+                                                <SolidColorBrush Color="FloralWhite" x:Key="TextControlBackgroundPointerOver"/>
+                                                <SolidColorBrush Color="FloralWhite" x:Key="TextControlBackgroundFocused"/>
+                                                <SolidColorBrush Color="FloralWhite" x:Key="TextControlBackground"/>
+
+                                            </ResourceDictionary>
+                                        </RichEditBox.Resources>
+                                    </RichEditBox>
                                 </ScrollViewer>
                             </Border>
+                            <!--<TabViewItem.Resources>
+                                <ResourceDictionary>
+                                    <ResourceDictionary.ThemeDictionaries>
+                                        <ResourceDictionary x:Key="Light">
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="Black"/>
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="White" />
+
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPressed" Color="PaleGreen"/>
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPressed" Color="White" />
+
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver" Color="DarkGreen" />
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPointerOver" Color="Black" />
+
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundDisabled" Color="LightGray"/>
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundDisabled" Color="Black" />
+                                        </ResourceDictionary>
+                                    </ResourceDictionary.ThemeDictionaries>
+                                </ResourceDictionary>
+                            </TabViewItem.Resources>-->
                         </TabViewItem>
-                        <TabViewItem x:Name="tabRTF" Tag="31" Header="RTF" IsClosable="False" Background="DarkGray" Foreground="White" RightTapped="TabViewItem_RTF_RightTapped" Tapped="TabViewItem_Tapped">
+                        <TabViewItem x:Name="tabRTF" Tag="31" Header="RTF" IsClosable="False" RightTapped="TabViewItem_RTF_RightTapped" Tapped="TabViewItem_Tapped"  BorderBrush="Black" BorderThickness="1">
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout>
                                     <MenuFlyoutItem x:Name="RtfTab_Contextual_SaveToFile" Text="File Copy" Click="RtfTab_Contextual_SaveToFile_Click"/>
@@ -410,13 +489,41 @@
                                     <MenuFlyoutItem x:Name="RtfTab_Contextual_Clear" Text="Clear" Click="RtfTab_Contextual_Clear_Click"/>
                                 </MenuFlyout>
                             </FlyoutBase.AttachedFlyout>
-                            <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                            <Border Background="LightGray" Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" BorderThickness="1" BorderBrush="Black">
                                 <ScrollViewer VerticalScrollBarVisibility="Visible" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Visible" HorizontalScrollMode="Auto" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                                    <RichEditBox x:Name="rtfText" FlowDirection="LeftToRight" TextAlignment="DetectFromContent" FontFamily="Lucida Sans Unicode,Tahoma" Foreground="Black" Background="LightCyan"/>
+                                    <RichEditBox x:Name="rtfText" FlowDirection="LeftToRight" TextAlignment="DetectFromContent" FontFamily="Lucida Sans Unicode,Tahoma">
+                                        <RichEditBox.Resources>
+                                            <ResourceDictionary x:Key="Light">
+                                                <SolidColorBrush Color="PaleGoldenrod" x:Key="TextControlBackgroundPointerOver"/>
+                                                <SolidColorBrush Color="PaleGoldenrod" x:Key="TextControlBackgroundFocused"/>
+                                                <SolidColorBrush Color="PaleGoldenrod" x:Key="TextControlBackground"/>
+
+                                            </ResourceDictionary>
+                                        </RichEditBox.Resources>
+                                    </RichEditBox>
                                 </ScrollViewer>
                             </Border>
+                            <!--<TabViewItem.Resources>
+                                <ResourceDictionary>
+                                    <ResourceDictionary.ThemeDictionaries>
+                                        <ResourceDictionary x:Key="Light">
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="Black"/>
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="White" />
+
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPressed" Color="PaleGreen"/>
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPressed" Color="White" />
+
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver" Color="DarkGreen" />
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPointerOver" Color="Black" />
+
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundDisabled" Color="LightGray"/>
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundDisabled" Color="Black" />
+                                        </ResourceDictionary>
+                                    </ResourceDictionary.ThemeDictionaries>
+                                </ResourceDictionary>
+                            </TabViewItem.Resources>-->
                         </TabViewItem>
-                        <TabViewItem x:Name="tabHtml" Tag="21" Header="HTML" IsClosable="False" Background="DarkGray" Foreground="White" RightTapped="TabViewItem_Html_RightTapped" Tapped="TabViewItem_Tapped">
+                        <TabViewItem x:Name="tabHtml" Tag="21" Header="HTML" IsClosable="False" RightTapped="TabViewItem_Html_RightTapped" Tapped="TabViewItem_Tapped" BorderBrush="Black" BorderThickness="1" >
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout>
                                     <MenuFlyoutItem x:Name="HtmlTab_Contextual_SaveToFile" Text="File Copy" Click="HtmlTab_Contextual_SaveToFile_Click"/>
@@ -424,13 +531,32 @@
                                     <MenuFlyoutItem x:Name="HtmlTab_Contextual_Clear" Text="Clear" Click="HtmlTab_Contextual_Clear_Click"/>
                                 </MenuFlyout>
                             </FlyoutBase.AttachedFlyout>
-                            <Border Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" CornerRadius="5">
+                            <Border Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" CornerRadius="5" BorderThickness="1" BorderBrush="Black">
                                 <ScrollViewer VerticalScrollBarVisibility="Visible" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Visible" HorizontalScrollMode="Auto" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                                     <WebView2 x:Name="HtmlText" FlowDirection="LeftToRight" />
                                 </ScrollViewer>
                             </Border>
+                            <!--<TabViewItem.Resources>
+                                <ResourceDictionary>
+                                    <ResourceDictionary.ThemeDictionaries>
+                                        <ResourceDictionary x:Key="Light">
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="Black"/>
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="White" />
+
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPressed" Color="PaleGreen"/>
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPressed" Color="White" />
+
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver" Color="DarkGreen" />
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPointerOver" Color="Black" />
+
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundDisabled" Color="LightGray"/>
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundDisabled" Color="Black" />
+                                        </ResourceDictionary>
+                                    </ResourceDictionary.ThemeDictionaries>
+                                </ResourceDictionary>
+                            </TabViewItem.Resources>-->
                         </TabViewItem>
-                        <TabViewItem x:Name="tabLogo" Tag="42" IsClosable="False" Background="DarkGray" Foreground="White" RightTapped="TabViewItem_Logo_RightTapped" Tapped="TabViewItem_Tapped">
+                        <TabViewItem x:Name="tabLogo" Tag="42" IsClosable="False" RightTapped="TabViewItem_Logo_RightTapped" Tapped="TabViewItem_Tapped" BorderBrush="Black" BorderThickness="1" >
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout>
                                     <MenuFlyoutItem x:Name="LogoTab_Contextual_SaveToFile" Text="File Copy" Click="LogoTab_Contextual_SaveToFile_Click"/>
@@ -438,11 +564,30 @@
                                     <MenuFlyoutItem x:Name="LogoTab_Contextual_Clear" Text="Clear" Click="LogoTab_Contextual_Clear_Click"/>
                                 </MenuFlyout>
                             </FlyoutBase.AttachedFlyout>
-                            <Border Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" CornerRadius="5">
+                            <Border Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" CornerRadius="5" BorderThickness="1" BorderBrush="Black">
                                 <ScrollViewer VerticalScrollBarVisibility="Visible" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Visible" HorizontalScrollMode="Auto" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                                     <WebView2 x:Name="LogoText" FlowDirection="LeftToRight" />
                                 </ScrollViewer>
                             </Border>
+                            <!--<TabViewItem.Resources>
+                                <ResourceDictionary>
+                                    <ResourceDictionary.ThemeDictionaries>
+                                        <ResourceDictionary x:Key="Light">
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="Black"/>
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="White" />
+
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPressed" Color="PaleGreen"/>
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPressed" Color="White" />
+
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver" Color="DarkGreen" />
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPointerOver" Color="Black" />
+
+                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundDisabled" Color="LightGray"/>
+                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundDisabled" Color="Black" />
+                                        </ResourceDictionary>
+                                    </ResourceDictionary.ThemeDictionaries>
+                                </ResourceDictionary>
+                            </TabViewItem.Resources>-->
                         </TabViewItem>
                     </TabView.TabItems>
                 </TabView>

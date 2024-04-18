@@ -51,84 +51,11 @@ namespace PelotonIDE.Presentation
             //Style = (Style)Application.Current.Resources["CustomRichEditBoxStyle"];
         }
 
-        private void CustomRichEditBox_SelectionChanging(RichEditBox sender, RichEditBoxSelectionChangingEventArgs args)
-        {
-            //var blueback = Windows.UI.Color.FromArgb(0x00, 0x55, 0x76, 0xa2);
-            //var whitefront = Windows.UI.Color.FromArgb(0x00, 0xff, 0xff, 0xff);
-            //var normal = Windows.UI.Color.FromArgb(0x00, 0xf9, 0xf8, 0xbd);
-
-            //Telemetry t = new();
-            //t.SetEnabled(false);
-            //CustomRichEditBox me = ((CustomRichEditBox)sender);
-            //ITextSelection selection = me.Document.Selection;
-            //selection.GetText(TextGetOptions.None, out string text);
-            //t.Transmit("me.Name=",me.Name,"Text=",text);
-            //selection.SelectOrDefault(x => x);
-            //int caretPosition = selection.StartPosition;
-            //int start = selection.StartPosition;
-            //int end = selection.EndPosition;
-            //if (end != start)
-            //{
-            //    var bc = selection.CharacterFormat.BackgroundColor;
-            //    me.PreviousSelection = $"{start},{end},{bc.A}-{bc.R}-{bc.G}-{bc.B}";
-            //    bc = blueback;
-            //}
-        }
-
-        private void CustomRichEditBox_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
-        {
-            CoreVirtualKeyStates ctrlState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
-            CoreVirtualKeyStates shiftState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift);
-            bool isCtrlPressed = ctrlState.HasFlag(CoreVirtualKeyStates.Down);
-            bool isShiftPressed = shiftState.HasFlag(CoreVirtualKeyStates.Locked);
-
-            CustomRichEditBox me = (CustomRichEditBox)sender;
-            Telemetry t = new();
-            t.SetEnabled(false);
-            t.Transmit("e.Key=", e.Key, "e.KeyStatus.ScanCode=", e.KeyStatus.ScanCode, "ctrlState=", ctrlState, "shiftState=", shiftState);
-            base.OnPreviewKeyDown(e);
-        }
-
-        private void CustomRichEditBox_KeyUp(object sender, KeyRoutedEventArgs e)
-        {
-            CoreVirtualKeyStates ctrlState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
-            CoreVirtualKeyStates shiftState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift);
-            bool isCtrlPressed = ctrlState.HasFlag(CoreVirtualKeyStates.Down);
-            bool isShiftPressed = shiftState.HasFlag(CoreVirtualKeyStates.Locked);
-
-            CustomRichEditBox me = (CustomRichEditBox)sender;
-            Telemetry t = new();
-            t.SetEnabled(false);
-            t.Transmit("e.Key=", e.Key, "e.KeyStatus.ScanCode=", e.KeyStatus.ScanCode, "ctrlState=", ctrlState, "shiftState=", shiftState);
-            base.OnKeyUp(e);
-        }
-
-        private void CustomRichEditBox_KeyDown(object sender, KeyRoutedEventArgs e)
-        {
-            CoreVirtualKeyStates ctrlState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
-            CoreVirtualKeyStates shiftState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift);
-            bool isCtrlPressed = ctrlState.HasFlag(CoreVirtualKeyStates.Down);
-            bool isShiftPressed = shiftState.HasFlag(CoreVirtualKeyStates.Locked);
-
-            //Window curWin = Window.Current;
-            //CoreWindow corWin = curWin.CoreWindow;
-            //CoreVirtualKeyStates insertState = corWin.GetKeyState(VirtualKey.Insert);
-
-            CoreVirtualKeyStates insertState = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Insert);
-            bool overwriteMode = insertState.HasFlag(CoreVirtualKeyStates.Locked);
-
-            CustomRichEditBox me = (CustomRichEditBox)sender;
-            Telemetry t = new();
-            t.SetEnabled(false);
-            t.Transmit("e.Key=", e.Key, "e.KeyStatus.ScanCode=", e.KeyStatus.ScanCode, "ctrlState=", ctrlState, "shiftState=", shiftState, "insertState=", insertState, "overwriteMode=", overwriteMode);
-            //base.OnKeyDown(e);
-        }
-
         private void CustomRichEditBox_SelectionChanged(object sender, RoutedEventArgs e)
         {
-            Color blueback = Color.FromArgb(0x00,0x55,0x76,0xa2);
-            Color whitefront = Color.FromArgb(0x00, 0xff, 0xff, 0xff);
-            Color normal = Color.FromArgb(0x00, 0xf9, 0xf8, 0xbd);
+            //Color blueback = Color.FromArgb(0x00,0x55,0x76,0xa2);
+            //Color whitefront = Color.FromArgb(0x00, 0xff, 0xff, 0xff);
+            //Color normal = Color.FromArgb(0x00, 0xf9, 0xf8, 0xbd);
 
             Telemetry t = new();
             t.SetEnabled(false);

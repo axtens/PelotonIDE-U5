@@ -16,6 +16,6 @@
   "VariableLength": false,
   "FontSize": 12.0,
   "Rendering": "0,3",
-  "SelectedRenderer":  3,
+  "SelectedRenderer":  -1,
   "OutputPanelSettings": "True|Bottom|200|400"
 }

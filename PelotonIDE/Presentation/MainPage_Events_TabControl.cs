@@ -1,5 +1,7 @@
 ﻿using Microsoft.UI.Xaml.Input;
 
+using Newtonsoft.Json;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,25 +14,32 @@ namespace PelotonIDE.Presentation
     {
         private void TabControl_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
         {
-            if (tabControl.SelectedItem != null)
+            Telemetry t = new();
+            t.SetEnabled(true);
+            var me = (NavigationView)sender;
+            if (args.SelectedItem != null)
             {
-                CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-                tabControl.Content = _richEditBoxes[navigationViewItem.Tag];
-                if (navigationViewItem.TabSettingsDict == null)
+                t.Transmit(args.SelectedItem.ToString());
+
+                if (tabControl.SelectedItem != null)
                 {
-                    return;
+                    CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
+                    tabControl.Content = _richEditBoxes[navigationViewItem.Tag];
+                    if (navigationViewItem.TabSettingsDict != null)
+                    {
+                        string currentLanguageName = GetLanguageNameOfCurrentTab(navigationViewItem.TabSettingsDict);
+                        if (languageName.Text != currentLanguageName)
+                        {
+                            languageName.Text = currentLanguageName;
+                        }
+                        UpdateCommandLineInStatusBar();
+                        UpdateStatusBarFromInFocusTab();
+                        UpdateInterpreterInStatusBar();
+                        //UpdateTopMostRendererInCurrentTab();
+                    }
                 }
-                string currentLanguageName = GetLanguageNameOfCurrentTab(navigationViewItem.TabSettingsDict);
-                if (languageName.Text != currentLanguageName)
-                {
-                    languageName.Text = currentLanguageName;
-                }
-                UpdateCommandLineInStatusBar();
-                UpdateStatusBarFromInFocusTab();
-                UpdateInterpreterInStatusBar();
-                UpdateTopMostRendererInCurrentTab();
-                UpdateOutputTabsFromRenderers();
             }
+            AssertSelectedOutputTab();
         }
         private void TabControl_KeyDown(object sender, KeyRoutedEventArgs e)
         {

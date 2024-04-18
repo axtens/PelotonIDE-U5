@@ -104,6 +104,7 @@ namespace PelotonIDE.Presentation
             Telemetry t = new();
             t.SetEnabled(false);
 
+           
             LanguageSettings ??= await GetLanguageConfiguration();
             RenderingConstants ??= new Dictionary<string, Dictionary<string, object>>()
                     {
@@ -127,14 +128,14 @@ namespace PelotonIDE.Presentation
 
             // #MainPage-LoadingVirtReg
             IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("Rendering", FactorySettings, "0,3");
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("SelectedRenderer", FactorySettings,3);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("SelectedRenderer", FactorySettings,-1);
 
             IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("Transput", FactorySettings, 3);
 
             IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("Timeout", FactorySettings, 1);
             UpdateTimeoutInMenu();
             UpdateRenderingInMenu();
-            // UpdateFontSizeInMenu();
+
             UpdateTransputInMenu();
 
             IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("OutputPanelSettings", FactorySettings, "True|Bottom|200|400");
@@ -226,15 +227,15 @@ namespace PelotonIDE.Presentation
                 languageName.Text = currentLanguageName;
             }
 
-            UpdateOutputTabsFromRenderers();
-
             await HtmlText.EnsureCoreWebView2Async();
             HtmlText.NavigateToString("<body style='background-color: papayawhip;'></body>");
 
             await LogoText.EnsureCoreWebView2Async();
-            LogoText.NavigateToString("<body style='background-color: lightgoldenrodyellow;'></body>");
+            LogoText.NavigateToString("<body style='background-color: #ffdad5;'></body>");
 
             UpdateTopMostRendererInCurrentTab();
+            AssertSelectedOutputTab();
+            return;
 
             void SetKeyboardFlags()
             {

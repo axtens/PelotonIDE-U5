@@ -77,7 +77,7 @@ namespace PelotonIDE.Presentation
 
             t.Transmit("stdOut=", stdOut, "stdErr=", stdErr);
 
-            IEnumerable<long> rendering = Type_3_GetInFocusTab<string>("Rendering").Split([',']).Select(e => long.Parse(e)); // strip focuser
+            IEnumerable<long> rendering = Type_3_GetInFocusTab<string>("Rendering").Split(',', StringSplitOptions.RemoveEmptyEntries).Select(e => long.Parse(e)); // strip focuser
 
             IEnumerable<string> list = (from item in RenderingConstants["Rendering"]
                                         where rendering.Contains((long)item.Value)
@@ -125,11 +125,12 @@ namespace PelotonIDE.Presentation
                         if (!string.IsNullOrEmpty(stdOut))
                         {
                             StorageFolder folder = ApplicationData.Current.LocalFolder;
-                            StorageFile file = await folder.CreateFileAsync("temp.logo", CreationCollisionOption.ReplaceExisting);
+                            string guid = Guid.NewGuid().ToString();
+                            StorageFile file = await folder.CreateFileAsync($"{guid}.logo", CreationCollisionOption.ReplaceExisting);
                             List<string> lines = [.. stdOut.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)];
                             await FileIO.WriteTextAsync(file, string.Join("\n", lines));
                             string jsBlock = ParseLogoIntoJavascript(await FileIO.ReadTextAsync(file));
-                            file = await folder.CreateFileAsync("temp.html", CreationCollisionOption.ReplaceExisting);
+                            file = await folder.CreateFileAsync($"{guid}.html", CreationCollisionOption.ReplaceExisting);
                             await FileIO.WriteTextAsync(file, TurtleFrameworkPlus(jsBlock));
                             LogoText.Source = new Uri(file.Path);
                             //await LogoText.EnsureCoreWebView2Async();
@@ -153,11 +154,19 @@ namespace PelotonIDE.Presentation
                 $"<script type='text/javascript'>{simple}</script>" +
                 $"<script type='text/javascript'>{jsBlock}</script>";
             */
+            var tmp = JavaScriptLibrariesHelper.GetJavaScriptLibrariesResource("real-turtle");
+            var pmt = JavaScriptLibrariesHelper.GetResource("real-turtle");
             return $@"<script type='text/javascript' src='https://unpkg.com/real-turtle'></script>" +
-                    "<canvas id='real-turtle'></canvas>" + 
-                    "<script type='text/javascript' src='https://unpkg.com/real-turtle/build/helpers/simple.js'></script>" + 
+                    "<canvas id='real-turtle'></canvas>" +
+                    "<script type='text/javascript' src='https://unpkg.com/real-turtle/build/helpers/simple.js'></script>" +
                     $"<script type='text/javascript'>{jsBlock}</script>";
-        }
+            /*
+            return $@"<script type='text/javascript'>{JavaScriptLibrariesHelper.GetJavaScriptLibrariesResource("real-turtle")}</script>" +
+                    "<canvas id='real-turtle'></canvas>" +
+                    $"<script type='text/javascript'>{JavaScriptLibrariesHelper.GetJavaScriptLibrariesResource("real-turtle-helpers-simple")}</script>" +
+                    $"<script type='text/javascript'>{jsBlock}</script>";
+            */
+            }
 
         private string ParseLogoIntoJavascript(string v)
         {

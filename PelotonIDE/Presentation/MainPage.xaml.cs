@@ -367,7 +367,11 @@ namespace PelotonIDE.Presentation
 
             string? text = rtfBuilder.ToString();
             if (text.EndsWith((char)0x0)) text = text.Remove(text.Length - 1);
-            while (text.LastIndexOf("\\par\r\n}") > -1) text = text.Remove(text.LastIndexOf("\\par\r\n}"), 6);
+            while (text.LastIndexOf("\\par\r\n}") > -1)
+            {
+                text = text.Remove(text.LastIndexOf("\\par\r\n}"), 6);
+            }
+
             File.WriteAllText(file.Path, text, Encoding.ASCII);
         }
 
@@ -629,89 +633,68 @@ namespace PelotonIDE.Presentation
             Telemetry t = new();
             t.SetEnabled(false);
 
+            if (!AnInFocusTabExists()) return;
+
+            string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+            Dictionary<string, string> frmMain = LanguageSettings[interfaceLanguageName]["frmMain"];
+
+            MenuFlyout mf = new();
+
+
             SolidColorBrush white = new(Colors.White);
             SolidColorBrush black = new(Colors.Black);
             SolidColorBrush darkGrey = new(Colors.DarkGray);
 
-            ContentControl me = (ContentControl)sender;
+            //ContentControl me = (ContentControl)sender;
 
-            object prevContent = me.Content;
+            //object prevContent = me.Content;
 
-            MenuFlyout mf = new();
+            string? inFocusTabRenderers = Type_3_GetInFocusTab<string>("Rendering");
 
-            string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
-
-            if (!AnInFocusTabExists()) return;
-
-            string? inFocusRendering = Type_3_GetInFocusTab<string>("Rendering");
-            t.Transmit("inFocusRendering=", inFocusRendering);
-
-            Dictionary<string, string> frmMain = LanguageSettings[interfaceLanguageName]["frmMain"];
-
-            UpdateOutputTabsFromRenderers();
-
-            foreach (string key in new string[] { "Output", "Error", "Html", "Logo", "RTF" })
+            foreach (TabViewItem tvi in outputPanelTabView.TabItems)
             {
-                long renderNumber = (long)RenderingConstants["Rendering"][key];
-
+                long renderNumber = long.Parse((string)tvi.Tag);
                 MenuFlyoutItem menuFlyoutItem = new()
                 {
-                    Name = key,
-                    Text = frmMain[$"tab{key}"],
-                    Foreground = inFocusRendering.Contains(renderNumber.ToString()) ? white : black,
-                    Background = inFocusRendering.Contains(renderNumber.ToString()) ? black : white,
-                    Tag = key,
+                    Name = tvi.Name,
+                    Text = frmMain[$"{tvi.Name}"],
+                    Foreground = inFocusTabRenderers.Contains(renderNumber.ToString()) ? white : black,
+                    Background = inFocusTabRenderers.Contains(renderNumber.ToString()) ? black : white,
+                    Tag = tvi.Name.Replace("tab", ""),
                 };
                 menuFlyoutItem.Click += ContentControl_Rendering_MenuFlyoutItem_Click; // this has to reset the cell to its original value
                 t.Transmit(menuFlyoutItem.Text, menuFlyoutItem.Name);
                 mf.Items.Add(menuFlyoutItem);
             }
 
-            //FrameworkElement? senderElement = sender as FrameworkElement;
+            AssertSelectedOutputTab();
 
             mf.ShowAt(sender as UIElement, e.GetPosition(sender as UIElement));
         }
 
-        private void UpdateOutputTabsFromRenderers()
+        private void AssertSelectedOutputTab()
         {
             Telemetry t = new();
             t.SetEnabled(true);
+            if (!AnInFocusTabExists()) return;
 
-            SolidColorBrush white = new(Colors.White);
-            SolidColorBrush black = new(Colors.Black);
-            SolidColorBrush darkGrey = new(Colors.DarkGray);
+            DisableAllOutputPanelTabs();
+            EnableAllOutputPanelTabsMatchingRendering();
 
-            CustomTabItem? ift = InFocusTab();
+            string? rendering = Type_3_GetInFocusTab<string>("Rendering");
 
-            string? inFocusRendering = Type_3_GetInFocusTab<string>("Rendering");
-            foreach (string key in new string[] { "Output", "Error", "Html", "Logo", "RTF" })
+            if (rendering != null && rendering.Split(",", StringSplitOptions.RemoveEmptyEntries).Any())
             {
-                long renderNumber = (long)RenderingConstants["Rendering"][key];
-                TabViewItem tvi = (TabViewItem)outputPanelTabView.FindName($"tab{key}");
-                if (inFocusRendering.Contains(renderNumber.ToString()))
+                var selectedRenderer = Type_3_GetInFocusTab<long>("SelectedRenderer");
+                (from TabViewItem tvi in outputPanelTabView.TabItems where long.Parse((string)tvi.Tag) == selectedRenderer select tvi).ForEach(tvi =>
                 {
-                    tvi.Background = black;
-                    tvi.Foreground = white;
-                    t.Transmit(ift.Content, renderNumber, key, "enabled");
-                }
-                else
-                {
-                    tvi.Background = darkGrey;
-                    tvi.Foreground = black;
-                    t.Transmit(ift.Content, renderNumber, key, "disabled");
-                }
+                    tvi.IsSelected = true;
+                    t.Transmit(tvi.Name, tvi.Tag, "frontmost");
+                    Type_3_UpdateInFocusTabSettings<long>("SelectedRenderer", true, selectedRenderer);
+                });
             }
-            // which one is selected?
-            IEnumerable<object> selected = from tvi in outputPanelTabView.TabItems where ((TabViewItem)tvi).IsSelected select tvi;
-            if (selected.Any())
-            {
-                TabViewItem selection = (TabViewItem)selected.First();
-                t.Transmit(ift.Content, selection.Tag, "selected");
-                Type_3_UpdateInFocusTabSettings<long>("SelectedRenderer", true, long.Parse((string)selection.Tag));
-                UpdateTopMostRendererInCurrentTab();
-            }
-
         }
+
 
         private void ContentControl_Rendering_MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
@@ -726,7 +709,7 @@ namespace PelotonIDE.Presentation
 
             if (AnInFocusTabExists())
             {
-                List<string> keys = [.. Type_3_GetInFocusTab<string>("Rendering").Split(',')];
+                List<string> keys = [.. Type_3_GetInFocusTab<string>("Rendering").Split(',', StringSplitOptions.RemoveEmptyEntries)];
                 if (keys.Contains(render))
                 {
                     keys.Remove(render);
@@ -736,10 +719,39 @@ namespace PelotonIDE.Presentation
                     keys.Add(render);
                 }
                 Type_3_UpdateInFocusTabSettings<string>("Rendering", true, string.Join(",", keys));
+
+                if (Type_3_GetInFocusTab<string>("Rendering").Trim().Length == 0)
+                {
+                    Type_3_UpdateInFocusTabSettings<long>("SelectedRenderer", true, -1);
+                }
+
+                DisableAllOutputPanelTabs();
+                EnableAllOutputPanelTabsMatchingRendering();
+
+                UpdateCommandLineInStatusBar();
+                AssertSelectedOutputTab();
             }
-            UpdateCommandLineInStatusBar();
-            UpdateOutputTabsFromRenderers();
         }
+
+        private void EnableAllOutputPanelTabsMatchingRendering()
+        {
+            if (!AnInFocusTabExists()) return;
+            if (InFocusTab().TabSettingsDict == null) return;
+            foreach (string key2 in Type_3_GetInFocusTab<string>("Rendering").Split(",", StringSplitOptions.RemoveEmptyEntries))
+            {
+                foreach (object? item in outputPanelTabView.TabItems)
+                {
+                    var tvi = (TabViewItem)item;
+                    if ((string)tvi.Tag == key2)
+                    {
+                        tvi.IsEnabled = true;
+                    }
+
+                }
+            }
+        }
+
+        private void DisableAllOutputPanelTabs() => outputPanelTabView.TabItems.ForEach(tvi => ((TabViewItem)tvi).IsEnabled = false);
 
         private void InterpretMenu_Transput_Click(object sender, RoutedEventArgs e)
         {
@@ -907,6 +919,33 @@ namespace PelotonIDE.Presentation
                 Type_3_UpdateInFocusTabSettings<long>("Engine", true, (long)me.Tag);
             }
             UpdateInterpreterInStatusBar();
+        }
+
+        private void TabView_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(true);
+            TabViewItem me = (TabViewItem)sender;
+
+            t.Transmit(me.Name, me.Tag, "IsSelected=", me.IsSelected, me.Foreground, me.Background);
+        }
+
+        private void TabView_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(true);
+            TabViewItem me = (TabViewItem)sender;
+
+            t.Transmit(me.Name, me.Tag, "IsSelected=", me.IsSelected, me.Foreground, me.Background);
+        }
+
+        private void TabViewItem_IsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            Telemetry t = new();
+            t.SetEnabled(true);
+            TabViewItem me = (TabViewItem)sender;
+            t.Transmit(me.Name, me.Tag, "IsSelected=", me.IsSelected);
+
         }
     }
 }
