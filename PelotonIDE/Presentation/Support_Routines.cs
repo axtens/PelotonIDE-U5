@@ -103,16 +103,18 @@ namespace PelotonIDE.Presentation
 
         private void HandleOutputPanelChange(string changeTo)
         {
-            Telemetry.SetEnabled(false);
-
+            
             OutputPanelPosition outputPanelPosition = (OutputPanelPosition)Enum.Parse(typeof(OutputPanelPosition), changeTo);
 
             double outputPanelHeight = Type_1_GetVirtualRegistry<double>("OutputPanelHeight");
             double outputPanelWidth = Type_1_GetVirtualRegistry<double>("OutputPanelWidth");
             bool outputPanelShowing = Type_1_GetVirtualRegistry<bool>("OutputPanelShowing");
-
+            
             string outputPanelTabViewSettings = Type_1_GetVirtualRegistry<string>("OutputPanelTabView_Settings");
             string tabControlSettings = Type_1_GetVirtualRegistry<string>("TabControl_Settings");
+
+            Telemetry.SetEnabled(true);
+            Telemetry.Transmit("outputPanelWidth=", outputPanelWidth, "outputPanelHeight=", outputPanelHeight, "outputPanelTabViewSettings=", outputPanelTabViewSettings, "tabControlSettings=", tabControlSettings, "outputPanel.ActualHeight=", outputPanel.ActualHeight, "outputPanel.ActualWidth=", outputPanel.ActualWidth, "App._window.Bounds=", App._window.Bounds);
 
             string optvPosition = FromBarredString_String(outputPanelTabViewSettings, 0);
             double optvHeight = FromBarredString_Double(outputPanelTabViewSettings, 1);

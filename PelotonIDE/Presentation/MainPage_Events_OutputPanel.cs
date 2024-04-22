@@ -17,7 +17,7 @@ namespace PelotonIDE.Presentation
         private void OutputPanel_SizeChanged(object sender, SizeChangedEventArgs e)
         {
 
-            Telemetry.SetEnabled(false);
+            Telemetry.SetEnabled(true);
             Telemetry.Transmit("e.NewSize.Height=", e.NewSize.Height, "e.NewSize.Width=", e.NewSize.Width, "e.PreviousSize.Height=", e.PreviousSize.Height, "e.PreviousSize.Width=", e.PreviousSize.Width);
 
             string pos = Type_1_GetVirtualRegistry<string>("OutputPanelPosition") ?? "Bottom";
@@ -95,7 +95,7 @@ namespace PelotonIDE.Presentation
 
         private void OutputThumb_DragCompleted(object sender, DragCompletedEventArgs e)
         {
-            Telemetry.SetEnabled(false);
+            Telemetry.SetEnabled(true);
             Thumb me = (Thumb)sender;
 
             Telemetry.Transmit(me.Name, "e.HorizontalChange=", e.HorizontalChange, "e.VerticalChange=", e.VerticalChange, "outputPanel.Width=", outputPanel.Width, "outputPanel.Height=", outputPanel.Height);
@@ -112,7 +112,7 @@ namespace PelotonIDE.Presentation
             }
 
             this.ProtectedCursor = InputCursor.CreateFromCoreCursor(new CoreCursor(CoreCursorType.Arrow, 0));
-            Telemetry.Transmit(this.ProtectedCursor);
+
         }
 
         private async void OutputThumb_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)

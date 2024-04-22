@@ -666,7 +666,7 @@ namespace PelotonIDE.Presentation
 
         private void AssertSelectedOutputTab()
         {
-            Telemetry.SetEnabled(false);
+            Telemetry.SetEnabled(true);
             if (!AnInFocusTabExists()) return;
 
             DeselectAndDisableAllOutputPanelTabs();
@@ -793,7 +793,7 @@ namespace PelotonIDE.Presentation
 
         private void OutputPanelTabView_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            Telemetry.SetEnabled(false);
+            Telemetry.SetEnabled(true);
             TabView me = (TabView)sender;
             Telemetry.Transmit(me.Name, "e.PreviousSize=", e.PreviousSize, "e.NewSize=", e.NewSize);
             string pos = Type_1_GetVirtualRegistry<string>("OutputPanelPosition") ?? "Bottom";

@@ -63,7 +63,7 @@ namespace PelotonIDE
 
         private void Window_SizeChanged(object sender, WindowSizeChangedEventArgs args)
         {
-            Telemetry.SetEnabled(false);
+            Telemetry.SetEnabled(true);
             Window me = (Window)sender;
             double height = args.Size.Height;
             double width = args.Size.Width;
