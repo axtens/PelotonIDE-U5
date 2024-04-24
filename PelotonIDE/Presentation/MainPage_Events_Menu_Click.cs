@@ -394,7 +394,8 @@ namespace PelotonIDE.Presentation
             Type_1_UpdateVirtualRegistry<string>("Rendering", renderers.JoinBy(","));
             Type_2_UpdatePerTabSettings<string>("Rendering", true, renderers.JoinBy(","));
             Type_3_UpdateInFocusTabSettings<string>("Rendering", true, renderers.JoinBy(","));
-            //UpdateTopMostRendererInCurrentTab();
+
+            Type_2_UpdatePerTabSettings<long>("SelectedRenderer", true, Type_1_GetVirtualRegistry<long>("SelectedRenderer"));
 
             AssertSelectedOutputTab();
         }
@@ -532,19 +533,31 @@ namespace PelotonIDE.Presentation
                     // var encoding = EncChecker.EncCheck.DetectFileAsEncoding(pickedFile.Path);
                     bool hasBOM = false;
                     Encoding? encoding = TextEncoding.GetFileEncoding(pickedFile.Path, 1000, ref hasBOM);
-                    // Load the file into the Document property of the RichEditBox.
-                    if (pickedFile.FileType == ".pr")
-                    {
-                        newestRichEditBox.Document.LoadFromStream(TextSetOptions.FormatRtf, randAccStream);
-                        newestRichEditBox.IsRTF = true;
-                        newestRichEditBox.IsDirty = false;
-                    }
-                    else if (pickedFile.FileType == ".p")
-                    {
-                        string text = File.ReadAllText(pickedFile.Path, encoding!);
-                        newestRichEditBox.Document.SetText(TextSetOptions.UnicodeBidi, text);
-                        newestRichEditBox.IsRTF = false;
-                        newestRichEditBox.IsDirty = false;
+                    switch (pickedFile.FileType.ToLower())
+                    { // Load the file into the Document property of the RichEditBox.
+                        case ".pr":
+                            {
+                                newestRichEditBox.Document.LoadFromStream(TextSetOptions.FormatRtf, randAccStream);
+                                newestRichEditBox.IsRTF = true;
+                                newestRichEditBox.IsDirty = false;
+                                break;
+                            }
+                        case ".p":
+                            {
+                                string text = File.ReadAllText(pickedFile.Path, encoding!);
+                                newestRichEditBox.Document.SetText(TextSetOptions.UnicodeBidi, text);
+                                newestRichEditBox.IsRTF = false;
+                                newestRichEditBox.IsDirty = false;
+                                break;
+                            }
+                        default:
+                            {
+                                string text = File.ReadAllText(pickedFile.Path, encoding!);
+                                newestRichEditBox.Document.SetText(TextSetOptions.UnicodeBidi, text);
+                                newestRichEditBox.IsRTF = false;
+                                newestRichEditBox.IsDirty = false;
+                                break;
+                            }
                     }
                     Type_1_UpdateVirtualRegistry("MostRecentPickedFilePath", Path.GetDirectoryName(pickedFile.Path));
                 }
@@ -558,7 +571,7 @@ namespace PelotonIDE.Presentation
                 UpdateCommandLineInStatusBar();
                 UpdateInterpreterInStatusBar();
                 UpdateTopMostRendererInCurrentTab();
-    
+
                 AssertSelectedOutputTab();
                 //bool flag = InFocusTabIsPrFile(); // FIXME What's this for??
             }
@@ -692,6 +705,19 @@ namespace PelotonIDE.Presentation
                                 currentRichEditBox.IsRTF = false;
                                 currentRichEditBox.IsDirty = false;
                             }
+                            else
+                            {
+                                currentRichEditBox.Document.GetText(TextGetOptions.None, out string plainText);
+                                using (DataWriter dataWriter = new(randAccStream))
+                                {
+                                    dataWriter.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf16LE;
+                                    dataWriter.WriteString(plainText);
+                                    await dataWriter.StoreAsync();
+                                    await randAccStream.FlushAsync();
+                                }
+                                currentRichEditBox.IsRTF = false;
+                                currentRichEditBox.IsDirty = false;
+                            }
                         }
 
                         // Let Windows know that we're finished changing the file so the
@@ -734,6 +760,19 @@ namespace PelotonIDE.Presentation
                                 currentRichEditBox.IsDirty = false;
                             }
                             else if (file.FileType == ".p")
+                            {
+                                currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string plainText);
+                                using (DataWriter dataWriter = new(randAccStream))
+                                {
+                                    dataWriter.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf16LE;
+                                    dataWriter.WriteString(plainText);
+                                    await dataWriter.StoreAsync();
+                                    await randAccStream.FlushAsync();
+                                }
+                                currentRichEditBox.IsRTF = false;
+                                currentRichEditBox.IsDirty = false;
+                            }
+                            else
                             {
                                 currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string plainText);
                                 using (DataWriter dataWriter = new(randAccStream))
@@ -829,6 +868,19 @@ namespace PelotonIDE.Presentation
                                 await randAccStream.FlushAsync();
                             }
                             currentRichEditBox.IsRTF = false;
+                        }
+                        else
+                        {
+                            currentRichEditBox.Document.GetText(Microsoft.UI.Text.TextGetOptions.None, out string plainText);
+                            using (DataWriter dataWriter = new(randAccStream))
+                            {
+                                dataWriter.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf16LE;
+                                dataWriter.WriteString(plainText);
+                                await dataWriter.StoreAsync();
+                                await randAccStream.FlushAsync();
+                            }
+                            currentRichEditBox.IsRTF = false;
+
                         }
                     }
 

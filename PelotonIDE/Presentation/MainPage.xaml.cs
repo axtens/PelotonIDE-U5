@@ -938,11 +938,13 @@ namespace PelotonIDE.Presentation
 
         private void TabViewItem_BringIntoViewRequested(UIElement sender, BringIntoViewRequestedEventArgs args)
         {
-            Telemetry.SetEnabled(false);
+            Telemetry.SetEnabled(true);
             TabViewItem me = (TabViewItem)sender;
-            Telemetry.Transmit(me.Name, me.Tag, "IsSelected=", me.IsSelected);
-            AssertSelectedOutputTab();
-            Telemetry.Transmit(me.Name, me.Tag, "IsSelected=", me.IsSelected);
+            long selectedRenderer = Type_3_GetInFocusTab<long>("SelectedRenderer");
+            Telemetry.Transmit(selectedRenderer);
+            //Telemetry.Transmit(me.Name, me.Tag, "IsSelected=", me.IsSelected);
+            // AssertSelectedOutputTab();
+            //Telemetry.Transmit(me.Name, me.Tag, "IsSelected=", me.IsSelected);
         }
 
         private void TabViewItem_GotFocus(object sender, RoutedEventArgs e)
