@@ -1,27 +1,16 @@
-using DocumentFormat.OpenXml.Wordprocessing;
-
 using Microsoft.UI;
-using Microsoft.UI.Input;
 using Microsoft.UI.Text;
 
 using Newtonsoft.Json;
 
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Timers;
+using System.IO.Compression;
 
 using Windows.Storage;
-using Windows.System;
-using Windows.UI.Core;
-using System.Linq;
-using System.Linq.Expressions;
-using Frame = Microsoft.UI.Xaml.Controls.Frame;
-using DocumentFormat.OpenXml.InkML;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Reflection;
-using Uno.Toolkit.UI;
-using System.Runtime.InteropServices;
+
+using RenderingConstantsStructure = System.Collections.Generic.Dictionary<string,
+        System.Collections.Generic.Dictionary<string, object>>;
+using TabSettingJson = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, object>>;
 
 namespace PelotonIDE.Presentation
 {
@@ -38,16 +27,16 @@ namespace PelotonIDE.Presentation
 
             NavigationData parameters = (NavigationData)e.Parameter;
 
-            //var selectedLanguage = parameters.selectedLangauge;
-            //var translatedREB = parameters.translatedREB;
             switch (parameters.Source)
             {
                 case "IDEConfig":
-                    //string? engine = LocalSettings.Values["Engine"].ToString();
-                    Type_1_UpdateVirtualRegistry("Engine.3", parameters.KVPs["Interpreter"].ToString());
-                    Type_1_UpdateVirtualRegistry("Scripts", parameters.KVPs["Scripts"].ToString());
+                    Type_1_UpdateVirtualRegistry("ideOps.Engine.2", parameters.KVPs["ideOps.Engine.2"].ToString());
+                    Type_1_UpdateVirtualRegistry("ideOps.Engine.3", parameters.KVPs["ideOps.Engine.3"].ToString());
+                    Type_1_UpdateVirtualRegistry("ideOps.CodeFolder", parameters.KVPs["ideOps.CodeFolder"].ToString());
+                    Type_1_UpdateVirtualRegistry("ideOps.DataFolder", parameters.KVPs["ideOps.DataFolder"].ToString());
                     break;
                 case "TranslatePage":
+
                     CustomRichEditBox richEditBox = new()
                     {
                         IsDirty = true,
@@ -57,43 +46,65 @@ namespace PelotonIDE.Presentation
                     richEditBox.AcceptsReturn = true;
                     richEditBox.Document.SetText(TextSetOptions.UnicodeBidi, parameters.KVPs["TargetText"].ToString());
 
-                    string? langname = LocalSettings.Values["InterfaceLanguageName"].ToString();
-                    long quietude = (long)parameters.KVPs["Quietude"];
-                    //Type_2_UpdatePerTabSettings("Quietude", true, virtRegQuietude);
+                    string? langname = LocalSettings.Values["ideOps.InterfaceLanguageName"].ToString();
+                    //long quietude = (long)parameters.KVPs["pOps.Quietude"];
 
-                    CustomTabItem navigationViewItem = new()
+                    CustomTabItem TargetInFocusTab = new()
                     {
                         Content = LanguageSettings[langname!]["GLOBAL"]["Document"] + " " + TabControlCounter, // (tabControl.MenuItems.Count + 1),
-                        //Content = "Tab " + (tabControl.MenuItems.Count + 1),
                         Tag = "Tab" + TabControlCounter, // (tabControl.MenuItems.Count + 1),
                         IsNewFile = true,
-                        TabSettingsDict = ClonePerTabSettings(PerTabInterpreterParameters),
+                        TabSettingsDict = ShallowCopyPerTabSetting(PerTabInterpreterParameters),
                         Height = 30,
                     };
 
                     TabControlCounter += 1;
 
-                    richEditBox.Tag = navigationViewItem.Tag;
-                    //richEditBox.Language = LanguageSettings[langname!]["GLOBAL"]["Locale"];
+                    richEditBox.Tag = TargetInFocusTab.Tag;
 
                     _richEditBoxes[richEditBox.Tag] = richEditBox;
-                    tabControl.MenuItems.Add(navigationViewItem);
-                    tabControl.SelectedItem = navigationViewItem;
+                    tabControl.MenuItems.Add(TargetInFocusTab);
+                    tabControl.SelectedItem = TargetInFocusTab;
 
-                    Type_3_UpdateInFocusTabSettings("Language", true, (long)parameters.KVPs["TargetLanguageID"]);
+                    SourceInFocusTabSettings = (TabSettingJson?)parameters.KVPs["SourceInFocusTabSettings"];
+
+                    TransferOriginalInFocusTabSettingsToInFocusTab(SourceInFocusTabSettings, TargetInFocusTab.TabSettingsDict);
+
+                    Type_3_UpdateInFocusTabSettings("pOps.Language", true, (long)parameters.KVPs["TargetLanguageID"]);
                     if (parameters.KVPs.TryGetValue("TargetVariableLength", out object? value))
                     {
-                        Type_3_UpdateInFocusTabSettings("VariableLength", (bool)value, (bool)value);
+                        Type_3_UpdateInFocusTabSettings("pOps.VariableLength", (bool)value, (bool)value);
                     }
 
-                    richEditBox.Focus(FocusState.Keyboard);
-                    languageName.Text = null;
-                    languageName.Text = GetLanguageNameOfCurrentTab(navigationViewItem.TabSettingsDict);
-                    tabCommandLine.Text = BuildTabCommandLine();
+                    if (parameters.KVPs.TryGetValue("TargetPadOutCode", out object? poc))
+                    {
+                        Type_3_UpdateInFocusTabSettings("pOps.Padding", (bool)poc, (bool)poc);
+                    }
 
+
+                    richEditBox.Focus(FocusState.Keyboard);
+
+                    UpdateStatusBar();
                     AfterTranslation = true;
 
                     break;
+            }
+        }
+        private void TransferOriginalInFocusTabSettingsToInFocusTab(TabSettingJson? sourceInFocusTabSettings, TabSettingJson? targetTabSettings)
+        {
+            foreach (var key in sourceInFocusTabSettings.Keys)
+            {
+                var cluster = sourceInFocusTabSettings[key];
+                if (cluster != null)
+                {
+                    if (key.StartsWith("pOps.") || key.StartsWith("ideOps.") || key.StartsWith("outputOps."))
+                    {
+                        if ((bool)cluster["Defined"])
+                        {
+                            targetTabSettings[key]["Value"] = cluster["Value"];
+                        }
+                    }
+                }
             }
         }
         /// <summary>
@@ -101,139 +112,168 @@ namespace PelotonIDE.Presentation
         /// </summary>
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            Telemetry.SetEnabled(false);
+            Telemetry.Disable();
 
-           
             LanguageSettings ??= await GetLanguageConfiguration();
-            RenderingConstants ??= new Dictionary<string, Dictionary<string, object>>()
-                    {
-                        { "Rendering", new Dictionary<string, object>()
-                        {
-                            { "Output", 3L },
-                            { "Error", 0L },
-                            { "RTF", 31L },
-                            { "Html", 21L },
-                            { "Logo", 42L }
-                        }
-                    }
-                };
+            RenderingConstants ??= await GetRenderingConstants();
 
             if (LangLangs.Count == 0)
                 LangLangs = GetLangLangs(LanguageSettings);
 
+            if (!IsPowerShellInstalled())
+            {
+                await PowerShellNeedDialog();
+            }
+
+            bool result = await TestPresenceOfAllPlexes();
+
             SetKeyboardFlags();
 
             FactorySettings ??= await GetFactorySettings();
+            Telemetry.SetFactorySettings(FactorySettings);
 
             // #MainPage-LoadingVirtReg
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("Rendering", FactorySettings, "0,3");
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("SelectedRenderer", FactorySettings,-1);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("outputOps.AvailableRenderers", FactorySettings, "3,0,21,42,31");
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("outputOps.ActiveRenderers", FactorySettings, "3,0");
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("outputOps.TappedRenderer", FactorySettings, -1);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<double>("ideOps.FontSize", FactorySettings, (double)12.0);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<bool>("ideOps.UsePerTabSettingsWhenCreatingTab", FactorySettings, true);
+            //IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("ideOps.DataFolder", FactorySettings, @"C:\Peloton\Data");
 
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("Transput", FactorySettings, 3);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("ideOps.Engine", FactorySettings, 3L);
+            Engine = Type_1_GetVirtualRegistry<long>("ideOps.Engine");
 
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("Timeout", FactorySettings, 1);
-            UpdateTimeoutInMenu();
-            UpdateRenderingInMenu();
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("ideOps.CodeFolder", FactorySettings, @"C:\peloton\code");
+            Codes = Type_1_GetVirtualRegistry<string>("ideOps.CodeFolder");
 
-            UpdateTransputInMenu();
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("ideOps.DataFolder", FactorySettings, @"C:\peloton\data");
+            Datas = Type_1_GetVirtualRegistry<string>("ideOps.DataFolder");
 
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("OutputPanelSettings", FactorySettings, "True|Bottom|200|400");
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("ideOps.Engine.2", FactorySettings, @"c:\protium\bin\pdb.exe");
+            InterpreterP2 = Type_1_GetVirtualRegistry<string>("ideOps.Engine.2");
 
-            var position = FromBarredString_String(Type_1_GetVirtualRegistry<string>("OutputPanelSettings"), 1);
-            Type_1_UpdateVirtualRegistry<string>("OutputPanelPosition", position);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("ideOps.Engine.3", FactorySettings, @"C:\peloton\bin\p3.exe");
+            InterpreterP3 = Type_1_GetVirtualRegistry<string>("ideOps.Engine.3");
 
-            Type_1_UpdateVirtualRegistry<bool>("OutputPanelShowing", FromBarredString_Boolean(Type_1_GetVirtualRegistry<string>("OutputPanelSettings"), 0));
-            Type_1_UpdateVirtualRegistry<double>("OutputPanelHeight", (double)FromBarredString_Double(Type_1_GetVirtualRegistry<string>("OutputPanelSettings"), 2));
-            Type_1_UpdateVirtualRegistry<double>("OutputPanelWidth", (double)FromBarredString_Double(Type_1_GetVirtualRegistry<string>("OutputPanelSettings"), 3));
-            
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("pOps.Transput", FactorySettings, 2);
+
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("ideOps.Timeout", FactorySettings, 1);
+            // UpdateTimeoutInMenu(); // BOOM
+            //UpdateRenderingInMenu();
+
+            // UpdateTransputInMenu();
+
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("ideOps.OutputPanelSettings", FactorySettings, "True|Bottom|200|400");
+
+            var position = FromBarredString_GetString(Type_1_GetVirtualRegistry<string>("ideOps.OutputPanelSettings"), 1);
+            Type_1_UpdateVirtualRegistry<string>("ideOps.OutputPanelPosition", position);
+
+            Type_1_UpdateVirtualRegistry<bool>("ideOps.OutputPanelShowing", FromBarredString_GetBoolean(Type_1_GetVirtualRegistry<string>("ideOps.OutputPanelSettings"), 0));
+            Type_1_UpdateVirtualRegistry<double>("ideOps.OutputPanelHeight", (double)FromBarredString_GetDouble(Type_1_GetVirtualRegistry<string>("ideOps.OutputPanelSettings"), 2));
+            Type_1_UpdateVirtualRegistry<double>("ideOps.OutputPanelWidth", (double)FromBarredString_GetDouble(Type_1_GetVirtualRegistry<string>("ideOps.OutputPanelSettings"), 3));
+
             HandleOutputPanelChange(position);
 
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("InterfaceLanguageName", FactorySettings, "English");
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("InterfaceLanguageID", FactorySettings, 0);
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("InterpreterLanguageName", FactorySettings, "English");
-            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("InterpreterLanguageID", FactorySettings, 0);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("ideOps.InterfaceLanguageName", FactorySettings, "English");
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("ideOps.InterfaceLanguageID", FactorySettings, 0);
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<string>("mainOps.InterpreterLanguageName", FactorySettings, "English");
+            IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("mainOps.InterpreterLanguageID", FactorySettings, 0);
 
-            if (Type_1_GetVirtualRegistry<string>("InterfaceLanguageName") != null)
+            if (Type_1_GetVirtualRegistry<string>("ideOps.InterfaceLanguageName") != null)
             {
-                HandleInterfaceLanguageChange(Type_1_GetVirtualRegistry<string>("InterfaceLanguageName"));
+                HandleInterfaceLanguageChange(Type_1_GetVirtualRegistry<string>("ideOps.InterfaceLanguageName"));
             }
 
             // Engine selection:
             //  Engine will contain either 2 or 3
-            
-            SetEngine();
-            SetScripts();
-            SetInterpreterNew();
-            SetInterpreterOld();
 
-            PerTabInterpreterParameters ??= await MainPage.GetPerTabInterpreterParameters();
+            //SetEngine();
+            //SetScriptsAndData();
+            //SetInterpreterNew();
+            //SetInterpreterOld();
+
+            PerTabInterpreterParameters ??= await MainPage.GetPerTabInterpreterParametersIncludingMatchingVirtualRegistry();
 
             if (!AfterTranslation)
             {
 
-                IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<bool>("VariableLength", FactorySettings, false);
-                IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("Quietude", FactorySettings, 2);
+                IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<bool>("pOps.VariableLength", FactorySettings, false);
+                IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo<long>("pOps.Quietude", FactorySettings, 2);
 
-                Type_2_UpdatePerTabSettings("Language", true, Type_1_GetVirtualRegistry<long>("InterpreterLanguageID"));
-                Type_2_UpdatePerTabSettings("VariableLength", Type_1_GetVirtualRegistry<bool>("VariableLength"), Type_1_GetVirtualRegistry<bool>("VariableLength"));
-                Type_2_UpdatePerTabSettings("Quietude", true, Type_1_GetVirtualRegistry<long>("Quietude"));
-                Type_2_UpdatePerTabSettings("Timeout", true, Type_1_GetVirtualRegistry<long>("Timeout"));
-                Type_2_UpdatePerTabSettings("Rendering", true, Type_1_GetVirtualRegistry<string>("Rendering"));
+                Type_2_UpdatePerTabSettings("pOps.Language", true, Type_1_GetVirtualRegistry<long>("mainOps.InterpreterLanguageID"));
+                Type_2_UpdatePerTabSettings("pOps.VariableLength", Type_1_GetVirtualRegistry<bool>("pOps.VariableLength"), Type_1_GetVirtualRegistry<bool>("pOps.VariableLength"));
+                Type_2_UpdatePerTabSettings("pOps.Quietude", true, Type_1_GetVirtualRegistry<long>("pOps.Quietude"));
+                Type_2_UpdatePerTabSettings("ideOps.Timeout", true, Type_1_GetVirtualRegistry<long>("ideOps.Timeout"));
+                Type_2_UpdatePerTabSettings("outputOps.ActiveRenderers", true, Type_1_GetVirtualRegistry<string>("outputOps.ActiveRenderers"));
             }
 
             CustomTabItem navigationViewItem = (CustomTabItem)tabControl.SelectedItem;
-            navigationViewItem.TabSettingsDict ??= ClonePerTabSettings(PerTabInterpreterParameters);
+            if (navigationViewItem != null)
+                navigationViewItem.TabSettingsDict ??= ShallowCopyPerTabSetting(PerTabInterpreterParameters);
 
-            UpdateTabDocumentNameIfOnlyOneAndFirst(tabControl, Type_1_GetVirtualRegistry<string>("InterfaceLanguageName"));
+            UpdateTabDocumentNameIfOnlyOneAndFirst(tabControl, Type_1_GetVirtualRegistry<string>("ideOps.InterfaceLanguageName"));
 
             if (!AfterTranslation)
             {
                 // So what to we do 
-                //Type_3_UpdateInFocusTabSettings("Language", true, Type_1_GetVirtualRegistry<long>("InterpreterLanguageID"));
+                //Type_3_UpdateInFocusTabSettings("pOps.Language", true, Type_1_GetVirtualRegistry<long>("mainOps.InterpreterLanguageID"));
                 // Do we also set the VariableLength of the inFocusTab?
-                //bool VariableLength = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("VariableLength", FactorySettings, LocalSettings, false);
-                IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo("VariableLength", FactorySettings, false);
-                Type_3_UpdateInFocusTabSettings("VariableLength", Type_1_GetVirtualRegistry<bool>("VariableLength"), Type_1_GetVirtualRegistry<bool>("VariableLength"));
-                UpdateStatusBarFromInFocusTab();
+                //bool VariableLength = GetFactorySettingsWithLocalSettingsOverrideOrDefault<bool>("pOps.VariableLength", FactorySettings, LocalSettings, false);
+                IfNotInVirtualRegistryUpdateItFromFactorySettingsOrDefaultTo("pOps.VariableLength", FactorySettings, false);
+                Type_3_UpdateInFocusTabSettings("pOps.VariableLength", Type_1_GetVirtualRegistry<bool>("pOps.VariableLength"), Type_1_GetVirtualRegistry<bool>("pOps.VariableLength"));
+
+
+                UpdateStatusBar();
                 DeserializeTabsFromVirtualRegistry();
             }
             InterfaceLanguageSelectionBuilder(mnuSelectLanguage, Internationalization_Click);
             InterpreterLanguageSelectionBuilder(mnuRun, "mnuLanguage", MnuLanguage_Click);
-            UpdateEngineSelectionFromFactorySettingsInMenu();
+            // UpdateEngineSelectionFromFactorySettingsInMenu();
 
-            if (!AfterTranslation)
+            //if (!AfterTranslation)
+            //{
+            //    UpdateMenuRunningModeInMenu(PerTabInterpreterParameters["pOps.Quietude"]);
+            //}
+
+            if (AfterTranslation)
             {
-                UpdateMenuRunningModeInMenu(PerTabInterpreterParameters["Quietude"]);
+                await HtmlText.EnsureCoreWebView2Async();
+                HtmlText.NavigateToString("<body style='background-color: papayawhip;'></body>");
+
+                await LogoText.EnsureCoreWebView2Async();
+                LogoText.NavigateToString("<body style='background-color: #ffdad5;'></body>");
             }
+
+
             AfterTranslation = false;
 
-            SetVariableLengthModeInMenu(mnuVariableLength, Type_1_GetVirtualRegistry<bool>("VariableLength"));
+            // SetVariableLengthModeInMenu(mnuVariableLength, Type_1_GetVirtualRegistry<bool>("pOps.VariableLength"));
 
-            UpdateLanguageNameInStatusBar(navigationViewItem.TabSettingsDict);
+            // UpdateLanguageNameInStatusBar(navigationViewItem.TabSettingsDict);
 
-            UpdateStatusBarFromVirtualRegistry();
-            UpdateCommandLineInStatusBar();
+            // UpdateStatusBarFromVirtualRegistry();
 
+            UpdateStatusBar();
             spOutput.Visibility = Visibility.Visible;
 
             // outputPanel.Width = relativePanel.ActualSize.X;            
-            
-            (tabControl.Content as CustomRichEditBox).Focus(FocusState.Keyboard);
+            if (tabControl != null && tabControl.Content != null)
+                (tabControl.Content as CustomRichEditBox).Focus(FocusState.Keyboard);
 
-            string currentLanguageName = GetLanguageNameOfCurrentTab(navigationViewItem.TabSettingsDict);
-            if (languageName.Text != currentLanguageName)
+            if (navigationViewItem != null)
             {
-                languageName.Text = currentLanguageName;
+                string currentLanguageName = GetLanguageNameOfCurrentTab(navigationViewItem.TabSettingsDict);
+                if (sbLanguageName.Text != currentLanguageName)
+                {
+                    sbLanguageName.Text = currentLanguageName;
+                }
             }
 
-            await HtmlText.EnsureCoreWebView2Async();
-            HtmlText.NavigateToString("<body style='background-color: papayawhip;'></body>");
+            // UpdateTopMostRendererInCurrentTab();
+            UpdateOutputTabs();
+            // UpdateTabCreationMethodInMenu();
+            UpdateMenus();
 
-            await LogoText.EnsureCoreWebView2Async();
-            LogoText.NavigateToString("<body style='background-color: #ffdad5;'></body>");
-
-            UpdateTopMostRendererInCurrentTab();
-            AssertSelectedOutputTab();
             return;
 
             void SetKeyboardFlags()
@@ -245,96 +285,388 @@ namespace PelotonIDE.Presentation
                 //INS.Foreground = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Insert).HasFlag(CoreVirtualKeyStates.Locked) ? black : lightGrey;
             }
 
-            void SetEngine()
-            {
-                if (LocalSettings.Values.TryGetValue("Engine", out object? value))
-                {
-                    Engine = (long)value;
-                }
-                else
-                {
-                    Engine = (long)FactorySettings["Engine"];
-                }
-                Type_1_UpdateVirtualRegistry("Engine", Engine);
-            }
-            void SetScripts()
-            {
-                if (LocalSettings.Values.TryGetValue("Scripts", out object? value))
-                {
-                    Scripts = value.ToString();
-                }
-                else
-                {
-                    Scripts = FactorySettings["Scripts"].ToString();
-                }
-                Scripts ??= @"C:\peloton\code";
-                Type_1_UpdateVirtualRegistry("Scripts", Scripts);
-            }
-            void SetInterpreterOld()
-            {
-                if (LocalSettings.Values.TryGetValue("Engine.2", out object? value))
-                {
-                    InterpreterP2 = value.ToString();
-                }
-                else
-                {
-                    InterpreterP2 = FactorySettings["Engine.2"].ToString();
-                }
-                InterpreterP2 ??= @"c:\protium\bin\pdb.exe";
-                Type_1_UpdateVirtualRegistry("Engine.2", InterpreterP2);
-            }
-            void SetInterpreterNew()
-            {
-                if (LocalSettings.Values.TryGetValue("Engine.3", out object? value))
-                {
-                    InterpreterP3 = value.ToString();
-                }
-                else
-                {
-                    InterpreterP3 = FactorySettings["Engine.3"].ToString();
-                }
-                InterpreterP3 ??= @"c:\peloton\bin\p3.exe";
-                Type_1_UpdateVirtualRegistry("Engine.3", InterpreterP3);
-            }
+            //void SetEngine()
+            //{
+            //    if (LocalSettings.Values.TryGetValue("ideOps.Engine", out object? value))
+            //    {
+            //        Engine = (long)value;
+            //    }
+            //    else
+            //    {
+            //        Engine = (long)FactorySettings["ideOps.Engine"];
+            //    }
+            //    Type_1_UpdateVirtualRegistry("ideOps.Engine", Engine);
+            //}
+            //void SetScriptsAndData()
+            //{
+            //    if (LocalSettings.Values.TryGetValue("ideOps.CodeFolder", out object? value))
+            //    {
+            //        Codes = value.ToString();
+            //    }
+            //    else
+            //    {
+            //        Codes = FactorySettings["ideOps.CodeFolder"].ToString();
+            //    }
+            //    Codes ??= @"C:\peloton\code";
+            //    Type_1_UpdateVirtualRegistry("ideOps.CodeFolder", Codes);            
+
+            //    if (LocalSettings.Values.TryGetValue("ideOps.DataFolder", out object? dvalue))
+            //    {
+            //        Datas = dvalue.ToString();
+            //    }
+            //    else
+            //    {
+            //        Datas = FactorySettings["ideOps.DataFolder"].ToString();
+            //    }
+            //    Datas ??= @"C:\peloton\data";
+            //    Type_1_UpdateVirtualRegistry("ideOps.DataFolder", Datas);
+            //}
+            //void SetInterpreterOld()
+            //{
+            //    if (LocalSettings.Values.TryGetValue("ideOps.Engine.2", out object? value))
+            //    {
+            //        InterpreterP2 = value.ToString();
+            //    }
+            //    else
+            //    {
+            //        InterpreterP2 = FactorySettings["ideOps.Engine.2"].ToString();
+            //    }
+            //    InterpreterP2 ??= @"c:\protium\bin\pdb.exe";
+            //    Type_1_UpdateVirtualRegistry("ideOps.Engine.2", InterpreterP2);
+            //}
+            //void SetInterpreterNew()
+            //{
+            //    if (LocalSettings.Values.TryGetValue("ideOps.Engine.3", out object? value))
+            //    {
+            //        InterpreterP3 = value.ToString();
+            //    }
+            //    else
+            //    {
+            //        InterpreterP3 = FactorySettings["ideOps.Engine.3"].ToString();
+            //    }
+            //    InterpreterP3 ??= @"c:\peloton\bin\p3.exe";
+            //    Type_1_UpdateVirtualRegistry("ideOps.Engine.3", InterpreterP3);
+            //}
         }
 
-
-        private void UpdateTransputInMenu()
+        public async Task PowerShellNeedDialog()
         {
-            Telemetry.SetEnabled(false);
+            Grid g = new() { 
+                Name = "PowerShellNeeded", 
+                Width = 600, 
+                Height = 100 
+            };
 
-            string transput = Type_1_GetVirtualRegistry<long>("Transput").ToString();
-            foreach (var mfi in from MenuFlyoutSubItem mfsi in mnuTransput.Items.Cast<MenuFlyoutSubItem>()
-                                where mfsi != null
-                                where mfsi.Items.Count > 0
-                                from MenuFlyoutItem mfi in mfsi.Items.Cast<MenuFlyoutItem>()
-                                select mfi)
+            RowDefinitionCollection rd = g.RowDefinitions;
+            rd.Add(new RowDefinition());
+
+            ColumnDefinitionCollection cd = g.ColumnDefinitions;
+            cd.Add(new ColumnDefinition() {  });
+
+            WebView2 wv = new WebView2();
+            await wv.EnsureCoreWebView2Async();
+            wv.NavigateToString(
+            @"<HTML>
+                <BODY>
+                    <p>We have noticed that PowerShell is not installed</p>
+                    <ol>
+                        <li>Please visit the webpage below, download PowerShell and install it.<br />
+                        <a target='_blank' href='https://pelotonprogramming.org/download_peloton'>https://pelotonprogramming.org/download_peloton</a></li>
+                        <li>Close the IDE and re-launch it.</li>
+                    </ol>
+                </BODY>
+            </HTML>");
+            //wv.AddHandler(TappedEvent, () => {
+            //    Process.Start("https://pelotonprogramming.org/download_peloton/");
+            ////}, true);
+            wv.CoreWebView2.NewWindowRequested += CoreWebView2_NewWindowRequested;
+            g.Children.Add(wv);
+
+            StackPanel sp = new() { 
+                Name = "Panelled", 
+                Width = 600
+            };
+
+            sp.Children.Add(g);
+
+            ContentDialog dialog = new()
             {
-                MenuItemHighlightController((MenuFlyoutItem)mfi, false);
-                if (transput == (string)mfi.Tag)
+                XamlRoot = this.XamlRoot,
+                Style = Application.Current.Resources["DefaultContentDialogStyle"] as Style, // DefaultContentDialogStyle
+                Title = "PowerShell Needed",
+                Content = sp,
+                PrimaryButtonText = "Close"
+            };
+
+            var result = await dialog.ShowAsync();
+        }
+
+        private void CoreWebView2_NewWindowRequested(Microsoft.Web.WebView2.Core.CoreWebView2 sender, Microsoft.Web.WebView2.Core.CoreWebView2NewWindowRequestedEventArgs args)
+        {
+            var ps = new ProcessStartInfo("https://pelotonprogramming.org/download_peloton")
+            {
+                UseShellExecute = true,
+                Verb = "open"
+            };
+            Process.Start(ps);
+            args.Handled = true;
+        }
+
+        private static bool CreateAndFillProtiumFolderIfMissing()
+        {
+            bool brokenInstallation = false;
+            foreach (var folder in new string[] {
+                @"C:\protium",
+                @"C:\protium\bin",
+                @"C:\protium\Code",
+                @"C:\protium\Data",
+                @"C:\protium\docs",
+                @"C:\protium\temp",
+                @"C:\protium\bin\.vs",
+                @"C:\protium\bin\data",
+                @"C:\protium\bin\Exe exchange",
+                @"C:\protium\bin\Help",
+                @"C:\protium\bin\icons",
+                @"C:\protium\bin\Lexers",
+                @"C:\protium\bin\lng",
+                @"C:\protium\bin\plugins",
+                @"C:\protium\bin\resources",
+                @"C:\protium\bin\Exe exchange\aa Operating before replacement",
+                @"C:\protium\bin\Exe exchange\NewInterpreters20July2015bin",
+                @"C:\protium\bin\Help\decompiled",
+                @"C:\protium\bin\Help\decompiled\html",
+                @"C:\protium\bin\Help\decompiled\images",
+                @"C:\protium\bin\plugins\images",
+                @"C:\protium\Code\dt",
+                @"C:\protium\Code\lib",
+                @"C:\protium\Code\p",
+                @"C:\protium\Code\pr",
+                @"C:\protium\Code\prx",
+                @"C:\protium\Code\pr\advanced",
+                @"C:\protium\Code\pr\data",
+                @"C:\protium\Code\pr\international",
+                @"C:\protium\Code\pr\plugins",
+                @"C:\protium\Code\pr\Simple",
+                @"C:\protium\Code\pr\standard",
+                @"C:\protium\Code\pr\structures",
+                @"C:\protium\Code\pr\yb",
+                @"C:\protium\Code\prx\China",
+                @"C:\protium\Code\prx\library",
+                @"C:\protium\Code\prx\plugins",
+                @"C:\protium\Code\prx\library\css",
+                @"C:\protium\Code\prx\library\data",
+                @"C:\protium\Code\prx\library\images",
+                @"C:\protium\Code\prx\library\projects",
+                @"C:\protium\Code\prx\library\scripts",
+                @"C:\protium\Code\prx\library\data\temp",
+                @"C:\protium\Code\prx\plugins\cheetah",
+                @"C:\protium\Code\prx\plugins\common",
+                @"C:\protium\Code\prx\plugins\isis",
+                @"C:\protium\Code\prx\plugins\sqlite",
+                @"C:\protium\Code\prx\plugins\tsunami",
+                @"C:\protium\Code\prx\plugins\zoom",
+                @"C:\protium\Code\prx\plugins\cheetah\projects",
+                @"C:\protium\Code\prx\plugins\cheetah\scripts",
+                @"C:\protium\Code\prx\plugins\isis\data",
+                @"C:\protium\Code\prx\plugins\isis\projects",
+                @"C:\protium\Code\prx\plugins\isis\scripts",
+                @"C:\protium\Code\prx\plugins\sqlite\projects",
+                @"C:\protium\Code\prx\plugins\sqlite\scripts",
+                @"C:\protium\Code\prx\plugins\tsunami\projects",
+                @"C:\protium\Code\prx\plugins\tsunami\scripts",
+                @"C:\protium\Code\prx\plugins\zoom\projects",
+                @"C:\protium\Code\prx\plugins\zoom\scripts",
+                @"C:\protium\Data\dbf",
+                @"C:\protium\Data\excel",
+                @"C:\protium\Data\isis",
+                @"C:\protium\Data\msaccess",
+                @"C:\protium\Data\mysql",
+                @"C:\protium\Data\sqlite",
+                @"C:\protium\Data\thes",
+                @"C:\protium\Data\tinydb",
+                @"C:\protium\Data\tsunami",
+                @"C:\protium\Data\ZOOM",
+                @"C:\protium\Data\mysql\cars",
+                @"C:\protium\Data\mysql\northwind"})
+            {
+                if (!Directory.Exists(folder))
                 {
-                    MenuItemHighlightController((MenuFlyoutItem)mfi, true);
+                    brokenInstallation = true;
+                    break;
                 }
             }
-        }
-
-        private void UpdateRenderingInMenu()
-        {
-            List<string> renderers = Type_1_GetVirtualRegistry<string>("Rendering").Split(',').Select(x => x.Trim()).ToList();
-
-            mnuRendering.Items.ForEach(item =>
+            if (brokenInstallation)
             {
-                MenuItemHighlightController((MenuFlyoutItem)item, false);
-                if (renderers.Contains((string)item.Tag))
-                {
-                    MenuItemHighlightController((MenuFlyoutItem)item, true);
-                }
-
-            });
+                ExtractProtiumAssets();
+            }
+            return true;
         }
 
+        private static void ExtractProtiumAssets(string tag = "")
+        {
+            string root = Windows.ApplicationModel.Package.Current.InstalledLocation.Path;
+            string zipPath = root + @"\Assets\InstallationItems\ProtiumAssets.zip";
+            if (!File.Exists(zipPath)) { return; }
+            Directory.CreateDirectory(@"C:\protium");
+            foreach (ZipArchiveEntry entry in ZipFile.OpenRead(zipPath).Entries)
+            {
+                string target;
+                if (tag == "")
+                {
+                    target = $"C:/protium/{entry.FullName}";
+                    Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                    if (entry.Length > 0)
+                        entry.ExtractToFile(target, true);
+                }
+                else
+                {
+                    if (entry.FullName.StartsWith(tag + "/"))
+                    {
+                        target = $"C:/protium/{entry.FullName}";
+                        Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                        if (entry.Length > 0)
+                            entry.ExtractToFile(target, true);
+                    }
+                }
+            }
+
+        }
+
+        private static bool CreateAndFillPelotonFolderIfMissing()
+        {
+            bool brokenInstallation = false;
+            foreach (var folder in new string[] {
+                @"C:\Peloton",
+                @"C:\Peloton\bin",
+                @"C:\Peloton\code",
+                @"C:\Peloton\data",
+                @"C:\Peloton\bin\lexers",
+                @"C:\Peloton\code\dt",
+                @"C:\Peloton\code\learning Docs",
+                @"C:\Peloton\code\lib",
+                @"C:\Peloton\code\p",
+                @"C:\Peloton\code\pr",
+                @"C:\Peloton\code\prx",
+                @"C:\Peloton\code\learning Docs\Day 1",
+                @"C:\Peloton\code\learning Docs\Day 2",
+                @"C:\Peloton\code\learning Docs\Day 3",
+                @"C:\Peloton\code\learning Docs\Day 4",
+                @"C:\Peloton\code\learning Docs\Day 5",
+                @"C:\Peloton\code\learning Docs\Fishing1",
+                @"C:\Peloton\code\learning Docs\Fishing4",
+                @"C:\Peloton\code\learning Docs\PPA",
+                @"C:\Peloton\code\learning Docs\Fishing1\buttons",
+                @"C:\Peloton\code\learning Docs\Fishing1\images",
+                @"C:\Peloton\code\learning Docs\Fishing4\Css",
+                @"C:\Peloton\code\learning Docs\Fishing4\Data",
+                @"C:\Peloton\code\learning Docs\Fishing4\Javascripts",
+                @"C:\Peloton\code\learning Docs\Fishing4\Projects",
+                @"C:\Peloton\code\learning Docs\Fishing4\Scripts",
+                @"C:\Peloton\code\learning Docs\Fishing4\Siteimages",
+                @"C:\Peloton\code\learning Docs\Fishing4\zSetupInstructions",
+                @"C:\Peloton\code\learning Docs\Fishing4\Siteimages\buttons",
+                @"C:\Peloton\code\learning Docs\Fishing4\Siteimages\images",
+                @"C:\Peloton\code\pr\advanced",
+                @"C:\Peloton\code\pr\data",
+                @"C:\Peloton\code\pr\international",
+                @"C:\Peloton\code\pr\plugins",
+                @"C:\Peloton\code\pr\Simple",
+                @"C:\Peloton\code\pr\standard",
+                @"C:\Peloton\code\pr\structures",
+                @"C:\Peloton\code\pr\yb",
+                @"C:\Peloton\code\prx\China",
+                @"C:\Peloton\code\prx\library",
+                @"C:\Peloton\code\prx\plugins",
+                @"C:\Peloton\code\prx\library\css",
+                @"C:\Peloton\code\prx\library\data",
+                @"C:\Peloton\code\prx\library\images",
+                @"C:\Peloton\code\prx\library\projects",
+                @"C:\Peloton\code\prx\library\scripts",
+                @"C:\Peloton\code\prx\library\data\temp",
+                @"C:\Peloton\code\prx\plugins\cheetah",
+                @"C:\Peloton\code\prx\plugins\common",
+                @"C:\Peloton\code\prx\plugins\isis",
+                @"C:\Peloton\code\prx\plugins\sqlite",
+                @"C:\Peloton\code\prx\plugins\tsunami",
+                @"C:\Peloton\code\prx\plugins\zoom",
+                @"C:\Peloton\code\prx\plugins\cheetah\projects",
+                @"C:\Peloton\code\prx\plugins\cheetah\scripts",
+                @"C:\Peloton\code\prx\plugins\isis\data",
+                @"C:\Peloton\code\prx\plugins\isis\projects",
+                @"C:\Peloton\code\prx\plugins\isis\scripts",
+                @"C:\Peloton\code\prx\plugins\sqlite\projects",
+                @"C:\Peloton\code\prx\plugins\sqlite\scripts",
+                @"C:\Peloton\code\prx\plugins\tsunami\projects",
+                @"C:\Peloton\code\prx\plugins\tsunami\scripts",
+                @"C:\Peloton\code\prx\plugins\zoom\projects",
+                @"C:\Peloton\code\prx\plugins\zoom\scripts",
+                @"C:\Peloton\data\dbf",
+                @"C:\Peloton\data\excel",
+                @"C:\Peloton\data\isis",
+                @"C:\Peloton\data\msaccess",
+                @"C:\Peloton\data\mysql",
+                @"C:\Peloton\data\sqlite",
+                @"C:\Peloton\data\thes",
+                @"C:\Peloton\data\tinydb",
+                @"C:\Peloton\data\tsunami",
+                @"C:\Peloton\data\ZOOM",
+                @"C:\Peloton\data\mysql\cars",
+                @"C:\Peloton\data\mysql\northwind" })
+            {
+                if (!Directory.Exists(folder))
+                {
+                    brokenInstallation = true;
+                    break;
+                }
+            }
+            if (brokenInstallation)
+            {
+                ExtractPelotonAssets();
+            }
+            return true;
+        }
+
+        //private void UpdateTabCreationMethodInMenu()
+        //{
+        //    MenuItemHighlightController(mnuPerTabSettings, UsePerTabSettingsWhenCreatingTab);
+        //    MenuItemHighlightController(mnuCurrentTabSettings, !UsePerTabSettingsWhenCreatingTab);
+        //}
+
+        //private void UpdateTransputInMenu()
+        //{
+        //    Telemetry.Disable();
+
+        //    string transput = Type_1_GetVirtualRegistry<long>("pOps.Transput").ToString();
+        //    foreach (var mfi in from MenuFlyoutSubItem mfsi in mnuTransput.Items.Cast<MenuFlyoutSubItem>()
+        //                        where mfsi != null
+        //                        where mfsi.Items.Count > 0
+        //                        from MenuFlyoutItem mfi in mfsi.Items.Cast<MenuFlyoutItem>()
+        //                        select mfi)
+        //    {
+        //        MenuItemHighlightController((MenuFlyoutItem)mfi, false);
+        //        if (transput == (string)mfi.Tag)
+        //        {
+        //            MenuItemHighlightController((MenuFlyoutItem)mfi, true);
+        //        }
+        //    }
+        //}
+        //private void UpdateRenderingInMenu()
+        //{
+        //    List<string> renderers = Type_1_GetVirtualRegistry<string>("outputOps.ActiveRenderers").Split(',').Select(x => x.Trim()).ToList();
+
+        //    mnuRendering.Items.ForEach(item =>
+        //    {
+        //        MenuItemHighlightController((MenuFlyoutItem)item, false);
+        //        if (renderers.Contains((string)item.Tag))
+        //        {
+        //            MenuItemHighlightController((MenuFlyoutItem)item, true);
+        //        }
+
+        //    });
+        //}
         private Dictionary<string, List<string>> GetLangLangs(Dictionary<string, Dictionary<string, Dictionary<string, string>>>? languageSettings)
         {
+            Telemetry.Disable();
             Dictionary<string, List<string>> dict = [];
             List<string> kees = [.. languageSettings.Keys];
             kees.Sort(CompareLanguagesById);
@@ -353,6 +685,7 @@ namespace PelotonIDE.Presentation
                     strings.Add(myLanguageInMyLanguage == theirLanguageInTheirLanguage ? myLanguageInMyLanguage : $"{theirLanguageInMyLanguage} - {theirLanguageInTheirLanguage}");
                 }
                 dict[key] = strings;
+                //Telemetry.Transmit("key=", key, "dict[key]=", strings.JoinBy("\n"));
             }
             return dict;
 
@@ -365,39 +698,36 @@ namespace PelotonIDE.Presentation
                 return 0;
             }
         }
+        //private void UpdateStatusBarFromVirtualRegistry()
+        //{
+        //    string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("ideOps.InterfaceLanguageName");
 
-        private void UpdateStatusBarFromVirtualRegistry()
-        {
-            string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+        //    bool isVariableLength = Type_1_GetVirtualRegistry<bool>("pOps.VariableLength");
+        //    sbFixedVariable.Text = (isVariableLength ? "#" : "@") + LanguageSettings[interfaceLanguageName]["GLOBAL"][isVariableLength ? "variableLength" : "fixedLength"];
 
-            bool isVariableLength = Type_1_GetVirtualRegistry<bool>("VariableLength");
-            fixedVariableStatus.Text = (isVariableLength ? "#" : "@") + LanguageSettings[interfaceLanguageName]["GLOBAL"][isVariableLength ? "variableLength" : "fixedLength"];
+        //    string[] quietudes = ["mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit"];
+        //    long quietude = Type_1_GetVirtualRegistry<long>("pOps.Quietude");
+        //    sbQuietude.Text = LanguageSettings[interfaceLanguageName]["frmMain"][quietudes.ElementAt((int)quietude)];
 
-            string[] quietudes = ["mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit"];
-            long quietude = Type_1_GetVirtualRegistry<long>("Quietude");
-            quietudeStatus.Text = LanguageSettings[interfaceLanguageName]["frmMain"][quietudes.ElementAt((int)quietude)];
+        //    string[] timeouts = ["mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite"];
+        //    long timeout = Type_1_GetVirtualRegistry<long>("ideOps.Timeout");
+        //    sbTimeout.Text = $"{LanguageSettings[interfaceLanguageName]["frmMain"]["mnuTimeout"]}: {LanguageSettings[interfaceLanguageName]["frmMain"][timeouts.ElementAt((int)timeout)]}";
+        //}
+        //private void UpdateStatusBarFromInFocusTab()
+        //{
+        //    string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("ideOps.InterfaceLanguageName");
 
-            string[] timeouts = ["mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite"];
-            long timeout = Type_1_GetVirtualRegistry<long>("Timeout");
-            timeoutStatus.Text = $"{LanguageSettings[interfaceLanguageName]["frmMain"]["mnuTimeout"]}: {LanguageSettings[interfaceLanguageName]["frmMain"][timeouts.ElementAt((int)timeout)]}";
-        }
+        //    bool isVariableLength = Type_3_GetInFocusTab<bool>("pOps.VariableLength");
+        //    sbFixedVariable.Text = (isVariableLength ? "#" : "@") + LanguageSettings[interfaceLanguageName]["GLOBAL"][isVariableLength ? "variableLength" : "fixedLength"];
 
-        private void UpdateStatusBarFromInFocusTab()
-        {
-            string interfaceLanguageName = Type_1_GetVirtualRegistry<string>("InterfaceLanguageName");
+        //    string[] quietudes = ["mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit"];
+        //    long quietude = Type_3_GetInFocusTab<long>("pOps.Quietude");
+        //    sbQuietude.Text = LanguageSettings[interfaceLanguageName]["frmMain"][quietudes.ElementAt((int)quietude)];
 
-            bool isVariableLength = Type_3_GetInFocusTab<bool>("VariableLength");
-            fixedVariableStatus.Text = (isVariableLength ? "#" : "@") + LanguageSettings[interfaceLanguageName]["GLOBAL"][isVariableLength ? "variableLength" : "fixedLength"];
-
-            string[] quietudes = ["mnuQuiet", "mnuVerbose", "mnuVerbosePauseOnExit"];
-            long quietude = Type_3_GetInFocusTab<long>("Quietude");
-            quietudeStatus.Text = LanguageSettings[interfaceLanguageName]["frmMain"][quietudes.ElementAt((int)quietude)];
-
-            string[] timeouts = ["mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite"];
-            long timeout = Type_3_GetInFocusTab<long>("Timeout");
-            timeoutStatus.Text = $"{LanguageSettings[interfaceLanguageName]["frmMain"]["mnuTimeout"]}: {LanguageSettings[interfaceLanguageName]["frmMain"][timeouts.ElementAt((int)timeout)]}";
-        }
-
+        //    string[] timeouts = ["mnu20Seconds", "mnu100Seconds", "mnu200Seconds", "mnu1000Seconds", "mnuInfinite"];
+        //    long timeout = Type_3_GetInFocusTab<long>("ideOps.Timeout");
+        //    sbTimeout.Text = $"{LanguageSettings[interfaceLanguageName]["frmMain"]["mnuTimeout"]}: {LanguageSettings[interfaceLanguageName]["frmMain"][timeouts.ElementAt((int)timeout)]}";
+        //}
         private void UpdateTabDocumentNameIfOnlyOneAndFirst(NavigationView tabControl, string? interfaceLanguageName)
         {
             if (tabControl.MenuItems.Count == 1 && interfaceLanguageName != null && interfaceLanguageName != "English")
@@ -407,23 +737,21 @@ namespace PelotonIDE.Presentation
                 ((CustomTabItem)tabControl.SelectedItem).Content = content;
             }
         }
-
-        private void UpdateEngineSelectionFromFactorySettingsInMenu()
-        {
-            if (LocalSettings.Values["Engine"].ToString() == "Engine.2")
-            {
-                MenuItemHighlightController(mnuNewEngine, false);
-                MenuItemHighlightController(mnuOldEngine, true);
-                interpreter.Text = "P2";
-            }
-            else
-            {
-                MenuItemHighlightController(mnuNewEngine, true);
-                MenuItemHighlightController(mnuOldEngine, false);
-                interpreter.Text = "P3";
-            }
-        }
-
+        //private void UpdateEngineSelectionFromFactorySettingsInMenu()
+        //{
+        //    if (LocalSettings.Values["ideOps.Engine"].ToString() == "ideOps.Engine.2")
+        //    {
+        //        MenuItemHighlightController(mnuNewEngine, false);
+        //        MenuItemHighlightController(mnuOldEngine, true);
+        //        sbEngine.Text = "P2";
+        //    }
+        //    else
+        //    {
+        //        MenuItemHighlightController(mnuNewEngine, true);
+        //        MenuItemHighlightController(mnuOldEngine, false);
+        //        sbEngine.Text = "P3";
+        //    }
+        //}
         /// <summary>
         /// Save current editor settings
         /// </summary>
@@ -454,18 +782,17 @@ namespace PelotonIDE.Presentation
             SerializeTabsToVirtualRegistry();
             SerializeLayoutToVirtualRegistry();
         }
-
         private void SerializeLayoutToVirtualRegistry()
         {
-            Telemetry.SetEnabled(false);
+            Telemetry.Disable();
             List<string> list =
             [
-                Type_1_GetVirtualRegistry<bool>("OutputPanelShowing") ? "True" : "False",
-                Type_1_GetVirtualRegistry<string>("OutputPanelPosition"),
-                Type_1_GetVirtualRegistry<double>("OutputPanelHeight").ToString(),
-                Type_1_GetVirtualRegistry<double>("OutputPanelWidth").ToString(),
+                Type_1_GetVirtualRegistry<bool>("ideOps.OutputPanelShowing") ? "True" : "False",
+                Type_1_GetVirtualRegistry<string>("ideOps.OutputPanelPosition"),
+                Type_1_GetVirtualRegistry<double>("ideOps.OutputPanelHeight").ToString(),
+                Type_1_GetVirtualRegistry<double>("ideOps.OutputPanelWidth").ToString(),
             ];
-            Type_1_UpdateVirtualRegistry<string>("OutputPanelSettings", list.JoinBy("|"));
+            Type_1_UpdateVirtualRegistry<string>("ideOps.OutputPanelSettings", list.JoinBy("|"));
         }
     }
 }

@@ -1,108 +1,77 @@
-﻿using Microsoft.UI;
-using Microsoft.UI.Input;
-using Microsoft.UI.Text;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Documents;
-using Microsoft.UI.Xaml.Input;
-
-using Newtonsoft.Json;
-
-using System.Diagnostics;
-using System.Text;
-
-using Windows.ApplicationModel.DataTransfer;
-using Windows.Storage;
-using Windows.Storage.Pickers;
-using Windows.Storage.Provider;
-using Windows.System;
-using Windows.UI;
-using Windows.UI.Core;
+namespace PelotonIDE.Presentation;
+using Microsoft.Win32;
 
 using LanguageConfigurationStructureSelection =
     System.Collections.Generic.Dictionary<string,
         System.Collections.Generic.Dictionary<string, string>>;
 
-namespace PelotonIDE.Presentation
+
+public sealed partial class IDEConfigPage : Page
 {
-    public sealed partial class IDEConfigPage : Page
+    public IDEConfigPage()
     {
-        public IDEConfigPage()
+        this.InitializeComponent();
+    }
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+
+        NavigationData parameters = (NavigationData)e.Parameter;
+
+        if (parameters.Source == "MainPage")
         {
-            this.InitializeComponent();
+            protiumInterpreterTextBox.Text = parameters.KVPs["ideOps.Engine.2"].ToString();
+            pelotonInterpreterTextBox.Text = parameters.KVPs["ideOps.Engine.3"].ToString();
+            sourceTextBox.Text = parameters.KVPs["ideOps.CodeFolder"].ToString();
+            dataTextBox.Text = parameters.KVPs["ideOps.DataFolder"].ToString();
+            LanguageConfigurationStructureSelection lcs = (LanguageConfigurationStructureSelection)parameters.KVPs["pOps.Language"];
+            cmdCancel.Content = lcs["frmMain"]["cmdCancel"];
+            cmdSaveMemory.Content = lcs["frmMain"]["cmdSaveMemory"];
+            lblSourceDirectory.Text = lcs["frmMain"]["lblSourceDirectory"];
         }
-
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+    }
+    private async void ProtiumInterpreterLocationBtn_Click(object sender, RoutedEventArgs e)
+    { 
+        var temp = FileFolderPicking.GetFile("Protium Interpreter?", Path.GetDirectoryName(protiumInterpreterTextBox.Text), "EXE files (*.exe)|*.exe");
+        if (temp[0] == "OK")
+            protiumInterpreterTextBox.Text = temp[1];
+    }
+    private async void PelotonInterpreterLocationBtn_Click(object sender, RoutedEventArgs e)
+    {
+        var temp = FileFolderPicking.GetFile("Peloton Interpreter?", Path.GetDirectoryName(pelotonInterpreterTextBox.Text), "EXE files (*.exe)|*.exe");
+        if (temp[0] == "OK")
+            pelotonInterpreterTextBox.Text = temp[1];
+    }
+    private async void SourceDirectoryBtn_Click(object sender, RoutedEventArgs e)
+    {
+        var temp = FileFolderPicking.GetFolder(sourceTextBox.Text);
+        if (temp[0] == "OK")
+            sourceTextBox.Text = temp[1];
+    }
+    private async void DataDirectoryBtn_Click(object sender, RoutedEventArgs e)
+    {
+        var temp = FileFolderPicking.GetFolder(dataTextBox.Text);
+        if (temp[0] == "OK")
+            dataTextBox.Text = temp[1];
+    }
+    private void IDEConfig_Apply_Button_Click(object sender, RoutedEventArgs e)
+    {
+        NavigationData nd = new()
         {
-            base.OnNavigatedTo(e);
-
-            NavigationData parameters = (NavigationData)e.Parameter;
-
-            if (parameters.Source == "MainPage")
+            Source = "IDEConfig",
+            KVPs = new()
             {
-                interpreterTextBox.Text = parameters.KVPs["Interpreter"].ToString();
-                sourceTextBox.Text = parameters.KVPs["Scripts"].ToString();
-                LanguageConfigurationStructureSelection lcs = (LanguageConfigurationStructureSelection)parameters.KVPs["Language"];
-                cmdCancel.Content = lcs["frmMain"]["cmdCancel"];
-                cmdSaveMemory.Content = lcs["frmMain"]["cmdSaveMemory"];
-                lblSourceDirectory.Text = lcs["frmMain"]["lblSourceDirectory"];
+                { "ideOps.Engine.2" , protiumInterpreterTextBox.Text },
+                { "ideOps.Engine.3" , pelotonInterpreterTextBox.Text },
+                { "ideOps.CodeFolder" , sourceTextBox.Text},
+                { "ideOps.DataFolder", dataTextBox.Text },
             }
-        }
-        private async void InterpreterLocationBtn_Click(object sender, RoutedEventArgs e)
-        {
-            FileOpenPicker open = new()
-            {
-                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-            };
-            open.FileTypeFilter.Add(".exe");
+        };
+        Frame.Navigate(typeof(MainPage), nd);
 
-            // For Uno.WinUI-based apps
-            nint hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
-            WinRT.Interop.InitializeWithWindow.Initialize(open, hwnd);
-
-            StorageFile pickedFile = await open.PickSingleFileAsync();
-            if (pickedFile != null)
-            {
-                interpreterTextBox.Text = pickedFile.Path;
-            }
-        }
-
-        private async void SourceDirectoryBtn_Click(object sender, RoutedEventArgs e)
-        {
-            FolderPicker folderPicker = new()
-            {
-                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-            };
-            folderPicker.FileTypeFilter.Add("*");
-
-            // For Uno.WinUI-based apps
-            nint hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App._window);
-            WinRT.Interop.InitializeWithWindow.Initialize(folderPicker, hwnd);
-
-            StorageFolder pickedFolder = await folderPicker.PickSingleFolderAsync();
-            if (pickedFolder != null)
-            {
-                sourceTextBox.Text = pickedFolder.Path;
-            }
-        }
-
-        private void IDEConfig_Apply_Button_Click(object sender, RoutedEventArgs e)
-        {
-            NavigationData nd = new()
-            {
-                Source = "IDEConfig",
-                KVPs = new()
-                {
-                    { "Interpreter" , interpreterTextBox.Text },
-                    { "Scripts" ,  sourceTextBox.Text}
-                }
-            };
-            Frame.Navigate(typeof(MainPage), nd);
-
-        }
-        private void IDEConfig_Cancel_Button_Click(object sender, RoutedEventArgs e)
-        {
-            Frame.Navigate(typeof(MainPage), null);
-        }
+    }
+    private void IDEConfig_Cancel_Button_Click(object sender, RoutedEventArgs e)
+    {
+        Frame.Navigate(typeof(MainPage), null);
     }
 }

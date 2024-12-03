@@ -30,7 +30,7 @@
 
         <!--<SolidColorBrush x:Key="TabViewItemBorderBrush" Color="Black" />-->
         <SolidColorBrush x:Key="TextControlSelectionHighlightColor" Color="DarkSlateGray" />
-        
+
 
         <Style TargetType="RichEditBox" x:Key="CustomRichEditBoxStyle">
             <Setter Property="Background" Value="#F9F8BD"/>
@@ -71,7 +71,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
         <!--<Style TargetType="WebView2" x:Key="HtmlOutputStyle">
             <Setter Property="Background" Value="LightSteelBlue"/>
             -->
@@ -173,7 +172,23 @@
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
             </MenuBarItem>
-            <MenuBarItem Title="Search" BorderBrush="LightGray" BorderThickness="1" x:Name="mnuSearch"/>
+            <MenuBarItem Title="Search" BorderBrush="LightGray" BorderThickness="1" x:Name="mnuSearch">
+                <MenuFlyoutItem x:Name="mnuFind" Text="Find" Click="Search_Find_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="F"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="mnuFindNext" Text="Find Next" Click="Search_FindNext_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="G"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="mnuReplace" Text="Replace" Click="Search_Replace_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="H"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+            </MenuBarItem>
             <MenuBarItem Title="Format" BorderBrush="LightGray" BorderThickness="1" x:Name="mnuFormat">
                 <MenuFlyoutSubItem x:Name="mnuFontSize" Text="FontSize">
                     <MenuFlyoutItem Text="12pt" x:Name="mnuPoint12" Click="FormatMenu_FontSize_Click" Tag="12"/>
@@ -184,10 +199,11 @@
                     <MenuFlyoutItem Text="22pt" x:Name="mnuPoint22" Click="FormatMenu_FontSize_Click" Tag="22"/>
                     <MenuFlyoutItem Text="24pt" x:Name="mnuPoint24" Click="FormatMenu_FontSize_Click" Tag="24"/>
                 </MenuFlyoutSubItem>
+                <MenuFlyoutItem Text="Text Colour" x:Name="mnuTextColour" Click="Format_TextColour_Click" />
             </MenuBarItem>
             <MenuBarItem Title="View" BorderBrush="LightGray" BorderThickness="1" x:Name="mnuView"/>
             <MenuBarItem Title="Interpreter" BorderBrush="LightGray" BorderThickness="1" x:Name="mnuRun">
-                <MenuFlyoutItem x:Name="mnuGo" Text="Run Code" Click="RunCodeButton_Click">
+                <MenuFlyoutItem x:Name="mnuRunCode" Text="Run Code" Click="RunCodeButton_Click">
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Modifiers="None" Key="F5"/>
                     </MenuFlyoutItem.KeyboardAccelerators>
@@ -239,12 +255,12 @@
                         <MenuFlyoutItem x:Name="tptPlugin" Text="Plugin Transput" Click="InterpretMenu_Transput_Click" Tag="41"/>
                     </MenuFlyoutSubItem>
                 </MenuFlyoutSubItem>
-                <MenuFlyoutSubItem x:Name="mnuRendering" Text="Rendering">
+                <MenuFlyoutSubItem x:Name="mnuRendering" Text="Renderers">
                     <MenuFlyoutItem x:Name="mnuOutput" Text="Output" Click="InterpretMenu_Rendering_Click" Tag="3"/>
                     <MenuFlyoutItem x:Name="mnuError" Text="Error" Click="InterpretMenu_Rendering_Click" Tag="0"/>
+                    <MenuFlyoutItem x:Name="mnuRTF" Text="RTF" Click="InterpretMenu_Rendering_Click" Tag="31"/>
                     <MenuFlyoutItem x:Name="mnuHTML" Text="HTML" Click="InterpretMenu_Rendering_Click" Tag="21"/>
                     <MenuFlyoutItem x:Name="mnuLogo" Text="Logo" Click="InterpretMenu_Rendering_Click" Tag="42"/>
-                    <MenuFlyoutItem x:Name="mnuRTF" Text="RTF" Click="InterpretMenu_Rendering_Click" Tag="31"/>
                 </MenuFlyoutSubItem>
                 <MenuFlyoutSubItem x:Name="mnuChooseEngine" Text="Choose runtime engine">
                     <MenuFlyoutItem Text="P2 Protium" x:Name="mnuOldEngine" Click="ChooseEngine_Click" Tag="P2"/>
@@ -270,61 +286,78 @@
             <MenuBarItem Title="Settings" BorderBrush="LightGray" BorderThickness="1" x:Name="mnuSettings">
                 <MenuFlyoutItem x:Name="mnuIDEConfiguration" Text="Editor Configuration" Click="MnuIDEConfiguration_Click" Command="{Binding GoToIDEConfig}"/>
                 <MenuFlyoutSubItem x:Name="mnuSelectLanguage" Text="Choose interface language"/>
+                <MenuFlyoutSubItem x:Name="mnuTabCreationMethod" Text="Tab Creation Method">
+                    <MenuFlyoutItem x:Name="mnuPerTabSettings" Text="Inherit PerTab Settings" Click="SettingsMenu_EditorConfiguration_Click" Tag="PerTab" />
+                    <MenuFlyoutItem x:Name="mnuCurrentTabSettings" Text="Inherit Current Tab Settings" Click="SettingsMenu_EditorConfiguration_Click" Tag="CurrentTab"/>
+                </MenuFlyoutSubItem>
+
             </MenuBarItem>
             <MenuBarItem Title="Window" BorderBrush="LightGray" BorderThickness="1" x:Name="mnuWindow"/>
             <MenuBarItem x:Name="mnuHelp" Title="Help" BorderBrush="LightGray" BorderThickness="1">
                 <MenuFlyoutItem x:Name="mnuHelpIndex" Text="Help" Click="Help_Click"/>
                 <MenuFlyoutItem x:Name="mnuReset" Text="Reset to factory settings" Click="ResetToFactorySettings_Click"/>
+                <MenuFlyoutSubItem x:Name="mnuComponentUpdater" Text="Component Updater">
+                    <MenuFlyoutItem x:Name="mnuUpdateAll" Text="Update All" Click="ComponentUpdater_Update" Tag="all" />
+                    <MenuFlyoutItem x:Name="mnuUpdateInterpreter" Text="Update Interpreter" Click="ComponentUpdater_Update" Tag="bin" />
+                    <MenuFlyoutItem x:Name="mnuUpdateLexers" Text="Update Lexers" Click="ComponentUpdater_Update" Tag="bin/lexers" />
+                    <MenuFlyoutItem x:Name="mnuUpdateCodeSamples" Text="Update Code Samples" Click="ComponentUpdater_Update" Tag="code" />
+                    <MenuFlyoutItem x:Name="mnuUpdateDatabaseSamples" Text="Update Database Samples" Click="ComponentUpdater_Update" Tag="data" />
+                    <MenuFlyoutItem x:Name="mnuDownloadPowerShell" Text="Download and Install PowerShell" Click="ComponentUpdater_DownloadPowerShell" Tag="" />
+                </MenuFlyoutSubItem>
                 <MenuFlyoutItem x:Name="mnuMemory" Text="Show Memory" Click="ShowMemory_Click"/>
+                <MenuFlyoutItem x:Name="mnuPowerShellStatus" Text="Show PowerShell Status" Click="ShowPowerShell_Click"/>
+                <MenuFlyoutItem x:Name="mnuShowTabs" Text="Show Tabs" Click="ShowTabs_Click"/>
                 <MenuFlyoutItem x:Name="mnuHelpAbout" Text="About" Click="HelpAbout_Click"/>
             </MenuBarItem>
         </MenuBar>
-        <Button x:Name="butNew" AutomationProperties.Name="New" ToolTipService.ToolTip="New" Click="FileNew_Click" RelativePanel.Below="menuBar">
+        <!-- Maybe +^Tab etc can be done here with buttons and in the menus with a keyboard accellerator -->
+
+        <Button x:Name="butNew" AutomationProperties.Name="New" ToolTipService.ToolTip="New" Click="FileNewButton_Click" RelativePanel.Below="menuBar">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8F4;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="butOpen" AutomationProperties.Name="Open" ToolTipService.ToolTip="Open" RelativePanel.RightOf="butNew" RelativePanel.Below="menuBar" Click="FileOpen_Click">
+        <Button x:Name="butOpen" AutomationProperties.Name="Open" ToolTipService.ToolTip="Open" RelativePanel.RightOf="butNew" RelativePanel.Below="menuBar" Click="FileOpenButton_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8E5;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="butClose" AutomationProperties.Name="Close" ToolTipService.ToolTip="Close" RelativePanel.RightOf="butOpen" RelativePanel.Below="menuBar" Click="FileClose_Click">
+        <Button x:Name="butClose" AutomationProperties.Name="Close" ToolTipService.ToolTip="Close" RelativePanel.RightOf="butOpen" RelativePanel.Below="menuBar" Click="FileCloseButton_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8BB;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="butSave" AutomationProperties.Name="Save" ToolTipService.ToolTip="Save" RelativePanel.RightOf="butClose" RelativePanel.Below="menuBar" Click="FileSave_Click">
+        <Button x:Name="butSave" AutomationProperties.Name="Save" ToolTipService.ToolTip="Save" RelativePanel.RightOf="butClose" RelativePanel.Below="menuBar" Click="FileSaveButton_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE74E;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="butSaveAs" AutomationProperties.Name="Save As" ToolTipService.ToolTip="Save As" RelativePanel.RightOf="butSave" RelativePanel.Below="menuBar" Click="FileSaveAs_Click">
+        <Button x:Name="butSaveAs" AutomationProperties.Name="Save As" ToolTipService.ToolTip="Save As" RelativePanel.RightOf="butSave" RelativePanel.Below="menuBar" Click="FileSaveAsButton_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE792;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="butCopy" AutomationProperties.Name="Copy" ToolTipService.ToolTip="Copy" RelativePanel.RightOf="butSaveAs" RelativePanel.Below="menuBar" Click="EditCopy_Click">
+        <Button x:Name="butCopy" AutomationProperties.Name="Copy" ToolTipService.ToolTip="Copy" RelativePanel.RightOf="butSaveAs" RelativePanel.Below="menuBar" Click="EditCopyButton_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8C8;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="butCut" AutomationProperties.Name="Cut" ToolTipService.ToolTip="Cut" RelativePanel.RightOf="butCopy" RelativePanel.Below="menuBar" Click="EditCut_Click">
+        <Button x:Name="butCut" AutomationProperties.Name="Cut" ToolTipService.ToolTip="Cut" RelativePanel.RightOf="butCopy" RelativePanel.Below="menuBar" Click="EditCutButton_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8C6;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="butPaste" AutomationProperties.Name="Paste" ToolTipService.ToolTip="Paste" RelativePanel.RightOf="butCut" RelativePanel.Below="menuBar" Click="EditPaste_Click">
+        <Button x:Name="butPaste" AutomationProperties.Name="Paste" ToolTipService.ToolTip="Paste" RelativePanel.RightOf="butCut" RelativePanel.Below="menuBar" Click="EditPasteButton_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE77F;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="butSelectAll" AutomationProperties.Name="Select All" ToolTipService.ToolTip="Select All" RelativePanel.RightOf="butPaste" RelativePanel.Below="menuBar" Click="EditSelectAll_Click">
+        <Button x:Name="butSelectAll" AutomationProperties.Name="Select All" ToolTipService.ToolTip="Select All" RelativePanel.RightOf="butPaste" RelativePanel.Below="menuBar" Click="EditSelectAllButton_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE8B3;"/>
             </Button.Content>
         </Button>
-        <Button x:Name="butTransform" AutomationProperties.Name="Transform" ToolTipService.ToolTip="Transform" RelativePanel.RightOf="butSelectAll" RelativePanel.Below="menuBar" Click="MnuTranslate_Click">
+        <Button x:Name="butTransform" AutomationProperties.Name="Transform" ToolTipService.ToolTip="Transform" RelativePanel.RightOf="butSelectAll" RelativePanel.Below="menuBar" Click="MnuTranslateButton_Click">
             <Button.Content>
                 <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE13C;"/>
             </Button.Content>
@@ -349,11 +382,30 @@
                 </ResourceDictionary>
             </Button.Resources>
         </Button>
+        <Button x:Name="butPrevPanel" AutomationProperties.Name="Previous Panel" ToolTipService.ToolTip="Previous Panel" RelativePanel.RightOf="butGo" RelativePanel.Below="menuBar"
+                Click="Button_PreviousPanel_Click">
+            <Button.Content>
+                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE892;" />
+            </Button.Content>
+            <Button.KeyboardAccelerators>
+                <KeyboardAccelerator Modifiers="Control,Shift" Key="Tab"/>
+            </Button.KeyboardAccelerators>
+        </Button>
+        <Button x:Name="butNextPanel" AutomationProperties.Name="Previous Panel" ToolTipService.ToolTip="Previous Panel" RelativePanel.RightOf="butPrevPanel" RelativePanel.Below="menuBar"
+                Click="Button_NextPanel_Click">
+            <Button.Content>
+                <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE893;" />
+            </Button.Content>
+            <Button.KeyboardAccelerators>
+                <KeyboardAccelerator Modifiers="Control" Key="Tab" />
+            </Button.KeyboardAccelerators>
+        </Button>
         <NavigationView x:Name="tabControl" PaneDisplayMode="Top" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" 
                         RelativePanel.Below="butSelectAll" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" RelativePanel.Above="outputPanel" 
-                        SelectionChanged="TabControl_SelectionChanged" RightTapped="TabControl_RightTapped" SizeChanged="TabControl_SizeChanged" >
+                        SelectionChanged="TabControl_SelectionChanged" SizeChanged="TabControl_SizeChanged"  >
+            <!-- RightTapped="TabControl_RightTapped" -->
             <NavigationView.MenuItems>
-                <local:CustomTabItem x:Name="tab1" Content="Document 1" Tag="Tab1" IsNewFile="True" Height="30" KeyDown="CustomTabItem_KeyDown" RightTapped="CustomTabItem_RightTapped"/>
+                <local:CustomTabItem x:Name="tab1" Content="Document 1" Tag="Tab1" IsNewFile="True" Height="30" />
             </NavigationView.MenuItems>
         </NavigationView>
         <Border x:Name="outputPanel" RelativePanel.Above="statusBar" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" Background="White" Margin="5, 0, 5, 0" SizeChanged="OutputPanel_SizeChanged">
@@ -413,31 +465,12 @@
                                                 <SolidColorBrush Color="AliceBlue" x:Key="TextControlBackgroundPointerOver"/>
                                                 <SolidColorBrush Color="AliceBlue" x:Key="TextControlBackgroundFocused"/>
                                                 <SolidColorBrush Color="AliceBlue" x:Key="TextControlBackground"/>
-
                                             </ResourceDictionary>
                                         </RichEditBox.Resources>
                                     </RichEditBox>
                                 </ScrollViewer>
                             </Border>
-                            <!--<TabViewItem.Resources>
-                                <ResourceDictionary>
-                                    <ResourceDictionary.ThemeDictionaries>
-                                        <ResourceDictionary x:Key="Light">
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="Black"/>
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="White" />
 
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPressed" Color="PaleGreen"/>
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPressed" Color="White" />
-
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver" Color="DarkGreen" />
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPointerOver" Color="Black" />
-
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundDisabled" Color="LightGray"/>
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundDisabled" Color="Black" />
-                                        </ResourceDictionary>
-                                    </ResourceDictionary.ThemeDictionaries>
-                                </ResourceDictionary>
-                            </TabViewItem.Resources>-->
                         </TabViewItem>
                         <TabViewItem x:Name="tabError" Tag="0" Header="Error" IsClosable="False" RightTapped="TabViewItem_Error_RightTapped" Tapped="TabViewItem_Tapped"  BorderBrush="Black" BorderThickness="1">
                             <FlyoutBase.AttachedFlyout>
@@ -461,25 +494,7 @@
                                     </RichEditBox>
                                 </ScrollViewer>
                             </Border>
-                            <!--<TabViewItem.Resources>
-                                <ResourceDictionary>
-                                    <ResourceDictionary.ThemeDictionaries>
-                                        <ResourceDictionary x:Key="Light">
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="Black"/>
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="White" />
 
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPressed" Color="PaleGreen"/>
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPressed" Color="White" />
-
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver" Color="DarkGreen" />
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPointerOver" Color="Black" />
-
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundDisabled" Color="LightGray"/>
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundDisabled" Color="Black" />
-                                        </ResourceDictionary>
-                                    </ResourceDictionary.ThemeDictionaries>
-                                </ResourceDictionary>
-                            </TabViewItem.Resources>-->
                         </TabViewItem>
                         <TabViewItem x:Name="tabRTF" Tag="31" Header="RTF" IsClosable="False" RightTapped="TabViewItem_RTF_RightTapped" Tapped="TabViewItem_Tapped"  BorderBrush="Black" BorderThickness="1">
                             <FlyoutBase.AttachedFlyout>
@@ -503,25 +518,7 @@
                                     </RichEditBox>
                                 </ScrollViewer>
                             </Border>
-                            <!--<TabViewItem.Resources>
-                                <ResourceDictionary>
-                                    <ResourceDictionary.ThemeDictionaries>
-                                        <ResourceDictionary x:Key="Light">
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="Black"/>
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="White" />
 
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPressed" Color="PaleGreen"/>
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPressed" Color="White" />
-
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver" Color="DarkGreen" />
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPointerOver" Color="Black" />
-
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundDisabled" Color="LightGray"/>
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundDisabled" Color="Black" />
-                                        </ResourceDictionary>
-                                    </ResourceDictionary.ThemeDictionaries>
-                                </ResourceDictionary>
-                            </TabViewItem.Resources>-->
                         </TabViewItem>
                         <TabViewItem x:Name="tabHtml" Tag="21" Header="HTML" IsClosable="False" RightTapped="TabViewItem_Html_RightTapped" Tapped="TabViewItem_Tapped" BorderBrush="Black" BorderThickness="1" >
                             <FlyoutBase.AttachedFlyout>
@@ -533,28 +530,11 @@
                             </FlyoutBase.AttachedFlyout>
                             <Border Margin="5" Padding="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" CornerRadius="5" BorderThickness="1" BorderBrush="Black">
                                 <ScrollViewer VerticalScrollBarVisibility="Visible" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Visible" HorizontalScrollMode="Auto" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                                    <WebView2 x:Name="HtmlText" FlowDirection="LeftToRight" />
+                                    <WebView2 x:Name="HtmlText" FlowDirection="LeftToRight"  />
+                                    <!-- NavigationStarting="HtmlText_NavigationStarting" NavigationCompleted="Html_NavigationCompleted"-->
                                 </ScrollViewer>
                             </Border>
-                            <!--<TabViewItem.Resources>
-                                <ResourceDictionary>
-                                    <ResourceDictionary.ThemeDictionaries>
-                                        <ResourceDictionary x:Key="Light">
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="Black"/>
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="White" />
 
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPressed" Color="PaleGreen"/>
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPressed" Color="White" />
-
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver" Color="DarkGreen" />
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPointerOver" Color="Black" />
-
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundDisabled" Color="LightGray"/>
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundDisabled" Color="Black" />
-                                        </ResourceDictionary>
-                                    </ResourceDictionary.ThemeDictionaries>
-                                </ResourceDictionary>
-                            </TabViewItem.Resources>-->
                         </TabViewItem>
                         <TabViewItem x:Name="tabLogo" Tag="42" IsClosable="False" RightTapped="TabViewItem_Logo_RightTapped" Tapped="TabViewItem_Tapped" BorderBrush="Black" BorderThickness="1" >
                             <FlyoutBase.AttachedFlyout>
@@ -569,25 +549,7 @@
                                     <WebView2 x:Name="LogoText" FlowDirection="LeftToRight" />
                                 </ScrollViewer>
                             </Border>
-                            <!--<TabViewItem.Resources>
-                                <ResourceDictionary>
-                                    <ResourceDictionary.ThemeDictionaries>
-                                        <ResourceDictionary x:Key="Light">
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="Black"/>
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="White" />
 
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPressed" Color="PaleGreen"/>
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPressed" Color="White" />
-
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver" Color="DarkGreen" />
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundPointerOver" Color="Black" />
-
-                                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundDisabled" Color="LightGray"/>
-                                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundDisabled" Color="Black" />
-                                        </ResourceDictionary>
-                                    </ResourceDictionary.ThemeDictionaries>
-                                </ResourceDictionary>
-                            </TabViewItem.Resources>-->
                         </TabViewItem>
                     </TabView.TabItems>
                 </TabView>
@@ -597,38 +559,38 @@
             <!--<TextBlock Text="0 words" Margin="0,0,20,0" Name="wordCount"/>-->
             <Border BorderThickness="1" BorderBrush="Black">
                 <ContentControl RightTapped="ContentControl_LanguageName_RightTapped">
-                    <TextBlock Name="languageName" Height="30" MinWidth="100" Width="Auto" VerticalAlignment="Bottom" HorizontalAlignment="Left" Padding="5"/>
+                    <TextBlock Name="sbLanguageName" Height="30" MinWidth="100" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
                 </ContentControl>
             </Border>
             <Border BorderThickness="1" BorderBrush="Black">
                 <ContentControl RightTapped="ContentControl_Quietude_RightTapped">
-                    <TextBlock Name="quietudeStatus" Height="30" MinWidth="100" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5" Text="quietude status"/>
+                    <TextBlock Name="sbQuietude" Height="30" MinWidth="100" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5" Text="quietude status"/>
                 </ContentControl>
             </Border>
             <Border BorderThickness="1" BorderBrush="Black">
                 <ContentControl RightTapped="ContentControl_FixedVariable_RightTapped">
-                    <TextBlock Name="fixedVariableStatus" Height="30" MinWidth="100" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5" Text="fixed variable status"/>
+                    <TextBlock Name="sbFixedVariable" Height="30" MinWidth="100" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5" Text="fixed variable status"/>
                 </ContentControl>
             </Border>
             <Border BorderThickness="1" BorderBrush="Black">
                 <ContentControl RightTapped="ContentControl_Timeout_RightTapped">
-                    <TextBlock Name="timeoutStatus" Height="30" MinWidth="100" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5" Text="timeout status"/>
+                    <TextBlock Name="sbTimeout" Height="30" MinWidth="100" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5" Text="timeout status"/>
                 </ContentControl>
             </Border>
             <Border BorderThickness="1" BorderBrush="Black">
-                <TextBlock Name="tabCommandLine" Height="30" MinWidth="100" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
+                <TextBlock Name="sbCommandLine" Height="30" MinWidth="100" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
             </Border>
             <Border BorderThickness="1" BorderBrush="Black">
                 <ContentControl RightTapped="ContentControl_Rendering_RightTapped">
-                    <TextBlock Name="txtRendering" Height="30" MinWidth="100" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5" Text="Rendering"/>
+                    <TextBlock Name="sbRendering" Height="30" MinWidth="100" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5" Text="Renderers"/>
                 </ContentControl>
             </Border>
-            <Border BorderThickness="1" BorderBrush="Black">
-                <TextBlock Name="cursorPosition" Height="30" MinWidth="100" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
-            </Border>
+            <!--<Border BorderThickness="1" BorderBrush="Black">
+                <TextBlock Name="sbCursorPosition" Height="30" MinWidth="100" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
+            </Border>-->
             <Border BorderThickness="1" BorderBrush="Black">
                 <ContentControl RightTapped="ContentControl_Interpreter_RightTapped">
-                    <TextBlock Name="interpreter" Height="30" MinWidth="30" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
+                    <TextBlock Name="sbEngine" Height="30" MinWidth="30" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
                 </ContentControl>
             </Border>
             <Border BorderThickness="1" BorderBrush="Black">
@@ -643,13 +605,15 @@
             <Border BorderThickness="1" BorderBrush="Black">
                 <TextBlock Name="SCRL" Height="30" MinWidth="50" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
             </Border>
+            <Border BorderThickness="1" BorderBrush="Black">
+                <ContentControl RightTapped="ContentControl_CodePath_RightTapped">
+                    <TextBlock x:Name="sbPath" Height="30" MinWidth="50" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
+                </ContentControl>
+            </Border>
+            <Border BorderThickness="1" BorderBrush="Black">
+                <TextBlock x:Name="sbMessage" Height="30" MinWidth="50" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
+            </Border>
             <!--<Border BorderThickness="1" BorderBrush="Black">
-                <TextBlock x:Name="oHW" Height="30" MinWidth="50" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
-            </Border>
-            <Border BorderThickness="1" BorderBrush="Black">
-                <TextBlock x:Name="tHW" Height="30" MinWidth="50" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
-            </Border>
-            <Border BorderThickness="1" BorderBrush="Black">
                 <TextBlock x:Name="vHW" Height="30" MinWidth="50" Width="Auto" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5"/>
             </Border>
             <Border BorderThickness="1" BorderBrush="Black">

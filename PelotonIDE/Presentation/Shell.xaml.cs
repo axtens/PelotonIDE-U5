@@ -1,14 +1,10 @@
-﻿using Uno.Toolkit.UI;
+﻿namespace PelotonIDE.Presentation;
 
-namespace PelotonIDE.Presentation
+public sealed partial class Shell : UserControl, IContentControlProvider
 {
-    public sealed partial class Shell : UserControl, IContentControlProvider
+    public Shell()
     {
-        public Shell()
-        {
-            this.InitializeComponent();
-        }
-
-        public ContentControl ContentControl => Splash;
+        this.InitializeComponent();
     }
+    public ContentControl ContentControl => Splash;
 }

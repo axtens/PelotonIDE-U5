@@ -1,18 +1,17 @@
-﻿namespace PelotonIDE.Presentation
-{
-    public partial record TranslateViewModel(Entity Entity)
-    {
-        private string? _sourceText;
+namespace PelotonIDE.Presentation;
 
-        public string? SourceText
+public partial record TranslateViewModel(Entity Entity)
+{
+    private string? _sourceText;
+
+    public string? SourceText
+    {
+        get { return _sourceText; }
+        set
         {
-            get { return _sourceText; }
-            set
+            if (_sourceText != value)
             {
-                if (_sourceText != value)
-                {
-                    _sourceText = value;
-                }
+                _sourceText = value;
             }
         }
     }

@@ -1,254 +1,320 @@
 {
-  "After": {
+  "pOps.After": {
     "Defined": false,
     "Key": "+",
     "Value": "",
     "Internal": false
   },
-  "Assert": {
+  "pOps.Assert": {
     "Defined": false,
     "Key": "A",
     "Value": false,
     "Internal": false
   },
-  "Base": {
+  "pOps.Base": {
     "Defined": false,
     "Key": "B",
     "Value": "",
     "Internal": false
   },
-  "Before": {
+  "pOps.Before": {
     "Defined": false,
     "Key": "-",
     "Value": "",
     "Internal": false
   },
-  "Brace": {
+  "pOps.Brace": {
     "Defined": false,
     "Key": "{",
     "Value": false,
     "Internal": false
   },
-  "Brackets": {
+  "pOps.Brackets": {
     "Defined": false,
     "Key": "(",
     "Value": false,
     "Internal": false
   },
-  "Check": {
+  "pOps.Check": {
     "Defined": false,
     "Key": "C",
     "Value": false,
     "Internal": false
   },
-  "Comma": {
+  "pOps.Comma": {
     "Defined": false,
     "Key": ",",
     "Value": false,
     "Internal": false
   },
-  "Debug": {
+  "pOps.Debug": {
     "Defined": false,
     "Key": "D",
     "Value": false,
     "Internal": false
   },
-  "Environment": {
+  "pOps.Environment": {
     "Defined": false,
     "Key": "E",
     "Value": "",
     "Internal": false
   },
-  "Exclaim": {
+  "pOps.Exclaim": {
     "Defined": false,
     "Key": "!",
     "Value": false,
     "Internal": false
   },
-  "eXecute": {
+  "pOps.eXecute": {
     "Defined": false,
     "Key": "X",
     "Value": "",
     "Internal": false
   },
-  "Filespec": {
+  "pOps.Filespec": {
     "Defined": false,
     "Key": "F",
     "Value": "",
     "Internal": false
   },
-  "Get": {
+  "pOps.Get": {
     "Defined": false,
     "Key": "G",
     "Value": "",
     "Internal": false
   },
-  "Help": {
+  "pOps.Help": {
     "Defined": false,
     "Key": "?",
     "Value": false,
     "Internal": false
   },
-  "Host": {
+  "pOps.Host": {
     "Defined": false,
     "Key": "H",
     "Value": -1,
     "Internal": false
   },
-  "Input": {
+  "pOps.Input": {
     "Defined": false,
     "Key": "I",
     "Value": "",
     "Internal": false
   },
-  "Jump": {
+  "pOps.Jump": {
     "Defined": false,
     "Key": "J",
     "Value": -1,
     "Internal": false
   },
-  "Keyword": {
+  "pOps.Keyword": {
     "Defined": false,
     "Key": "K",
     "Value": "",
     "Internal": false
   },
-  "Language": {
+  "pOps.Language": {
     "Defined": true,
     "Key": "L",
     "Value": 0,
     "Internal": false
   },
-  "Listen": {
+  "pOps.Listen": {
     "Defined": false,
     "Key": ".",
     "Value": -1,
     "Internal": false
   },
-  "Literate": {
+  "pOps.Literate": {
     "Defined": false,
     "Key": "*",
     "Value": false,
     "Internal": false
   },
-  "Memory": {
+  "pOps.Memory": {
     "Defined": false,
     "Key": "M",
     "Value": "",
     "Internal": false
   },
-  "Nanny": {
+  "pOps.Nanny": {
     "Defined": false,
     "Key": "N",
     "Value": false,
     "Internal": false
   },
-  "Override": {
+  "pOps.Override": {
     "Defined": true,
     "Key": "O",
     "Value": false,
     "Internal": false
   },
-  "PreventUnicode": {
+  "pOps.PreventUnicode": {
     "Defined": false,
     "Key": "$",
     "Value": false,
     "Internal": false
   },
-  "Project": {
+  "pOps.Project": {
     "Defined": false,
     "Key": "P",
     "Value": "",
     "Internal": false
   },
-  "Quietude": {
+  "pOps.Quietude": {
     "Defined": true,
     "Key": "Q",
     "Value": 2,
     "Internal": false
   },
-  "Recordset": {
+  "pOps.Recordset": {
     "Defined": false,
     "Key": "R",
     "Value": "",
     "Internal": false
   },
-  "Spaced": {
+  "pOps.Spaced": {
     "Defined": false,
     "Key": "_",
     "Value": false,
     "Internal": false
   },
-  "Structure": {
+  "pOps.Structure": {
     "Defined": false,
     "Key": "S",
     "Value": "",
     "Internal": false
   },
-  "Transput": {
+  "pOps.Transput": {
     "Defined": true,
     "Key": "T",
-    "Value": 3,
+    "Value": 2,
     "Internal": false
   },
-  "Use": {
+  "pOps.Use": {
     "Defined": false,
     "Key": "U",
     "Value": "",
     "Internal": false
   },
-  "VariableLength": {
+  "pOps.VariableLength": {
     "Defined": false,
     "Key": "#",
     "Value": false,
     "Internal": false
   },
-  "Variables": {
+  "pOps.Variables": {
     "Defined": false,
     "Key": "V",
     "Value": "",
     "Internal": false
   },
-  "Workspace": {
+  "pOps.Workspace": {
     "Defined": false,
     "Key": "W",
     "Value": "",
     "Internal": false
   },
-  "Yonder": {
+  "pOps.Yonder": {
     "Defined": false,
     "Key": "Y",
     "Value": -1,
     "Internal": false
   },
-  "Zone": {
+  "pOps.Zone": {
     "Defined": false,
     "Key": "Z",
     "Value": "",
     "Internal": false
   },
-  "Timeout": {
+  "pOps.Padding": {
+    "Defined": true,
+    "Key": "`",
+    "Value": false,
+    "Internal": false
+  },
+  "ideOps.Timeout": {
     "Defined": true,
     "Key": "~",
     "Value": 0,
     "Internal": true
   },
-  "Rendering": {
+  "outputOps.ActiveRenderers": {
     "Defined": true,
     "Key": "r",
     "Value": "0,3",
     "Internal": true
   },
-  "SelectedRenderer": {
+  "outputOps.TappedRenderer": {
     "Defined": true,
-    "Key": "s",
+    "Key": "t",
     "Value": 3,
     "Internal": true
   },
-  "Engine": {
+  "ideOps.Engine": {
     "Defined": true,
     "Key": "e",
     "Value": 3,
+    "Internal": true
+  },
+  "ideOps.FontSize": {
+    "Defined": true,
+    "Key": "f",
+    "Value": 12.0,
+    "Internal": true
+  },
+  "ideOps.DataFolder": {
+    "Defined": true,
+    "Key": "d",
+    "Value": "c:\\peloton\\data",
+    "Internal": true
+  },
+  "ideOps.CodeFolder": {
+    "Defined": true,
+    "Key": "c",
+    "Value": "c:\\peloton\\code",
+    "Internal": true
+  },
+  "ideOps.findText": {
+    "Defined": true,
+    "Key": "ft",
+    "Value": "",
+    "Internal": true
+  },
+  "ideOps.findWhole": {
+    "Defined": true,
+    "Key": "fw",
+    "Value": false,
+    "Internal": true
+  },
+  "ideOps.findCase": {
+    "Defined": true,
+    "Key": "fc",
+    "Value": false,
+    "Internal": true
+  },
+  "ideOps.findSelection": {
+    "Defined": true,
+    "Key": "fs",
+    "Value": false,
+    "Internal": true
+  },
+  "ideOps.replaceText": {
+    "Defined": true,
+    "Key": "rt",
+    "Value": "",
+    "Internal": true
+  },
+  "ideOps.findLastFound": {
+    "Defined": true,
+    "Key": "lf",
+    "Value": -1,
+    "Internal": true
+  },
+  "ideOps.findWrapped": {
+    "Defined": true,
+    "Key": "fw",
+    "Value": false,
     "Internal": true
   }
 }

@@ -1,19 +1,16 @@
-namespace PelotonIDE.Presentation
+namespace PelotonIDE.Presentation;
+
+public class ShellViewModel
 {
-    public class ShellViewModel
+    private INavigator Navigator { get; }
+    public ShellViewModel(INavigator navigator)
     {
-        private INavigator Navigator { get; }
+        Navigator = navigator;
 
-        public ShellViewModel(INavigator navigator)
-        {
-            Navigator = navigator;
-
-            _ = Start();
-        }
-
-        public async Task Start()
-        {
-            await Navigator.NavigateViewModelAsync<MainViewModel>(this);
-        }
+        _ = Start();
+    }
+    public async Task Start()
+    {
+        await Navigator.NavigateViewModelAsync<MainViewModel>(this);
     }
 }

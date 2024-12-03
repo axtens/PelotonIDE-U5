@@ -1,6 +1,5 @@
-namespace PelotonIDE.Presentation
+namespace PelotonIDE.Presentation;
+
+public partial record IDEConfigViewModel(Entity Entity)
 {
-    public partial record IDEConfigViewModel(Entity Entity)
-    {
-    }
 }

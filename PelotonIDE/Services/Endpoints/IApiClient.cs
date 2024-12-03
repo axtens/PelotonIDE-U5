@@ -1,12 +1,9 @@
-using PelotonIDE.DataContracts;
-using System.Collections.Immutable;
+using Refit;
 
-namespace PelotonIDE.Services.Endpoints
+namespace PelotonIDE.Services.Endpoints;
+[Headers("Content-Type: application/json")]
+public interface IApiClient
 {
-    [Headers("Content-Type: application/json")]
-    public interface IApiClient
-    {
-        [Get("/api/weatherforecast")]
-        Task<ApiResponse<IImmutableList<WeatherForecast>>> GetWeather(CancellationToken cancellationToken = default);
-    }
+    [Get("/api/weatherforecast")]
+    Task<ApiResponse<IImmutableList<WeatherForecast>>> GetWeather(CancellationToken cancellationToken = default);
 }
