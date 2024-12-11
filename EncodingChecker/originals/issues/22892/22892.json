@@ -1,0 +1,39 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": null,
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "UniversalDetector.cs, line 152:\n \n    if (inputState == InputState.PureASCII &&\n       (buf[i] == 0x33 || (buf[i] == 0x7B && lastChar == 0x7E))) {\n \n        // found escape character or HZ \"~{\"\n        inputState = InputState.EscASCII;\n    }\n \n0x33 - isn't ESC, it's '3'. \nIt should be: buf[i] == 0x1B",
+    "LastUpdatedDate": "2013-02-14T12:47:12.95-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Low",
+      "Severity": 50,
+      "Id": 1
+    },
+    "ProjectName": "EncodingChecker",
+    "ReportedDate": "2012-06-14T06:17:30.49-07:00",
+    "Status": {
+      "Name": "Proposed",
+      "Id": 1
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Incorrect escape symbol detection",
+    "Type": {
+      "Name": "Issue",
+      "Id": 3
+    },
+    "VoteCount": 1,
+    "Id": 22892
+  },
+  "FileAttachments": [],
+  "Comments": []
+}

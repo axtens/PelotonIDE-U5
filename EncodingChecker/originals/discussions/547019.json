@@ -1,0 +1,10 @@
+[
+  {
+    "Id": "1251113",
+    "ThreadId": "547019",
+    "Html": "I have UTF-8 and windows -1252 encoding text files. It detect UTF-8 files, but not win-1252 files.\r<br />\nAny ideas? <br />\n",
+    "PostedDate": "2014-05-29T23:55:33.387-07:00",
+    "UserRole": null,
+    "MarkedAsAnswerDate": null
+  }
+]

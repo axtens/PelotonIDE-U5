@@ -1,0 +1,1 @@
+The proposed solution is indeed faster than using Encoding. Problem is that it doesn't work for encoding byte arrays of uneven length. As given, it raises an out-of-bound exception. Increasing the length by 1 leaves a trailing byte when decoding from string.

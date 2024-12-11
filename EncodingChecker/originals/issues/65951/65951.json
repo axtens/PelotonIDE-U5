@@ -1,0 +1,56 @@
+{
+  "WorkItem": {
+    "AffectedComponent": {
+      "Name": "",
+      "DisplayName": ""
+    },
+    "ClosedComment": "",
+    "ClosedDate": null,
+    "CommentCount": 0,
+    "Custom": null,
+    "Description": "When viewing a directory, somme files are listed and some none, even if the file mask only contains \"*.*\".",
+    "LastUpdatedDate": "2017-11-10T07:54:42.94-08:00",
+    "PlannedForRelease": "",
+    "ReleaseVisibleToPublic": false,
+    "Priority": {
+      "Name": "Unassigned",
+      "Severity": 0,
+      "Id": 0
+    },
+    "ProjectName": "EncodingChecker",
+    "ReportedDate": "2017-11-10T07:47:40.947-08:00",
+    "Status": {
+      "Name": "Proposed",
+      "Id": 1
+    },
+    "ReasonClosed": {
+      "Name": "Unassigned"
+    },
+    "Summary": "Some files are not detected",
+    "Type": {
+      "Name": "Unassigned",
+      "Id": 5
+    },
+    "VoteCount": 1,
+    "Id": 65951
+  },
+  "FileAttachments": [
+    {
+      "FileId": 8811,
+      "FileName": "Explorer.jpg",
+      "DownloadUrl": ".\\8811"
+    },
+    {
+      "FileId": 8812,
+      "FileName": "FileEncodingChecker.jpg",
+      "DownloadUrl": ".\\8812"
+    }
+  ],
+  "Comments": [
+    {
+      "Message": "FileEncodingChecker view for the same directory",
+      "PostedDate": "2017-11-10T07:54:42.94-08:00",
+      "Id": -2147483648
+    }
+  ]
+}
