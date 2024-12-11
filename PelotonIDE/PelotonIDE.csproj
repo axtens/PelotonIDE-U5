@@ -53,6 +53,9 @@
     <PackageReference Include="Newtonsoft.Json.Bson" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\EncodingChecker\EncodingChecker.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="EncodingChecker">
       <HintPath>..\..\..\EncodingChecker\bin\Release\net8.0\EncodingChecker.dll</HintPath>
     </Reference>

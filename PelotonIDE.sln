@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		global.json = global.json
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EncodingChecker", "EncodingChecker\EncodingChecker.csproj", "{429DAD1D-8362-41D8-B2F7-E7C8FB3DA865}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,10 @@ Global
 		{DA77C05F-A8DA-444A-B1C6-B57435EC29C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA77C05F-A8DA-444A-B1C6-B57435EC29C7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DA77C05F-A8DA-444A-B1C6-B57435EC29C7}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{429DAD1D-8362-41D8-B2F7-E7C8FB3DA865}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{429DAD1D-8362-41D8-B2F7-E7C8FB3DA865}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{429DAD1D-8362-41D8-B2F7-E7C8FB3DA865}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{429DAD1D-8362-41D8-B2F7-E7C8FB3DA865}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
